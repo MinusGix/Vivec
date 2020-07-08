@@ -84,7 +84,13 @@ where
             |x| VMADScript::parse(x, object_format),
             script_count as usize,
         )(data)?;
-        let (data, fragments) = many0(Fragment::parse_fragments)(data)?;
+        // We only want to try parsing the rest as fragments if there isn't anything left.
+        // many0 would still try calling the function, even if there is no data left, which is not what I want.
+        let fragments = if !data.is_empty() {
+            many0(Fragment::parse_fragments)(data)?.1
+        } else {
+            Vec::new()
+        };
 
         Ok((
             data,
