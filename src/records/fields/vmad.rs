@@ -552,8 +552,11 @@ impl<'data> DataSize for VMADProperty<'data> {
 #[derive(Debug, Clone)]
 pub struct NoFragments {}
 impl<'data> ParseFragments<'data> for NoFragments {
-    fn parse_fragments(_data: &'data [u8]) -> IResult<&'data [u8], Self> {
-        panic!("Tried parsing fragments, when there should be none.");
+    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
+        panic!(
+            "Tried parsing fragments, when there should be none, there was: {} bytes left",
+            data.len()
+        );
     }
 }
 impl StaticDataSize for NoFragments {
