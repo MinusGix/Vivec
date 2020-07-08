@@ -78,9 +78,9 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
         while let Some(field) = field_iter.next() {
             match field.type_name.as_ref() {
                 b"EDID" => collect_one!(EDID, field => fields; edid_index),
-                //b"VMAD" => {
-                //    collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; vmad_index)
-                //}
+                b"VMAD" => {
+                    collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; vmad_index)
+                }
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
                 b"FULL" => collect_one!(FULL, field => fields; full_index),
                 b"MODL" => {
