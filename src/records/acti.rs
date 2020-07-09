@@ -33,8 +33,8 @@ pub struct ACTIRecord<'data> {
     pub model_collection_index: Option<Index>,
     /// DESTCollection
     pub destruction_collection_index: Option<Index>,
-    /// (KSIZ, KWDA)
-    pub keyword_data_index: Option<(Index, Index)>,
+    /// KWDACollection
+    pub keyword_data_index: Option<Index>,
     /// PNAM
     pub marker_color_index: Option<Index>,
     /// SNAM
@@ -94,20 +94,9 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                 }
                 b"KSIZ" => {
                     let (_, ksiz) = kwda::KSIZ::from_field(field)?;
-                    let field = match field_iter.next() {
-                        Some(field) => field,
-                        None => return Err(FromRecordError::ExpectedField(b"KWDA".as_bstr())),
-                    };
-                    if field.type_name().as_ref() != b"KWDA" {
-                        return Err(FromRecordError::ExpectedFieldGot {
-                            expected: b"KWDA".as_bstr(),
-                            found: field.type_name(),
-                        });
-                    }
-                    let (_, kwda) = kwda::KWDA::from_field(field, ksiz.amount)?;
-                    keyword_data_index = Some((fields.len(), fields.len() + 1));
-                    fields.push(ksiz.into());
-                    fields.push(kwda.into());
+                    let (_, col) = kwda::KWDACollection::collect(ksiz, &mut field_iter)?;
+                    keyword_data_index = Some(fields.len());
+                    fields.push(ACTIField::KWDACollection(col));
                 }
                 b"PNAM" => collect_one!(PNAM, field => fields; pnam_index),
                 b"SNAM" => collect_one!(SNAM, field => fields; snam_index),
@@ -193,8 +182,7 @@ pub enum ACTIField<'data> {
     FULL(full::FULL),
     MODLCollection(modl::MODLCollection<'data>),
     DESTCollection(dest::DESTCollection<'data>),
-    KSIZ(kwda::KSIZ),
-    KWDA(kwda::KWDA),
+    KWDACollection(kwda::KWDACollection),
     PNAM(PNAM),
     SNAM(SNAM),
     VNAM(VNAM),
@@ -216,8 +204,7 @@ impl<'data> TypeNamed<'data> for ACTIField<'data> {
                 FULL,
                 MODLCollection,
                 DESTCollection,
-                KSIZ,
-                KWDA,
+                KWDACollection,
                 PNAM,
                 SNAM,
                 VNAM,
@@ -244,8 +231,7 @@ impl<'data> DataSize for ACTIField<'data> {
                 FULL,
                 MODLCollection,
                 DESTCollection,
-                KSIZ,
-                KWDA,
+                KWDACollection,
                 PNAM,
                 SNAM,
                 VNAM,
@@ -275,8 +261,7 @@ impl<'data> Writable for ACTIField<'data> {
                 FULL,
                 MODLCollection,
                 DESTCollection,
-                KSIZ,
-                KWDA,
+                KWDACollection,
                 PNAM,
                 SNAM,
                 VNAM,

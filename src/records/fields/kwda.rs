@@ -5,8 +5,10 @@ use super::{
 use crate::{
     make_single_value_field,
     parse::{count, le_u32, PResult},
-    records::common::FormId,
+    records::common::{FormId, TypeNamed},
+    util::{DataSize, Writable},
 };
+use bstr::{BStr, ByteSlice};
 
 make_single_value_field!(
     /// 'Keyword Size'
@@ -36,5 +38,60 @@ impl KWDA {
     pub fn from_field(field: GeneralField<'_>, amount: u32) -> PResult<Self, FromFieldError> {
         let (data, keywords) = count(field.data, FormId::parse, amount as usize)?;
         Ok((data, Self { keywords }))
+    }
+}
+
+/// KWDACollection
+#[derive(Debug, Clone)]
+pub struct KWDACollection {
+    // Note: we don't keep the KSIZ instance in here, since it can be generated from the KWDA instance :]
+    keywords: KWDA,
+}
+impl KWDACollection {
+    pub fn collect<'data, I>(
+        ksiz: KSIZ,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>,
+    {
+        let next_field = field_iter.peek();
+        if next_field
+            .map(|x| x.type_name())
+            .filter(|x| *x == b"KWDA".as_bstr())
+            .is_none()
+        {
+            Err(FromFieldError::ExpectedSpecificField(b"KWDA".as_bstr()))
+        } else {
+            let field = field_iter.next().unwrap();
+            let (_, field) = KWDA::from_field(field, ksiz.amount)?;
+            Ok((&[], KWDACollection { keywords: field }))
+        }
+    }
+    pub fn create_ksiz(&self) -> KSIZ {
+        // TODO: check that it fits
+        KSIZ {
+            amount: self.keywords.keywords.len() as u32,
+        }
+    }
+}
+impl TypeNamed<'static> for KWDACollection {
+    fn type_name(&self) -> &'static BStr {
+        // TODO: this isn't 100% sensible. It follows what other collections do (return first element), but what we really care about is the KWDA inst
+        b"KSIZ".as_bstr()
+    }
+}
+impl DataSize for KWDACollection {
+    fn data_size(&self) -> usize {
+        self.create_ksiz().data_size() + self.keywords.data_size()
+    }
+}
+impl Writable for KWDACollection {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: std::io::Write,
+    {
+        self.create_ksiz().write_to(w)?;
+        self.keywords.write_to(w)
     }
 }
