@@ -86,7 +86,6 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                     modl_collection_index = Some(fields.len());
                     fields.push(ACTIField::MODLCollection(col));
                 }
-                // TODO: put all the sub dest structures under their own handling
                 b"DEST" => {
                     let (_, dest) = dest::DEST::from_field(field)?;
                     let (_, col) = dest::DESTCollection::collect(dest, &mut field_iter)?;

@@ -1,11 +1,8 @@
-use super::{
-    common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
-    modl,
-};
+use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     make_empty_field, make_model_fields, make_single_value_field,
     parse::{le_u16, le_u32, take, PResult},
-    records::common::{get_field, FormId, NullTerminatedString, TypeNamed},
+    records::common::{get_field, FormId, TypeNamed},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -192,7 +189,7 @@ impl<'data> DESTCollection<'data> {
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {
         let mut stage_data = Vec::new();
-        for i in 0..destruction.count {
+        for _ in 0..destruction.count {
             let (_, dstd) = get_field(field_iter, b"DSTD".as_bstr())?;
             let dstd = dstd.expect("Expected DSTD field");
             let (_, collection) = DSTDCollection::collect(dstd, field_iter)?;

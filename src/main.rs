@@ -1,4 +1,3 @@
-use bstr::{BStr, BString, ByteSlice, ByteVec, B};
 use derive_more::From;
 use groups::{
     common::{FromGeneralGroup, FromTopGroup, FromTopGroupError, GeneralGroup, GroupType},
@@ -6,7 +5,7 @@ use groups::{
 };
 use parse::{many, take, PResult, ParseError};
 use records::common::{FromRecord, FromRecordError, GeneralRecord, TypeNamed};
-use util::{DataSize, StaticDataSize, Writable};
+use util::{DataSize, Writable};
 
 mod groups;
 mod parse;

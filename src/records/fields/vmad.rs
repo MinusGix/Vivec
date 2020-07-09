@@ -556,7 +556,7 @@ impl<'data> DataSize for VMADProperty<'data> {
 #[derive(Debug, Clone)]
 pub struct NoFragments {}
 impl<'data> ParseFragments<'data> for NoFragments {
-    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
+    fn parse_fragments(_data: &'data [u8]) -> PResult<Self> {
         Err(ParseError::ExpectedEOF)
     }
 }

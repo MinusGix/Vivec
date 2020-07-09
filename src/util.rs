@@ -44,36 +44,6 @@ where
 }
 
 pub mod byte {
-    /// Converts bytes into u16
-    /// little endian
-    pub fn as_u16(v: &[u8]) -> u16 {
-        (u16::from(v[0]) << 8) | u16::from(v[1])
-    }
-
-    /// Converts bytes into u32
-    /// little endian
-    pub fn as_u32(v: &[u8]) -> u32 {
-        (u32::from(v[0]) << 24) | (u32::from(v[1]) << 16) | (u32::from(v[2]) << 8) | u32::from(v[3])
-    }
-
-    /// Little endian
-    pub fn as_f32(v: &[u8]) -> f32 {
-        f32::from_le_bytes([v[0], v[1], v[2], v[3]])
-    }
-
-    /// Converts bytes into u64
-    /// little endian
-    pub fn as_u64(v: &[u8]) -> u64 {
-        (u64::from(v[0]) << 56)
-            | (u64::from(v[1]) << 48)
-            | (u64::from(v[2]) << 40)
-            | (u64::from(v[3]) << 32)
-            | (u64::from(v[4]) << 24)
-            | (u64::from(v[5]) << 16)
-            | (u64::from(v[6]) << 8)
-            | u64::from(v[7])
-    }
-
     pub fn as_4_bytes(b: &[u8]) -> [u8; 4] {
         [b[0], b[1], b[2], b[3]]
     }

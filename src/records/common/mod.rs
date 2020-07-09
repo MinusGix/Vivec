@@ -1,10 +1,9 @@
 use super::fields::common::{FieldName, FromField, FromFieldError, GeneralField};
 use crate::{
     parse::{le_u16, le_u32, many, take, PResult, ParseError},
-    util::{byte, DataSize, StaticDataSize, Writable},
+    util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use derive_more::From;
 use std::io::Write;
 
 pub type Index = usize;
@@ -383,7 +382,7 @@ pub enum FromRecordError<'data> {
         expected: FieldName<'data>,
         found: FieldName<'data>,
     },
-    /// Found a field, which we didn't expect to find
+    /// Found a field, which we didn't expect to find at all
     UnexpectedField(FieldName<'data>),
     /// Found a field which was a duplicate. Note: This doesn't mean they're the same, but we only expected to find one.
     DuplicateField(FieldName<'data>),

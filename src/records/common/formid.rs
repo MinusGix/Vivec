@@ -13,7 +13,7 @@ impl FormId {
     }
 
     pub fn from_bytes(id: [u8; 4]) -> FormId {
-        FormId::new(byte::as_u32(&id))
+        FormId::new(u32::from_le_bytes(id))
     }
 
     pub fn parse(data: &[u8]) -> PResult<FormId> {
