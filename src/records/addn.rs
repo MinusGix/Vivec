@@ -40,7 +40,7 @@ pub struct ADDNRecord<'data> {
 }
 impl<'data> TypeNamed<'static> for ADDNRecord<'data> {
     fn type_name(&self) -> &'static BStr {
-        b"ADDn".as_bstr()
+        b"ADDN".as_bstr()
     }
 }
 impl<'data> FromRecord<'data> for ADDNRecord<'data> {
@@ -122,7 +122,6 @@ pub enum ADDNField<'data> {
     EDID(EDID<'data>),
     OBND(obnd::OBND),
     MODLCollection(modl::MODLCollection<'data>),
-    //MODT(modl::MODT<'data>),
     DATA(DATA),
     SNAM(SNAM),
     DNAM(DNAM),
