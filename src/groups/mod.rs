@@ -6,6 +6,7 @@ use derive_more::From;
 
 pub mod aact;
 pub mod acti;
+pub mod addn;
 
 pub mod common;
 
@@ -13,6 +14,7 @@ pub mod common;
 pub enum Group<'data> {
     AACT(aact::AACTGroup<'data>),
     ACTI(acti::ACTIGroup<'data>),
+    ADDN(addn::ADDNGroup<'data>),
     Unknown(common::GeneralGroup<'data>),
     UnknownTop(common::TopGroup<'data>),
 }
@@ -23,7 +25,7 @@ pub enum Group<'data> {
 }*/
 impl<'data> DataSize for Group<'data> {
     fn data_size(&self) -> usize {
-        dispatch_all!(Group, self, [AACT, ACTI, Unknown, UnknownTop], x, {
+        dispatch_all!(Group, self, [AACT, ACTI, ADDN, Unknown, UnknownTop], x, {
             x.data_size()
         })
     }
@@ -33,7 +35,7 @@ impl<'data> Writable for Group<'data> {
     where
         T: std::io::Write,
     {
-        dispatch_all!(Group, self, [AACT, ACTI, Unknown, UnknownTop], x, {
+        dispatch_all!(Group, self, [AACT, ACTI, ADDN, Unknown, UnknownTop], x, {
             x.write_to(w)
         })
     }

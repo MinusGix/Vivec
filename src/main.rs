@@ -100,6 +100,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
                     match group.label.as_ref() {
                         b"AACT" => groups::aact::AACTGroup::from_top_group(group)?.1.into(),
                         b"ACTI" => groups::acti::ACTIGroup::from_top_group(group)?.1.into(),
+                        b"ADDN" => groups::addn::ADDNGroup::from_top_group(group)?.1.into(),
                         _ => group.into(),
                     }
                 }
@@ -128,8 +129,11 @@ fn main() {
                     Record::Unknown(record) => println!("U({}),", record.type_name()), // println!("Unknown record: {:?}", record),
                 },
                 Top::Group(group) => match group {
-                    Group::AACT(group) => println!("AACT Group: {:#?} entries", group),
+                    Group::AACT(group) => {
+                        println!("AACT Group: {:#?} entries", group.records.len())
+                    }
                     Group::ACTI(group) => println!("ACTI Group: {} entries", group.records.len()),
+                    Group::ADDN(group) => println!("ADDN group: {} entries", group.records.len()),
                     _ => print!("G, "),
                 },
             };
