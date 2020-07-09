@@ -1,15 +1,13 @@
 use crate::{
+    parse::{le_i32, le_u32, tag, take, PResult, ParseError},
     records::common::{
-        FormId, FromRecord, GeneralRecord, RecordName, TypeNamed, VersionControlInfo,
+        FormId, FromRecord, FromRecordError, GeneralRecord, RecordName, TypeNamed,
+        VersionControlInfo,
     },
     util::{byte, DataSize, Position, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use nom::{
-    bytes::complete::{tag, take},
-    number::complete::{le_i32, le_u32},
-    IResult,
-};
+use derive_more::From;
 use std::io::Write;
 
 pub const GROUPH_SIZE: usize = 24;
@@ -42,14 +40,14 @@ pub struct GeneralGroup<'data> {
     pub data: &'data [u8],
 }
 impl<'data> GeneralGroup<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
-        let (data, _) = tag(b"GRUP")(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+        let (data, _) = tag(data, b"GRUP")?;
         // Size of the entire group, including group header..
         let (data, group_size) = le_u32(data)?;
         let (data, group_type) = GroupType::parse(data)?;
         let (data, version_control_info) = VersionControlInfo::parse(data)?;
         let (data, unknown) = le_u32(data)?;
-        let (data, group_data) = take((group_size as usize) - GROUPH_SIZE)(data)?;
+        let (data, group_data) = take(data, group_size as usize - GROUPH_SIZE)?;
 
         Ok((
             data,
@@ -137,8 +135,16 @@ impl<'data> Writable for TopGroup<'data> {
         self.data.write_to(w)
     }
 }
+
+#[derive(Debug, Clone, From)]
+pub enum FromTopGroupError<'data> {
+    /// TODO: note that any parse errors inside records will be under FromRecordError.. this is fine I guess?
+    RecordError(FromRecordError<'data>),
+    ParseError(ParseError<'data>),
+}
+
 pub trait FromTopGroup<'data>: Sized {
-    fn from_top_group(group: TopGroup<'data>) -> IResult<&[u8], Self>;
+    fn from_top_group(group: TopGroup<'data>) -> PResult<Self, FromTopGroupError<'data>>;
 }
 
 // TODO: this label storing behavior doesn't match What Record does
@@ -171,8 +177,8 @@ pub enum GroupType<'data> {
     Unknown { group_type: i32, label: [u8; 4] },
 }
 impl<'data> GroupType<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], GroupType<'data>> {
-        let (data, label) = take(4usize)(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+        let (data, label) = take(data, 4)?;
         let (data, group_type) = le_i32(data)?;
         Ok((data, GroupType::from_info(group_type, label)))
     }
@@ -293,15 +299,17 @@ mod tests {
 
 pub fn convert_all_records_into<'data, T>(
     records: Vec<GeneralRecord<'data>>,
-) -> Result<Vec<T>, nom::Err<(&[u8], nom::error::ErrorKind)>>
+) -> Result<Vec<T>, FromTopGroupError>
 where
     T: FromRecord<'data>,
 {
-    let records: Result<Vec<T>, nom::Err<(&[u8], nom::error::ErrorKind)>> = records
+    let records: Result<Vec<T>, FromTopGroupError> = records
         .into_iter()
         .map(T::from_record)
-        .map(|aact| aact.map(|x| x.1))
+        .map(|x| x.map(|x| x.1))
+        .map(|x| x.map_err(|e| e.into()))
         .collect();
+
     records
 }
 
@@ -316,8 +324,8 @@ macro_rules! make_simple_top_group {
             pub records: Vec<$record_name<$life>>,
         }
         impl<$life> $crate::FromTopGroup<$life> for $group_name<$life> {
-            fn from_top_group(group: $crate::groups::common::TopGroup<$life>) -> nom::IResult<&[u8], Self> {
-                let (data, records) = nom::multi::many0($crate::records::common::GeneralRecord::parse)(group.data)?;
+            fn from_top_group(group: $crate::groups::common::TopGroup<$life>) -> crate::parse::PResult<Self, crate::groups::common::FromTopGroupError> {
+                let (data, records) = crate::parse::many(group.data, $crate::records::common::GeneralRecord::parse)?;
                 if !data.is_empty() {
                     panic!("Did not consume all data when parsing records from group data!");
                 }

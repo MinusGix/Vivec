@@ -23,7 +23,7 @@ macro_rules! make_formid_field {
 			}
 		}
 		impl $crate::records::fields::common::FromField<'_> for $name {
-			fn from_field(field: $crate::records::fields::common::GeneralField<'_>) -> nom::IResult<&[u8], Self> {
+			fn from_field(field: $crate::records::fields::common::GeneralField<'_>) -> $crate::parse::PResult<Self, $crate::records::fields::common::FromFieldError> {
 				let (data, formid) = $crate::records::common::FormId::parse(field.data)?;
 				// TODO: check that it used up all the data
 				Ok((data, Self::new(formid)))

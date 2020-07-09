@@ -1,5 +1,7 @@
-use crate::util::{DataSize, Writable};
-use nom::{bytes::complete::take, IResult};
+use crate::{
+    parse::{single, PResult},
+    util::{DataSize, Writable},
+};
 
 /// An RGB structure with an unused (?) third component
 /// This is a utility class, to be used in other fields. Such as CNAM, PNAM and others
@@ -21,13 +23,12 @@ impl RGBU {
         }
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], RGBU> {
-        let take1 = take(1usize);
-        let (data, red) = take1(data)?;
-        let (data, green) = take1(data)?;
-        let (data, blue) = take1(data)?;
-        let (data, unused) = take1(data)?;
-        Ok((data, RGBU::new(red[0], green[0], blue[0], unused[0])))
+    pub fn parse(data: &[u8]) -> PResult<RGBU> {
+        let (data, red) = single(data)?;
+        let (data, green) = single(data)?;
+        let (data, blue) = single(data)?;
+        let (data, unused) = single(data)?;
+        Ok((data, RGBU::new(red, green, blue, unused)))
     }
 }
 impl DataSize for RGBU {

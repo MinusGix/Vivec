@@ -1,16 +1,11 @@
-use super::common::{write_field_header, FromField, GeneralField, FIELDH_SIZE};
+use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     dispatch_all,
+    parse::{count, le_f32, le_i16, le_i32, le_u16, le_u32, many, take, PResult},
     records::common::{FormId, TypeNamed, Windows1252String16},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use nom::{
-    bytes::complete::take,
-    multi::{count, many0},
-    number::complete::{le_f32, le_i16, le_i32, le_u16, le_u32},
-    IResult,
-};
 use std::{convert::TryFrom, io::Write};
 
 /// Contains Papyrus script data
@@ -22,7 +17,7 @@ impl<'data, Fragment> FromField<'data> for VMAD<'data, Fragment>
 where
     Fragment: ParseFragments<'data>,
 {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, primary) = VMADPrimarySection::parse(field.data)?;
         Ok((data, VMAD { primary }))
     }
@@ -57,7 +52,7 @@ where
 }
 
 pub trait ParseFragments<'data>: Sized + DataSize + Writable {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self>;
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self>;
 }
 
 #[derive(Debug, Clone)]
@@ -75,19 +70,20 @@ impl<'data, Fragment> VMADPrimarySection<'data, Fragment>
 where
     Fragment: ParseFragments<'data>,
 {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, version) = le_i16(data)?;
         let (data, object_format) = VMADObjectFormat::parse(data)?;
         let (data, script_count) = le_u16(data)?;
         // since it's script count rather than the size of the data that is scripts, that makes life slightly harder
         let (data, scripts) = count(
+            data,
             |x| VMADScript::parse(x, object_format),
             script_count as usize,
-        )(data)?;
+        )?;
         // We only want to try parsing the rest as fragments if there isn't anything left.
         // many0 would still try calling the function, even if there is no data left, which is not what I want.
         let fragments = if !data.is_empty() {
-            many0(Fragment::parse_fragments)(data)?.1
+            many(data, Fragment::parse_fragments)?.1
         } else {
             Vec::new()
         };
@@ -162,7 +158,7 @@ impl TryFrom<u16> for VMADObjectFormat {
     }
 }
 impl VMADObjectFormat {
-    pub fn parse(data: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = le_u16(data)?;
         let object_format = match VMADObjectFormat::try_from(value) {
 			Ok(format) => format,
@@ -208,14 +204,15 @@ pub struct VMADScript<'data> {
     pub properties: Vec<VMADProperty<'data>>,
 }
 impl<'data> VMADScript<'data> {
-    pub fn parse(data: &'data [u8], object_format: VMADObjectFormat) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8], object_format: VMADObjectFormat) -> PResult<Self> {
         let (data, name) = Windows1252String16::parse(data)?;
-        let (data, status) = take(1usize)(data)?;
+        let (data, status) = take(data, 1usize)?;
         let (data, property_count) = le_u16(data)?;
         let (data, properties) = count(
+            data,
             |x| VMADProperty::parse(x, object_format),
             property_count as usize,
-        )(data)?;
+        )?;
         Ok((
             data,
             VMADScript {
@@ -286,7 +283,7 @@ impl<'data> VMADPropertyData<'data> {
         data: &'data [u8],
         object_format: VMADObjectFormat,
         property_type: u8,
-    ) -> IResult<&[u8], VMADPropertyData> {
+    ) -> PResult<VMADPropertyData> {
         match property_type {
             1 => {
                 let (data, value) = VMADPropertyObject::parse(data, object_format)?;
@@ -305,7 +302,7 @@ impl<'data> VMADPropertyData<'data> {
                 Ok((data, VMADPropertyData::Float(value)))
             }
             5 => {
-                let (data, value) = take(1usize)(data)?;
+                let (data, value) = take(data, 1usize)?;
                 let value = value[0] != 0;
                 Ok((data, VMADPropertyData::Boolean(value)))
             }
@@ -315,36 +312,38 @@ impl<'data> VMADPropertyData<'data> {
                 let (data, amount) = le_u32(data)?;
                 // TODO: we could just `take` the amount of bytes, since the size is statically known
                 let (data, items) = count(
+                    data,
                     |x| VMADPropertyObject::parse(x, object_format),
                     amount as usize,
-                )(data)?;
+                )?;
                 Ok((data, VMADPropertyData::ObjectArray(items)))
             }
             12 => {
                 let (data, amount) = le_u32(data)?;
-                let (data, items) = count(Windows1252String16::parse, amount as usize)(data)?;
+                let (data, items) = count(data, Windows1252String16::parse, amount as usize)?;
                 Ok((data, VMADPropertyData::Windows1252String16Array(items)))
             }
             13 => {
                 let (data, amount) = le_u32(data)?;
-                let (data, items) = count(le_i32, amount as usize)(data)?;
+                let (data, items) = count(data, le_i32, amount as usize)?;
                 Ok((data, VMADPropertyData::Int32Array(items)))
             }
             14 => {
                 let (data, amount) = le_u32(data)?;
-                let (data, items) = count(le_f32, amount as usize)(data)?;
+                let (data, items) = count(data, le_f32, amount as usize)?;
                 Ok((data, VMADPropertyData::FloatArray(items)))
             }
             15 => {
                 let (data, amount) = le_u32(data)?;
                 // TODO: I hate it
                 let (data, items) = count(
+                    data,
                     |x: &[u8]| {
-                        let (data, value) = take(1usize)(x)?;
+                        let (data, value) = take(x, 1usize)?;
                         Ok((data, value[0] == 0))
                     },
                     amount as usize,
-                )(data)?;
+                )?;
                 Ok((data, VMADPropertyData::BooleanArray(items)))
             }
 
@@ -447,10 +446,7 @@ pub struct VMADPropertyObject {
     pub unused: u16,
 }
 impl VMADPropertyObject {
-    pub fn parse(
-        data: &[u8],
-        object_format: VMADObjectFormat,
-    ) -> IResult<&[u8], VMADPropertyObject> {
+    pub fn parse(data: &[u8], object_format: VMADObjectFormat) -> PResult<VMADPropertyObject> {
         match object_format {
             // [formid:4][alias:2][zeros:2]
             VMADObjectFormat::IDLead => {
@@ -522,11 +518,11 @@ pub struct VMADProperty<'data> {
     pub data: VMADPropertyData<'data>,
 }
 impl<'data> VMADProperty<'data> {
-    pub fn parse(data: &'data [u8], object_format: VMADObjectFormat) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8], object_format: VMADObjectFormat) -> PResult<Self> {
         let (data, name) = Windows1252String16::parse(data)?;
-        let (data, property_type) = take(1usize)(data)?;
+        let (data, property_type) = take(data, 1usize)?;
         let property_type = property_type[0];
-        let (data, status) = take(1usize)(data)?;
+        let (data, status) = take(data, 1usize)?;
         let status = status[0];
         let (data, property_data) = VMADPropertyData::parse(data, object_format, property_type)?;
         Ok((
@@ -558,7 +554,7 @@ impl<'data> DataSize for VMADProperty<'data> {
 #[derive(Debug, Clone)]
 pub struct NoFragments {}
 impl<'data> ParseFragments<'data> for NoFragments {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
         panic!(
             "Tried parsing fragments, when there should be none, there was: {} bytes left",
             data.len()
@@ -596,14 +592,14 @@ pub struct INFORecordFragments<'data> {
 }
 
 impl<'data> ParseFragments<'data> for INFORecordFragments<'data> {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         assert_eq!(unknown, 2);
         let (data, flags) = INFORecordFragmentsFlags::parse(data)?;
         let (data, filename) = Windows1252String16::parse(data)?;
         // The amount of fragments is the amount of bits set in flags. Scary, but an interesting way to do it.
-        let (data, fragments) = count(FragmentInfo::parse, flags.count_ones() as usize)(data)?;
+        let (data, fragments) = count(data, FragmentInfo::parse, flags.count_ones() as usize)?;
         Ok((
             data,
             INFORecordFragments {
@@ -645,8 +641,8 @@ impl INFORecordFragmentsFlags {
         Self { flags }
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], Self> {
-        let (data, flags) = take(1usize)(data)?;
+    pub fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = take(data, 1usize)?;
         Ok((data, Self::new(flags[0])))
     }
 
@@ -687,8 +683,8 @@ pub struct FragmentInfo<'data> {
     pub fragment_name: Windows1252String16<'data>,
 }
 impl<'data> FragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
         let (data, fragment_name) = Windows1252String16::parse(data)?;
@@ -731,13 +727,13 @@ pub struct PACKRecordFragments<'data> {
     pub fragments: Vec<FragmentInfo<'data>>,
 }
 impl<'data> ParseFragments<'data> for PACKRecordFragments<'data> {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         assert_eq!(unknown, 2);
         let (data, flags) = PACKRecordFragmentsFlags::parse(data)?;
         let (data, filename) = Windows1252String16::parse(data)?;
-        let (data, fragments) = count(FragmentInfo::parse, flags.count_ones() as usize)(data)?;
+        let (data, fragments) = count(data, FragmentInfo::parse, flags.count_ones() as usize)?;
         Ok((
             data,
             PACKRecordFragments {
@@ -781,8 +777,8 @@ impl PACKRecordFragmentsFlags {
         Self { flags }
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], Self> {
-        let (data, flags) = take(1usize)(data)?;
+    pub fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = take(data, 1usize)?;
         Ok((data, Self::new(flags[0])))
     }
 
@@ -825,13 +821,13 @@ pub struct PERKRecordFragments<'data> {
     pub fragments: Vec<PERKRecordFragmentInfo<'data>>,
 }
 impl<'data> ParseFragments<'data> for PERKRecordFragments<'data> {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, filename) = Windows1252String16::parse(data)?;
         let (data, fragment_count) = le_u16(data)?;
         let (data, fragments) =
-            count(PERKRecordFragmentInfo::parse, fragment_count as usize)(data)?;
+            count(data, PERKRecordFragmentInfo::parse, fragment_count as usize)?;
         Ok((
             data,
             PERKRecordFragments {
@@ -871,10 +867,10 @@ pub struct PERKRecordFragmentInfo<'data> {
     pub fragment_name: Windows1252String16<'data>,
 }
 impl<'data> PERKRecordFragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, index) = le_u16(data)?;
         let (data, unknown) = le_u16(data)?;
-        let (data, unknown2) = take(1usize)(data)?;
+        let (data, unknown2) = take(data, 1usize)?;
         let unknown2 = unknown2[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
         let (data, fragment_name) = Windows1252String16::parse(data)?;
@@ -922,16 +918,16 @@ pub struct QUSTRecordFragments<'data> {
     pub aliases: Vec<FragmentAlias<'data>>,
 }
 impl<'data> ParseFragments<'data> for QUSTRecordFragments<'data> {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         assert_eq!(unknown, 2);
         let (data, fragment_count) = le_u16(data)?;
         let (data, filename) = Windows1252String16::parse(data)?;
         let (data, fragments) =
-            count(QUSTRecordFragmentInfo::parse, fragment_count as usize)(data)?;
+            count(data, QUSTRecordFragmentInfo::parse, fragment_count as usize)?;
         let (data, alias_count) = le_u16(data)?;
-        let (data, aliases) = count(FragmentAlias::parse, alias_count as usize)(data)?;
+        let (data, aliases) = count(data, FragmentAlias::parse, alias_count as usize)?;
         Ok((
             data,
             QUSTRecordFragments {
@@ -986,12 +982,12 @@ pub struct QUSTRecordFragmentInfo<'data> {
     pub fragment_name: Windows1252String16<'data>,
 }
 impl<'data> QUSTRecordFragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, index) = le_u16(data)?;
         let (data, unknown) = le_u16(data)?;
         assert_eq!(unknown, 0);
         let (data, log_entry) = le_i32(data)?;
-        let (data, unknown2) = take(1usize)(data)?;
+        let (data, unknown2) = take(data, 1usize)?;
         let unknown2 = unknown2[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
         let (data, fragment_name) = Windows1252String16::parse(data)?;
@@ -1044,10 +1040,10 @@ pub struct FragmentAlias<'data> {
 }
 impl<'data> FragmentAlias<'data> {
     // TODO: verify that version and object_format are equivalent to parents
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
         // TODO: hardcoding byte size is bleh
         // We need the object format, which is stored later, so we simply consume the bytes needed for now
-        let (data, object) = take(4usize)(data)?;
+        let (data, object) = take(data, 4usize)?;
 
         let (data, version) = le_u16(data)?;
 
@@ -1057,9 +1053,10 @@ impl<'data> FragmentAlias<'data> {
 
         let (data, script_count) = le_u16(data)?;
         let (data, scripts) = count(
+            data,
             |x| VMADScript::parse(x, object_format),
             script_count as usize,
-        )(data)?;
+        )?;
         Ok((
             data,
             Self {
@@ -1112,15 +1109,15 @@ pub struct SCENRecordFragments<'data> {
     pub phases: Vec<PhaseInfo<'data>>,
 }
 impl<'data> ParseFragments<'data> for SCENRecordFragments<'data> {
-    fn parse_fragments(data: &'data [u8]) -> IResult<&'data [u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         assert_eq!(unknown, 2);
         let (data, flags) = SCENRecordFragmentsFlags::parse(data)?;
         let (data, filename) = Windows1252String16::parse(data)?;
-        let (data, begin_end) = count(BEFragmentInfo::parse, flags.count_ones() as usize)(data)?;
+        let (data, begin_end) = count(data, BEFragmentInfo::parse, flags.count_ones() as usize)?;
         let (data, phase_count) = le_u16(data)?;
-        let (data, phases) = count(PhaseInfo::parse, phase_count as usize)(data)?;
+        let (data, phases) = count(data, PhaseInfo::parse, phase_count as usize)?;
         Ok((
             data,
             SCENRecordFragments {
@@ -1170,8 +1167,8 @@ pub struct BEFragmentInfo<'data> {
     pub fragment_name: Windows1252String16<'data>,
 }
 impl<'data> BEFragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
         let (data, fragment_name) = Windows1252String16::parse(data)?;
@@ -1213,11 +1210,11 @@ pub struct PhaseInfo<'data> {
     pub fragment_name: Windows1252String16<'data>,
 }
 impl<'data> PhaseInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
-        let (data, unknown) = take(1usize)(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+        let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, phase) = le_u32(data)?;
-        let (data, unknown2) = take(1usize)(data)?;
+        let (data, unknown2) = take(data, 1usize)?;
         let unknown2 = unknown2[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
         let (data, fragment_name) = Windows1252String16::parse(data)?;

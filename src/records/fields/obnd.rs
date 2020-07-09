@@ -1,10 +1,10 @@
-use super::common::{write_field_header, FromField, GeneralField, FIELDH_SIZE};
+use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
+    parse::{le_i16, PResult},
     records::common::TypeNamed,
     util::{Position3, StaticDataSize, Writable},
 };
 use bstr::BStr;
-use nom::{number::complete::le_i16, IResult};
 
 /// Object Bounds
 /// bin format:
@@ -26,7 +26,7 @@ impl OBND {
     }
 }
 impl FromField<'_> for OBND {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], OBND> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         if field.data.len() != 12 {
             panic!("Expected 12 bytes for OBND field!");
         }

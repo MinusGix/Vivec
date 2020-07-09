@@ -1,12 +1,11 @@
-use super::common::{FromField, GeneralField};
-use crate::{make_single_value_field, records::common::NullTerminatedString};
-use nom::IResult;
+use super::common::{FromField, FromFieldError, GeneralField};
+use crate::{make_single_value_field, parse::PResult, records::common::NullTerminatedString};
 
 make_single_value_field!(
     /// MUST BE NAMED EDID, currently this value is hardcoded.
     [Debug, Clone, Eq, PartialEq], EDID, id, NullTerminatedString, 'data);
 impl<'data> FromField<'data> for EDID<'data> {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, id) = NullTerminatedString::parse(field.data)?;
         // TODO: check that is all.
         Ok((data, Self { id }))

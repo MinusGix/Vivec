@@ -1,23 +1,20 @@
 use super::{
     common::{
-        lstring::LString, CommonRecordInfo, FormId, FromRecord, GeneralRecord, Index, TypeNamed,
+        lstring::LString, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord,
+        Index, TypeNamed,
     },
     fields::{
-        common::{FromField, GeneralField},
+        common::{FromField, FromFieldError, GeneralField},
         dest, edid, modl, obnd, rgbu, vmad,
     },
 };
 use crate::{
     collect_one, dispatch_all, make_formid_field, make_single_value_field,
+    parse::{count, le_u16, le_u32, PResult},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use derive_more::From;
-use nom::{
-    multi::count,
-    number::complete::{le_u16, le_u32},
-    IResult,
-};
 use std::io::Write;
 
 #[derive(Debug, Clone)]
@@ -56,7 +53,7 @@ pub struct ACTIRecord<'data> {
     pub fields: Vec<ACTIField<'data>>,
 }
 impl<'data> FromRecord<'data> for ACTIRecord<'data> {
-    fn from_record(record: GeneralRecord<'data>) -> IResult<&[u8], Self> {
+    fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError> {
         let mut edid_index = None;
         let mut vmad_index = None;
         let mut obnd_index = None;
@@ -303,7 +300,7 @@ make_single_value_field!(
     LString
 );
 impl FromField<'_> for FULL {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, name) = LString::parse(field.data)?;
         Ok((data, Self { name }))
     }
@@ -318,7 +315,7 @@ make_single_value_field!(
     u32
 );
 impl FromField<'_> for KSIZ {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, amount) = le_u32(field.data)?;
         Ok((data, Self { amount }))
     }
@@ -334,15 +331,15 @@ make_single_value_field!(
 );
 //impl FromField<'_> for KWDA {
 impl KWDA {
-    fn from_field(field: GeneralField<'_>, amount: u32) -> IResult<&[u8], Self> {
-        let (data, keywords) = count(FormId::parse, amount as usize)(field.data)?;
+    fn from_field(field: GeneralField<'_>, amount: u32) -> PResult<Self, FromFieldError> {
+        let (data, keywords) = count(field.data, FormId::parse, amount as usize)?;
         Ok((data, Self { keywords }))
     }
 }
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], PNAM, color, rgbu::RGBU);
 impl FromField<'_> for PNAM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, color) = rgbu::RGBU::parse(field.data)?;
         Ok((data, Self { color }))
     }
@@ -371,7 +368,7 @@ make_single_value_field!(
     LString
 );
 impl FromField<'_> for RNAM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, verb) = LString::parse(field.data)?;
         Ok((data, Self { verb }))
     }
@@ -387,7 +384,7 @@ make_single_value_field!(
     u16
 );
 impl FromField<'_> for FNAM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, flags) = le_u16(field.data)?;
         Ok((data, Self { flags }))
     }

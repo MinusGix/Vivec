@@ -1,10 +1,9 @@
 use super::BStrw;
-use crate::util::{DataSize, Writable};
-use bstr::{BStr, ByteSlice};
-use nom::{
-    bytes::complete::{tag, take_until},
-    IResult,
+use crate::{
+    parse::{tag, take_until, PResult},
+    util::{DataSize, Writable},
 };
+use bstr::{BStr, ByteSlice};
 
 /// Null-terminated-string
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -23,12 +22,10 @@ impl<'data> NullTerminatedString<'data> {
         NullTerminatedString::new(value.as_bstr())
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], NullTerminatedString> {
+    pub fn parse(data: &[u8]) -> PResult<NullTerminatedString> {
         // TODO: i hate this reference thing
-        let zero = [0u8];
-        let zeror: &[u8] = &zero;
-        let (data, info) = take_until(zeror)(data)?;
-        let (data, _) = tag(zeror)(data)?;
+        let (data, info) = take_until(data, 0x00)?;
+        let (data, _) = tag(data, &[0x00])?;
         Ok((data, NullTerminatedString::from_ascii_bytes(info)))
     }
 }

@@ -1,18 +1,18 @@
 use super::{
     common::{self, CommonRecordInfo, GeneralRecord, Index},
     fields::{
-        common::{FromField, GeneralField},
+        common::{FromField, FromFieldError, GeneralField},
         edid, rgbu,
     },
 };
 use crate::{
     collect_one, dispatch_all, make_single_value_field,
+    parse::PResult,
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FromRecord, TypeNamed};
+use common::{FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
-use nom::IResult;
 use std::io::Write;
 
 /// Holds information about actions
@@ -33,7 +33,7 @@ impl<'data> TypeNamed<'static> for AACTRecord<'data> {
     }
 }
 impl<'data> FromRecord<'data> for AACTRecord<'data> {
-    fn from_record(record: GeneralRecord<'data>) -> IResult<&[u8], AACTRecord<'data>> {
+    fn from_record(record: GeneralRecord<'data>) -> PResult<AACTRecord<'data>, FromRecordError> {
         let mut edid_index = None;
         let mut cname_index = None;
         let mut fields = Vec::new();
@@ -122,7 +122,7 @@ type EDID<'data> = edid::EDID<'data>;
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], CNAM, color, rgbu::RGBU);
 impl FromField<'_> for CNAM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, color) = rgbu::RGBU::parse(field.data)?;
         Ok((data, Self { color }))
     }

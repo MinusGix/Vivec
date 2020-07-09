@@ -1,7 +1,9 @@
 use super::BStrw;
-use crate::util::{DataSize, Writable};
+use crate::{
+    parse::{le_u16, take, PResult},
+    util::{DataSize, Writable},
+};
 use bstr::{BStr, ByteSlice};
-use nom::{bytes::complete::take, number::complete::le_u16, IResult};
 
 /// A string that is prefixed by 2 bytes for the length
 /// and is encoded in Windows-1252
@@ -21,10 +23,10 @@ impl<'data> Windows1252String16<'data> {
         Windows1252String16::new(value.as_bstr())
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], Windows1252String16> {
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
         // TODO: test that this is little endian
         let (data, length) = le_u16(data)?;
-        let (data, string) = take(length)(data)?;
+        let (data, string) = take(data, length as usize)?;
         Ok((data, Windows1252String16::from_ascii_bytes(string)))
     }
 }

@@ -1,23 +1,19 @@
 use super::{
     common::{self, CommonRecordInfo, GeneralRecord, Index},
     fields::{
-        common::{write_field_header, FromField, GeneralField, FIELDH_SIZE},
+        common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
         edid, vmad,
     },
 };
 use crate::{
     collect_many, collect_one, dispatch_all, make_empty_field, make_formid_field,
     make_single_value_field,
+    parse::{le_f32, le_u32, take, PResult},
     util::{byte, DataSize, Position3, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FormId, FromRecord, TypeNamed};
+use common::{FormId, FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
-use nom::{
-    bytes::complete::take,
-    number::complete::{le_f32, le_u32},
-    IResult,
-};
 use std::io::Write;
 
 // TODO: this uses up a good amount of memory to hold all these indices. We could turn most of these into functions, and simply verify at parse time that there isn't multiple.
@@ -87,7 +83,7 @@ impl<'data> TypeNamed<'static> for ACHRRecord<'data> {
     }
 }
 impl<'data> FromRecord<'data> for ACHRRecord<'data> {
-    fn from_record(record: GeneralRecord<'data>) -> IResult<&[u8], Self> {
+    fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError> {
         let mut editor_id_index: Option<Index> = None;
         let mut script_index: Option<Index> = None;
         let mut base_npc_index: Option<Index> = None; // has to have value
@@ -290,7 +286,7 @@ make_formid_field!(XEZN);
 
 make_single_value_field!([Debug, Copy, Clone, PartialEq], XPRD, idle_time, f32);
 impl FromField<'_> for XPRD {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, idle_time) = le_f32(field.data)?;
         Ok((data, XPRD { idle_time }))
     }
@@ -302,7 +298,7 @@ make_formid_field!(INAM);
 
 make_single_value_field!([Debug, Clone], PDTO, topic_type, TopicType, 'data);
 impl<'data> FromField<'data> for PDTO<'data> {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, topic_type) = le_u32(field.data)?;
         let (data, topic_type) = TopicType::parse(data, topic_type)?;
         Ok((data, PDTO { topic_type }))
@@ -318,14 +314,14 @@ pub enum TopicType<'data> {
     Subtype(&'data BStr),
 }
 impl<'data> TopicType<'data> {
-    pub fn parse(data: &'data [u8], topic_type: u32) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8], topic_type: u32) -> PResult<Self> {
         match topic_type {
             0 => {
                 let (data, formid) = FormId::parse(data)?;
                 Ok((data, TopicType::Ref(formid)))
             }
             1 => {
-                let (data, text) = take(4usize)(data)?;
+                let (data, text) = take(data, 4)?;
                 let text = text.as_bstr();
                 Ok((data, TopicType::Subtype(text)))
             }
@@ -378,7 +374,7 @@ make_single_value_field!(
     'data
 );
 impl<'data> FromField<'data> for XRGD<'data> {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         Ok((&[], Self { data: field.data }))
     }
 }
@@ -395,7 +391,7 @@ impl TypeNamed<'static> for XRGB {
     }
 }
 impl FromField<'_> for XRGB {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, f1) = le_f32(field.data)?;
         let (data, f2) = le_f32(data)?;
         let (data, f3) = le_f32(data)?;
@@ -427,7 +423,7 @@ make_single_value_field!(
     LevelModifier
 );
 impl FromField<'_> for XLCM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, modifier) = le_u32(field.data)?;
         let modifier = match LevelModifier::from_u32(modifier) {
             Some(x) => x,
@@ -491,8 +487,8 @@ impl Writable for LevelModifier {
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], XAPD, flags, XAPDFlags);
 impl FromField<'_> for XAPD {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
-        let (data, flags) = take(1usize)(field.data)?;
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
+        let (data, flags) = take(field.data, 1)?;
         Ok((
             data,
             XAPD {
@@ -542,7 +538,7 @@ impl TypeNamed<'static> for XAPR {
     }
 }
 impl FromField<'_> for XAPR {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, formid) = FormId::parse(field.data)?;
         let (data, delay) = le_f32(data)?;
         Ok((data, XAPR { formid, delay }))
@@ -588,7 +584,7 @@ impl TypeNamed<'static> for XESP {
     }
 }
 impl FromField<'_> for XESP {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, parent) = FormId::parse(field.data)?;
         let (data, flags) = le_u32(data)?;
         let flags = XESPFlags::new(flags);
@@ -670,7 +666,7 @@ impl TypeNamed<'static> for XLKR {
     }
 }
 impl FromField<'_> for XLKR {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, keyword) = FormId::parse(field.data)?;
         let (data, reference) = FormId::parse(data)?;
         Ok((data, XLKR { keyword, reference }))
@@ -703,7 +699,7 @@ make_formid_field!(XLRL);
 
 make_single_value_field!([Debug, Copy, Clone, PartialEq], XSCL, scale, f32);
 impl FromField<'_> for XSCL {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, scale) = le_f32(field.data)?;
         Ok((data, XSCL { scale }))
     }
@@ -723,7 +719,7 @@ impl TypeNamed<'static> for DATA {
     }
 }
 impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, x) = le_f32(field.data)?;
         let (data, y) = le_f32(data)?;
         let (data, z) = le_f32(data)?;

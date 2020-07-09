@@ -1,18 +1,15 @@
 use bstr::{BStr, BString, ByteSlice, ByteVec, B};
+use derive_more::From;
 use groups::{
-    common::{FromGeneralGroup, FromTopGroup, GeneralGroup, GroupType},
+    common::{FromGeneralGroup, FromTopGroup, FromTopGroupError, GeneralGroup, GroupType},
     Group,
 };
-use nom::{
-    bytes::complete::{tag, take},
-    combinator::peek,
-    multi::many0,
-    IResult,
-};
-use records::common::{FromRecord, GeneralRecord, TypeNamed};
+use parse::{many, take, PResult, ParseError};
+use records::common::{FromRecord, FromRecordError, GeneralRecord, TypeNamed};
 use util::{DataSize, StaticDataSize, Writable};
 
 mod groups;
+mod parse;
 mod records;
 mod util;
 
@@ -22,8 +19,15 @@ pub enum GeneralTop<'data> {
     Group(GeneralGroup<'data>),
 }
 
-fn parse_top_level<'data>(data: &'data [u8]) -> IResult<&[u8], GeneralTop<'data>> {
-    let (_, name) = take(4usize)(data)?;
+#[derive(Debug, Clone, From)]
+enum GeneralError<'data> {
+    TopGroup(FromTopGroupError<'data>),
+    Record(FromRecordError<'data>),
+    ParseError(ParseError<'data>),
+}
+
+fn parse_top_level<'data>(data: &'data [u8]) -> PResult<GeneralTop<'data>, GeneralError<'data>> {
+    let (_, name) = take(data, 4)?;
     // GRUPs have different format than records, and parsing them as records would be dreadfully incorrect.
     if name == b"GRUP" {
         let (data, group) = GeneralGroup::parse(data)?;
@@ -60,8 +64,8 @@ impl<'data> DataSize for Top<'data> {
     }
 }
 
-fn parse_file(data: &[u8]) -> IResult<&[u8], Vec<Top>> {
-    let (data, general_top) = many0(parse_top_level)(data)?;
+fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
+    let (data, general_top) = many(data, parse_top_level)?;
 
     println!(
         "After parsing general top level, there was {} bytes left",

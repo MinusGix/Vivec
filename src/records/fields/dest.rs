@@ -1,19 +1,14 @@
 use super::{
-    common::{write_field_header, FromField, GeneralField, FIELDH_SIZE},
+    common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
     modl,
 };
 use crate::{
     make_empty_field, make_model_fields, make_single_value_field,
+    parse::{le_u16, le_u32, take, PResult},
     records::common::{get_field, FormId, NullTerminatedString, TypeNamed},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use nom::{
-    bytes::complete::take,
-    multi::many0,
-    number::complete::{le_u16, le_u32},
-    IResult,
-};
 use std::io::Write;
 
 /// Destruction data
@@ -28,10 +23,10 @@ pub struct DEST {
     pub unknown: u16,
 }
 impl FromField<'_> for DEST {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, health) = le_u32(field.data)?;
-        let (data, count) = take(1usize)(data)?;
-        let (data, flag) = take(1usize)(data)?;
+        let (data, count) = take(data, 1usize)?;
+        let (data, flag) = take(data, 1usize)?;
         let (data, unknown) = le_u16(data)?;
         Ok((
             data,
@@ -82,9 +77,9 @@ pub struct DSTD {
     pub debris_count: u32,
 }
 impl FromField<'_> for DSTD {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], DSTD> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, health_percent) = le_u16(field.data)?;
-        let (data, damage_stage) = take(1usize)(data)?;
+        let (data, damage_stage) = take(data, 1usize)?;
         let damage_stage = damage_stage[0];
         let (data, flags) = DSTDFlags::parse(data)?;
         let (data, self_damage_rate) = le_u32(data)?;
@@ -146,8 +141,8 @@ pub struct DSTDFlags {
     pub flags: u8,
 }
 impl DSTDFlags {
-    pub fn parse(data: &[u8]) -> IResult<&[u8], Self> {
-        let (data, flags) = take(1usize)(data)?;
+    pub fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = take(data, 1)?;
         Ok((data, Self { flags: flags[0] }))
     }
 
@@ -192,7 +187,7 @@ impl<'data> DESTCollection<'data> {
     pub fn collect<I>(
         destruction: DEST,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> IResult<&'data [u8], Self>
+    ) -> PResult<Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {
@@ -242,7 +237,7 @@ impl<'data> DSTDCollection<'data> {
     pub fn collect<I>(
         stage: DSTD,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> IResult<&'data [u8], Self>
+    ) -> PResult<Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {

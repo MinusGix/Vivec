@@ -1,5 +1,7 @@
-use crate::util::{StaticDataSize, Writable};
-use nom::{bytes::complete::take, IResult};
+use crate::{
+    parse::{take, PResult},
+    util::{StaticDataSize, Writable},
+};
 
 /// Version Control User ID
 pub type VUID = u8;
@@ -30,11 +32,11 @@ impl VersionControlInfo {
         }
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], VersionControlInfo> {
-        let (data, day) = take(1usize)(data)?;
-        let (data, month) = take(1usize)(data)?;
-        let (data, last_user_id) = take(1usize)(data)?;
-        let (data, current_user_id) = take(1usize)(data)?;
+    pub fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, day) = take(data, 1usize)?;
+        let (data, month) = take(data, 1usize)?;
+        let (data, last_user_id) = take(data, 1usize)?;
+        let (data, current_user_id) = take(data, 1usize)?;
         Ok((
             data,
             VersionControlInfo::new(day[0], month[0], last_user_id[0], current_user_id[0]),

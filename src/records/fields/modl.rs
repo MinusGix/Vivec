@@ -1,10 +1,10 @@
 use crate::{
     make_single_value_field,
+    parse::{le_u32, take, PResult},
     records::common::FormId,
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use nom::{bytes::complete::take, number::complete::le_u32, IResult};
 
 #[derive(Debug, Clone)]
 pub struct AlternateTexture<'data> {
@@ -15,9 +15,9 @@ pub struct AlternateTexture<'data> {
     index_3d: u32,
 }
 impl<'data> AlternateTexture<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], Self> {
+    pub fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, size) = le_u32(data)?;
-        let (data, name_3d) = take(size as usize)(data)?;
+        let (data, name_3d) = take(data, size as usize)?;
         let name_3d = name_3d.as_bstr();
         let (data, texture_set) = FormId::parse(data)?;
         let (data, index_3d) = le_u32(data)?;
@@ -66,7 +66,7 @@ macro_rules! make_model_fields {
             'data
         );
         impl<'data> $crate::records::fields::common::FromField<'data> for $modl<'data> {
-            fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> nom::IResult<&[u8], Self> {
+            fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>> {
                 let (data, filename) = $crate::records::common::NullTerminatedString::parse(field.data)?;
                 assert_eq!(data.len(), 0);
                 Ok((data, Self { filename }))
@@ -88,12 +88,12 @@ macro_rules! make_model_fields {
             'data
         );
         impl<'data> $crate::records::fields::common::FromField<'data> for $modt<'data> {
-            fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> nom::IResult<&[u8], Self> {
+            fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>> {
                 if field.data.len() % 12 != 0 {
                     panic!("Expected {} to have data that is a multiple of 12!", stringify!($modt));
                 }
 
-                let (data, positions) = take(field.data.len())(field.data)?;
+                let (data, positions) = $crate::parse::take(field.data, field.data.len())?;
                 assert_eq!(data.len(), 0);
                 Ok((data, Self { positions }))
             }
@@ -104,10 +104,9 @@ macro_rules! make_model_fields {
             pub alternate_textures: Vec<$crate::records::fields::modl::AlternateTexture<'data>>,
         }
         impl<'data> $crate::records::fields::common::FromField<'data> for $mods<'data> {
-            fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> nom::IResult<&[u8], Self> {
-                let (data, count) = nom::number::complete::le_u32(field.data)?;
-                let (data, alternate_textures) =
-                    nom::multi::count($crate::records::fields::modl::AlternateTexture::parse, count as usize)(data)?;
+            fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>> {
+                let (data, count) = $crate::parse::le_u32(field.data)?;
+                let (data, alternate_textures) = $crate::parse::count(data, $crate::records::fields::modl::AlternateTexture::parse, count as usize)?;
                 assert_eq!(data.len(), 0);
                 Ok((data, Self { alternate_textures }))
             }
@@ -145,7 +144,7 @@ macro_rules! make_model_fields {
             pub alternate_textures: Option<$mods<'data>>,
         }
         impl<'data> $collection<'data> {
-            pub fn collect<I>(modl: $modl<'data>, field_iter: &mut std::iter::Peekable<I>) -> nom::IResult<&'data [u8], Self>
+            pub fn collect<I>(modl: $modl<'data>, field_iter: &mut std::iter::Peekable<I>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>>
             where
                 I: std::iter::Iterator<Item = $crate::records::fields::common::GeneralField<'data>>,
             {

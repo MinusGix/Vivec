@@ -1,12 +1,10 @@
-use super::fields::common::{FromField, GeneralField};
-use crate::util::{byte, DataSize, StaticDataSize, Writable};
-use bstr::{BStr, ByteSlice};
-use nom::{
-    bytes::complete::take,
-    multi::many0,
-    number::complete::{le_u16, le_u32},
-    IResult,
+use super::fields::common::{FieldName, FromField, FromFieldError, GeneralField};
+use crate::{
+    parse::{le_u16, le_u32, many, take, PResult, ParseError},
+    util::{byte, DataSize, StaticDataSize, Writable},
 };
+use bstr::{BStr, ByteSlice};
+use derive_more::From;
 use std::io::Write;
 
 pub type Index = usize;
@@ -312,8 +310,8 @@ impl<'data> TypeNamed<'data> for GeneralRecord<'data> {
     }
 }
 impl<'data> GeneralRecord<'data> {
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], GeneralRecord<'data>> {
-        let (data, type_name) = take(4usize)(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<GeneralRecord<'data>> {
+        let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
 
         let (data, record_data_size) = le_u32(data)?;
@@ -325,8 +323,8 @@ impl<'data> GeneralRecord<'data> {
         let (data, unknown) = le_u16(data)?;
 
         // TODO: verify it's all been used
-        let (data, record_data) = take(record_data_size)(data)?;
-        let (_, fields) = many0(GeneralField::parse)(record_data)?;
+        let (data, record_data) = take(data, record_data_size as usize)?;
+        let (_, fields) = many(record_data, GeneralField::parse)?;
 
         Ok((
             data,
@@ -372,23 +370,33 @@ impl<'data> DataSize for GeneralRecord<'data> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, From)]
+pub enum FromRecordError<'data> {
+    /// An unexpected end of fields
+    UnexpectedEnd(),
+    /// Expected a certain type of field
+    ExpectedField(FieldName<'data>),
+    FromField(FromFieldError<'data>),
+    ParseError(ParseError<'data>),
+}
+
 pub trait FromRecord<'data>: Sized {
-    fn from_record(record: GeneralRecord<'data>) -> IResult<&[u8], Self>;
+    fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError<'data>>;
 }
 
 pub trait TypeNamed<'aleph>: Sized {
     fn type_name(&self) -> &'aleph BStr;
 }
 
-pub fn get_field<'data, I, F>(
+pub fn get_field<'aleph, 'bet, I, F>(
     field_iter: &mut std::iter::Peekable<I>,
-    expected_field_name: &BStr,
-) -> nom::IResult<&'data [u8], Option<F>>
+    expected_field_name: &'bet BStr,
+) -> PResult<'aleph, Option<F>, FromFieldError<'aleph>>
 where
-    I: Iterator<Item = GeneralField<'data>>,
-    F: FromField<'data>,
+    I: std::iter::Iterator<Item = GeneralField<'aleph>>,
+    F: FromField<'aleph>,
 {
-    let next_field: Option<&GeneralField<'data>> = field_iter.peek();
+    let next_field: Option<&GeneralField<'aleph>> = field_iter.peek();
     // TODO: hardcoding field name = bad
     if next_field
         .map(|x| x.type_name())
@@ -397,7 +405,7 @@ where
     {
         Ok((&[], None))
     } else {
-        let field: GeneralField<'data> = field_iter.next().unwrap();
+        let field: GeneralField<'aleph> = field_iter.next().unwrap();
         assert_eq!(field.type_name(), expected_field_name);
         let (_, field): (_, F) = F::from_field(field)?;
         Ok((&[], Some(field)))

@@ -1,21 +1,18 @@
 use super::{
     common::{self, CommonRecordInfo, GeneralRecord, Index},
     fields::{
-        common::{write_field_header, FromField, GeneralField, FIELDH_SIZE},
+        common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
         edid, modl, obnd,
     },
 };
 use crate::{
     collect_one, dispatch_all, make_formid_field, make_single_value_field,
+    parse::{le_u16, le_u32, PResult},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FromRecord, TypeNamed};
+use common::{FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
-use nom::{
-    number::complete::{le_u16, le_u32},
-    IResult,
-};
 use std::io::Write;
 
 /// Contains information on addon nodes
@@ -47,7 +44,7 @@ impl<'data> TypeNamed<'static> for ADDNRecord<'data> {
     }
 }
 impl<'data> FromRecord<'data> for ADDNRecord<'data> {
-    fn from_record(record: GeneralRecord<'data>) -> IResult<&[u8], ADDNRecord<'data>> {
+    fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError> {
         let mut edid_index = None;
         let mut obnd_index = None;
         let mut modl_collection_index = None;
@@ -179,7 +176,7 @@ make_single_value_field!(
     u32
 );
 impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], DATA> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, addon_node_index) = le_u32(field.data)?;
         Ok((data, DATA { addon_node_index }))
     }
@@ -214,7 +211,7 @@ impl DNAM {
     }
 }
 impl FromField<'_> for DNAM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], DNAM> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, particle_cap) = le_u16(field.data)?;
         let (data, flags) = le_u16(data)?;
         Ok((data, DNAM::new(particle_cap, flags)))

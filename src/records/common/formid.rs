@@ -1,5 +1,7 @@
-use crate::util::{byte, StaticDataSize, Writable};
-use nom::{number::complete::le_u32, IResult};
+use crate::{
+    parse::{le_u32, PResult},
+    util::{byte, StaticDataSize, Writable},
+};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct FormId {
@@ -14,7 +16,7 @@ impl FormId {
         FormId::new(byte::as_u32(&id))
     }
 
-    pub fn parse(data: &[u8]) -> IResult<&[u8], FormId> {
+    pub fn parse(data: &[u8]) -> PResult<FormId> {
         let (data, id) = le_u32(data)?;
         Ok((data, FormId::new(id)))
     }

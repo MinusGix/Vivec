@@ -1,9 +1,10 @@
 use crate::{
+    parse::{le_u16, take, PResult, ParseError},
     records::common::TypeNamed,
     util::{fmt_data, DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use nom::{bytes::complete::take, number::complete::le_u16, IResult};
+use derive_more::From;
 use std::io::Write;
 
 /// Always four characters
@@ -45,11 +46,14 @@ impl<'data> GeneralField<'data> {
         GeneralField { type_name, data }
     }
 
-    pub fn parse(data: &'data [u8]) -> IResult<&[u8], GeneralField<'data>> {
-        let (data, type_name) = take(4usize)(data)?;
+    pub fn parse(data: &'data [u8]) -> PResult<GeneralField<'data>> {
+        let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
+        println!("Type name: {}", type_name);
         let (data, field_data_size) = le_u16(data)?;
-        let (data, field_data) = take(field_data_size)(data)?;
+        println!("Field data size: {}", field_data_size);
+        let (data, field_data) = take(data, field_data_size as usize)?;
+        println!("Field data parsed size: {}", field_data.len());
 
         Ok((data, GeneralField::new(type_name, field_data)))
     }
@@ -101,8 +105,15 @@ mod test {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, From)]
+pub enum FromFieldError<'data> {
+    /// An unexpected end of fields
+    UnexpectedEnd,
+    ParseError(ParseError<'data>),
+}
+
 pub trait FromField<'data>: Sized {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self>;
+    fn from_field(field: GeneralField<'data>) -> PResult<'data, Self, FromFieldError>;
 }
 
 #[macro_export]
@@ -117,7 +128,7 @@ macro_rules! make_empty_field {
             }
         }
         impl $crate::records::fields::common::FromField<'_> for $name {
-            fn from_field(field: GeneralField<'_>) -> IResult<&[u8], Self> {
+            fn from_field(field: GeneralField<'_>) -> crate::parse::PResult<Self, crate::records::fields::common::FromFieldError> {
                 if (!field.data.is_empty()) {
                     // TODO: include name
                     panic!("Field's size was not zero! This was not expected!");

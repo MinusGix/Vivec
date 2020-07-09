@@ -1,20 +1,17 @@
 use super::{
     common::{
-        CommonRecordInfo, FormId, FromRecord, GeneralRecord, Index, NullTerminatedString, TypeNamed,
+        CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
+        NullTerminatedString, TypeNamed,
     },
-    fields::common::{write_field_header, FromField, GeneralField, FIELDH_SIZE},
+    fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
 use crate::{
     collect_one, dispatch_all, make_single_value_field,
+    parse::{le_f32, le_u32, le_u64, many, PResult},
     util::{fmt_data, DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use derive_more::From;
-use nom::{
-    multi::many0,
-    number::complete::{le_f32, le_u32, le_u64},
-    IResult,
-};
 use std::io::Write;
 
 #[derive(Debug, Clone)]
@@ -70,7 +67,7 @@ impl<'data> TypeNamed<'static> for TES4Record<'data> {
 }
 
 impl<'data> FromRecord<'data> for TES4Record<'data> {
-    fn from_record(record: GeneralRecord<'data>) -> IResult<&[u8], TES4Record> {
+    fn from_record(record: GeneralRecord<'data>) -> PResult<TES4Record, FromRecordError<'data>> {
         let mut fields = Vec::new();
         let mut hedr_index: Option<Index> = None;
         let mut cnam_index: Option<Index> = None;
@@ -96,7 +93,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
                     // TODO: support MAST entries without DATA after? in case they become completely removed, since they're currently unused
                     let field = match field_iter.next() {
                         Some(field) => field,
-                        None => panic!("ILE: Expected field after MAST field"),
+                        None => return Err(FromRecordError::UnexpectedEnd()),
                     };
                     if field.type_name().as_ref() != b"DATA" {
                         panic!("ILE: Expected data field after MAST field");
@@ -274,7 +271,7 @@ impl TypeNamed<'static> for HEDR {
     }
 }
 impl FromField<'_> for HEDR {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], HEDR> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, version) = le_f32(field.data)?;
         let (data, record_count) = le_u32(data)?;
         let (data, next_object_id) = le_u32(data)?;
@@ -317,7 +314,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], CNAM,
     'data
 );
 impl<'data> FromField<'data> for CNAM<'data> {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, author) = NullTerminatedString::parse(field.data)?;
         Ok((data, CNAM { author }))
     }
@@ -330,7 +327,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], SNAM,
     'data
 );
 impl<'data> FromField<'data> for SNAM<'data> {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], Self> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, description) = NullTerminatedString::parse(field.data)?;
         Ok((data, SNAM { description }))
     }
@@ -345,7 +342,7 @@ make_single_value_field!(
     'data
 );
 impl<'data> FromField<'data> for MAST<'data> {
-    fn from_field(field: GeneralField<'data>) -> IResult<&[u8], MAST> {
+    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, filename) = NullTerminatedString::parse(field.data)?;
         Ok((data, MAST { filename }))
     }
@@ -353,7 +350,7 @@ impl<'data> FromField<'data> for MAST<'data> {
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], DATA, value, u64);
 impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], DATA> {
+    fn from_field(field: GeneralField<'_>) -> PResult<DATA, FromFieldError> {
         // TODO: verify that was all
         let (data, value) = le_u64(field.data)?;
         Ok((data, DATA { value }))
@@ -370,8 +367,8 @@ make_single_value_field!(
     Vec<FormId>
 );
 impl FromField<'_> for ONAM {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], ONAM> {
-        let (field_data, overrides) = many0(FormId::parse)(field.data)?;
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
+        let (field_data, overrides) = many(field.data, FormId::parse)?;
         Ok((field_data, ONAM { overrides }))
     }
 }
@@ -385,7 +382,7 @@ impl std::fmt::Debug for ONAM {
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], INTV, value, u32);
 impl FromField<'_> for INTV {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], INTV> {
+    fn from_field(field: GeneralField<'_>) -> PResult<INTV, FromFieldError> {
         // TODO: verify that was all
         let (data, value) = le_u32(field.data)?;
         Ok((data, INTV { value }))
@@ -394,7 +391,7 @@ impl FromField<'_> for INTV {
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], INCC, value, u32);
 impl FromField<'_> for INCC {
-    fn from_field(field: GeneralField<'_>) -> IResult<&[u8], INCC> {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         // TODO: verify that was all
         let (data, value) = le_u32(field.data)?;
         Ok((data, INCC { value }))
