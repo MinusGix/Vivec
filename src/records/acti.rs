@@ -5,7 +5,7 @@ use super::{
     },
     fields::{
         common::{FromField, FromFieldError, GeneralField},
-        dest, edid, modl, obnd, rgbu, vmad,
+        dest, edid, full, modl, obnd, rgbu, vmad,
     },
 };
 use crate::{
@@ -79,7 +79,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                     collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; vmad_index)
                 }
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
-                b"FULL" => collect_one!(FULL, field => fields; full_index),
+                b"FULL" => collect_one!(full::FULL, field => fields; full_index),
                 b"MODL" => {
                     let (_, modl) = modl::MODL::from_field(field)?;
                     let (_, col) = modl::MODLCollection::collect(modl, &mut field_iter)?;
@@ -190,7 +190,7 @@ pub enum ACTIField<'data> {
     EDID(EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
     OBND(obnd::OBND),
-    FULL(FULL),
+    FULL(full::FULL),
     MODLCollection(modl::MODLCollection<'data>),
     DESTCollection(dest::DESTCollection<'data>),
     KSIZ(KSIZ),
@@ -293,20 +293,6 @@ impl<'data> Writable for ACTIField<'data> {
 }
 
 pub type EDID<'data> = edid::EDID<'data>;
-
-make_single_value_field!(
-    /// Ingame name
-    [Debug, Clone, Eq, PartialEq],
-    FULL,
-    name,
-    LString
-);
-impl FromField<'_> for FULL {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, name) = LString::parse(field.data)?;
-        Ok((data, Self { name }))
-    }
-}
 
 make_single_value_field!(
     /// 'Keyword Size'

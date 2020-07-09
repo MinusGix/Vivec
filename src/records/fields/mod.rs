@@ -1,5 +1,6 @@
 pub mod dest;
 pub mod edid;
+pub mod full;
 pub mod modl;
 pub mod obnd;
 pub mod vmad;
