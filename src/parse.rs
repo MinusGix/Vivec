@@ -4,6 +4,15 @@ pub enum ParseError<'data> {
     ExpectedBytes(&'data [u8]),
     /// Expected bytes and found EOF
     UnexpectedEOF,
+    /// Expected there to be no more bytes
+    ExpectedEOF,
+    // TODO: have some way to know what the value you got was
+    /// There was an invalid value for an enumeration
+    InvalidEnumerationValue,
+    /// Expected an exact number of bytes
+    ExpectedExact { expected: usize, found: usize },
+    /// More general version of above, for when the amount of bytes was invalid
+    InvalidByteCount { found: usize },
 }
 
 pub type PResult<'data, V, E = ParseError<'data>> = Result<(&'data [u8], V), E>;

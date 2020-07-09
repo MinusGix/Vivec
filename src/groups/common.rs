@@ -327,7 +327,7 @@ macro_rules! make_simple_top_group {
             fn from_top_group(group: $crate::groups::common::TopGroup<$life>) -> crate::parse::PResult<Self, crate::groups::common::FromTopGroupError> {
                 let (data, records) = crate::parse::many(group.data, $crate::records::common::GeneralRecord::parse)?;
                 if !data.is_empty() {
-                    panic!("Did not consume all data when parsing records from group data!");
+                    return Err(crate::parse::ParseError::ExpectedEOF.into());
                 }
 
                 let records = $crate::groups::common::convert_all_records_into(records)?;

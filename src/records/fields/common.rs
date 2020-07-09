@@ -49,11 +49,8 @@ impl<'data> GeneralField<'data> {
     pub fn parse(data: &'data [u8]) -> PResult<GeneralField<'data>> {
         let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
-        println!("Type name: {}", type_name);
         let (data, field_data_size) = le_u16(data)?;
-        println!("Field data size: {}", field_data_size);
         let (data, field_data) = take(data, field_data_size as usize)?;
-        println!("Field data parsed size: {}", field_data.len());
 
         Ok((data, GeneralField::new(type_name, field_data)))
     }
@@ -109,6 +106,8 @@ mod test {
 pub enum FromFieldError<'data> {
     /// An unexpected end of fields
     UnexpectedEnd,
+    /// Expected Field
+    ExpectedSpecificField(FieldName<'data>),
     ParseError(ParseError<'data>),
 }
 
@@ -128,10 +127,12 @@ macro_rules! make_empty_field {
             }
         }
         impl $crate::records::fields::common::FromField<'_> for $name {
-            fn from_field(field: GeneralField<'_>) -> crate::parse::PResult<Self, crate::records::fields::common::FromFieldError> {
+            fn from_field(field: GeneralField<'_>) -> crate::parse::PResult<Self, $crate::records::fields::common::FromFieldError> {
                 if (!field.data.is_empty()) {
-                    // TODO: include name
-                    panic!("Field's size was not zero! This was not expected!");
+                    return Err($crate::parse::ParseError::ExpectedExact {
+                        expected: 0,
+                        found: field.data.len()
+                    }.into())
                 }
                 Ok((&[], Self {}))
             }

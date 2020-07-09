@@ -8,7 +8,7 @@ use super::{
 use crate::{
     collect_many, collect_one, dispatch_all, make_empty_field, make_formid_field,
     make_single_value_field,
-    parse::{le_f32, le_u32, take, PResult},
+    parse::{le_f32, le_u32, take, PResult, ParseError},
     util::{byte, DataSize, Position3, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -325,7 +325,7 @@ impl<'data> TopicType<'data> {
                 let text = text.as_bstr();
                 Ok((data, TopicType::Subtype(text)))
             }
-            _ => panic!("Unknown topic type!"),
+            _ => Err(ParseError::InvalidEnumerationValue),
         }
     }
 
@@ -427,7 +427,7 @@ impl FromField<'_> for XLCM {
         let (data, modifier) = le_u32(field.data)?;
         let modifier = match LevelModifier::from_u32(modifier) {
             Some(x) => x,
-            None => panic!("Unknown level modifier value!"),
+            None => return Err(ParseError::InvalidEnumerationValue.into()),
         };
         Ok((
             data,

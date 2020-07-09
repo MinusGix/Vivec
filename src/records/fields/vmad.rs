@@ -1,7 +1,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     dispatch_all,
-    parse::{count, le_f32, le_i16, le_i32, le_u16, le_u32, many, take, PResult},
+    parse::{count, le_f32, le_i16, le_i32, le_u16, le_u32, many, take, PResult, ParseError},
     records::common::{FormId, TypeNamed, Windows1252String16},
     util::{DataSize, StaticDataSize, Writable},
 };
@@ -161,11 +161,13 @@ impl VMADObjectFormat {
     pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = le_u16(data)?;
         let object_format = match VMADObjectFormat::try_from(value) {
-			Ok(format) => format,
-			Err(e) => match e {
-				VMADObjectFormatConversionError::InvalidValue => panic!("Invalid value for VMAD primary section object_format, this value is unsupported"),
-			}
-		};
+            Ok(format) => format,
+            Err(e) => match e {
+                VMADObjectFormatConversionError::InvalidValue => {
+                    return Err(ParseError::InvalidEnumerationValue);
+                }
+            },
+        };
         Ok((data, object_format))
     }
 
@@ -347,7 +349,7 @@ impl<'data> VMADPropertyData<'data> {
                 Ok((data, VMADPropertyData::BooleanArray(items)))
             }
 
-            x => panic!(format!("Unknown VMAD property data type: {}", x)),
+            _ => Err(ParseError::InvalidEnumerationValue),
         }
     }
 
@@ -555,10 +557,7 @@ impl<'data> DataSize for VMADProperty<'data> {
 pub struct NoFragments {}
 impl<'data> ParseFragments<'data> for NoFragments {
     fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
-        panic!(
-            "Tried parsing fragments, when there should be none, there was: {} bytes left",
-            data.len()
-        );
+        Err(ParseError::ExpectedEOF)
     }
 }
 impl StaticDataSize for NoFragments {

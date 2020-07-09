@@ -27,7 +27,9 @@ pub use windows1252_string::*;
 macro_rules! collect_one {
     ($s:ty, $field:expr => $fields:expr; $o:expr) => {{
         if $o.is_some() {
-            panic!("Unexpected [name] field when already found [name] in TES4 record!");
+            return Err($crate::records::common::FromRecordError::DuplicateField(
+                stringify!($s).as_bytes().as_bstr(),
+            ));
         }
 
         let (_, result) = <$s>::from_field($field)?;
@@ -370,14 +372,33 @@ impl<'data> DataSize for GeneralRecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, From)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FromRecordError<'data> {
     /// An unexpected end of fields
-    UnexpectedEnd(),
+    UnexpectedEnd,
     /// Expected a certain type of field
     ExpectedField(FieldName<'data>),
+    /// Expected field, but got
+    ExpectedFieldGot {
+        expected: FieldName<'data>,
+        found: FieldName<'data>,
+    },
+    /// Found a field, which we didn't expect to find
+    UnexpectedField(FieldName<'data>),
+    /// Found a field which was a duplicate. Note: This doesn't mean they're the same, but we only expected to find one.
+    DuplicateField(FieldName<'data>),
     FromField(FromFieldError<'data>),
     ParseError(ParseError<'data>),
+}
+impl<'data> From<FromFieldError<'data>> for FromRecordError<'data> {
+    fn from(err: FromFieldError<'data>) -> Self {
+        Self::FromField(err)
+    }
+}
+impl<'data> From<ParseError<'data>> for FromRecordError<'data> {
+    fn from(err: ParseError<'data>) -> Self {
+        Self::ParseError(err)
+    }
 }
 
 pub trait FromRecord<'data>: Sized {

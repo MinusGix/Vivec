@@ -254,7 +254,7 @@ impl<'data> DSTDCollection<'data> {
         let (_, dstf) = get_field(field_iter, b"DSTF".as_bstr())?;
         let dstf = match dstf {
             Some(dstf) => dstf,
-            None => panic!("Failed to find closing DSTF field!"),
+            None => return Err(FromFieldError::ExpectedSpecificField(b"DSTF".as_bstr())),
         };
 
         Ok((

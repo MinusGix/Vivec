@@ -97,10 +97,13 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                     let (_, ksiz) = KSIZ::from_field(field)?;
                     let field = match field_iter.next() {
                         Some(field) => field,
-                        None => panic!("ILE: expected field after KSIZ field"),
+                        None => return Err(FromRecordError::ExpectedField(b"KWDA".as_bstr())),
                     };
                     if field.type_name().as_ref() != b"KWDA" {
-                        panic!("ILE expected KWDA field after KSIZ field");
+                        return Err(FromRecordError::ExpectedFieldGot {
+                            expected: b"KWDA".as_bstr(),
+                            found: field.type_name(),
+                        });
                     }
                     let (_, kwda) = KWDA::from_field(field, ksiz.amount)?;
                     keyword_data_index = Some((fields.len(), fields.len() + 1));

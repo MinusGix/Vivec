@@ -90,7 +90,9 @@ macro_rules! make_model_fields {
         impl<'data> $crate::records::fields::common::FromField<'data> for $modt<'data> {
             fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>> {
                 if field.data.len() % 12 != 0 {
-                    panic!("Expected {} to have data that is a multiple of 12!", stringify!($modt));
+                    return Err($crate::parse::ParseError::InvalidByteCount {
+                        found: field.data.len()
+                    }.into());
                 }
 
                 let (data, positions) = $crate::parse::take(field.data, field.data.len())?;

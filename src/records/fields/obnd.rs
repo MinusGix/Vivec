@@ -1,6 +1,6 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    parse::{le_i16, PResult},
+    parse::{le_i16, PResult, ParseError},
     records::common::TypeNamed,
     util::{Position3, StaticDataSize, Writable},
 };
@@ -21,14 +21,20 @@ impl TypeNamed<'static> for OBND {
     }
 }
 impl OBND {
+    const EXPECTED_BYTES: usize = 12;
+
     pub fn new(p1: Position3<i16>, p2: Position3<i16>) -> OBND {
         OBND { p1, p2 }
     }
 }
 impl FromField<'_> for OBND {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        if field.data.len() != 12 {
-            panic!("Expected 12 bytes for OBND field!");
+        if field.data.len() != OBND::EXPECTED_BYTES {
+            return Err(ParseError::ExpectedExact {
+                expected: OBND::EXPECTED_BYTES,
+                found: field.data.len(),
+            }
+            .into());
         }
 
         let data = field.data;

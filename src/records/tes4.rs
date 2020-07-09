@@ -93,7 +93,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
                     // TODO: support MAST entries without DATA after? in case they become completely removed, since they're currently unused
                     let field = match field_iter.next() {
                         Some(field) => field,
-                        None => return Err(FromRecordError::UnexpectedEnd()),
+                        None => return Err(FromRecordError::UnexpectedEnd),
                     };
                     if field.type_name().as_ref() != b"DATA" {
                         panic!("ILE: Expected data field after MAST field");
