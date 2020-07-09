@@ -5,7 +5,7 @@ use super::{
     },
     fields::{
         common::{FromField, FromFieldError, GeneralField},
-        dest, edid, full, modl, obnd, rgbu, vmad,
+        dest, edid, full, kwda, modl, obnd, rgbu, vmad,
     },
 };
 use crate::{
@@ -93,7 +93,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                     fields.push(ACTIField::DESTCollection(col));
                 }
                 b"KSIZ" => {
-                    let (_, ksiz) = KSIZ::from_field(field)?;
+                    let (_, ksiz) = kwda::KSIZ::from_field(field)?;
                     let field = match field_iter.next() {
                         Some(field) => field,
                         None => return Err(FromRecordError::ExpectedField(b"KWDA".as_bstr())),
@@ -104,7 +104,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                             found: field.type_name(),
                         });
                     }
-                    let (_, kwda) = KWDA::from_field(field, ksiz.amount)?;
+                    let (_, kwda) = kwda::KWDA::from_field(field, ksiz.amount)?;
                     keyword_data_index = Some((fields.len(), fields.len() + 1));
                     fields.push(ksiz.into());
                     fields.push(kwda.into());
@@ -193,8 +193,8 @@ pub enum ACTIField<'data> {
     FULL(full::FULL),
     MODLCollection(modl::MODLCollection<'data>),
     DESTCollection(dest::DESTCollection<'data>),
-    KSIZ(KSIZ),
-    KWDA(KWDA),
+    KSIZ(kwda::KSIZ),
+    KWDA(kwda::KWDA),
     PNAM(PNAM),
     SNAM(SNAM),
     VNAM(VNAM),
@@ -293,37 +293,6 @@ impl<'data> Writable for ACTIField<'data> {
 }
 
 pub type EDID<'data> = edid::EDID<'data>;
-
-make_single_value_field!(
-    /// 'Keyword Size'
-    [Debug, Copy, Clone, Eq, PartialEq],
-    KSIZ,
-    /// Number of formids in following KWDA record
-    amount,
-    u32
-);
-impl FromField<'_> for KSIZ {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, amount) = le_u32(field.data)?;
-        Ok((data, Self { amount }))
-    }
-}
-
-make_single_value_field!(
-    /// 'Keyword array'
-    [Debug, Clone],
-    KWDA,
-    /// FormId array that points to keywords (?)
-    keywords,
-    Vec<FormId>
-);
-//impl FromField<'_> for KWDA {
-impl KWDA {
-    fn from_field(field: GeneralField<'_>, amount: u32) -> PResult<Self, FromFieldError> {
-        let (data, keywords) = count(field.data, FormId::parse, amount as usize)?;
-        Ok((data, Self { keywords }))
-    }
-}
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], PNAM, color, rgbu::RGBU);
 impl FromField<'_> for PNAM {
