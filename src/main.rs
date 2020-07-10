@@ -91,6 +91,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
                     b"ADDN" => records::addn::ADDNRecord::from_record(record)?.1.into(),
                     b"ACHR" => records::achr::ACHRRecord::from_record(record)?.1.into(),
                     b"ACTI" => records::acti::ACTIRecord::from_record(record)?.1.into(),
+                    b"ALCH" => records::alch::ALCHRecord::from_record(record)?.1.into(),
                     _ => record.into(),
                 }));
             }
@@ -126,6 +127,7 @@ fn main() {
                     Record::ADDN(addn) => println!("ADDN: {:?}", addn),
                     Record::ACHR(achr) => println!("ACHR: {:?}", achr),
                     Record::ACTI(acti) => println!("ACTI: {:?}", acti),
+                    Record::ALCH(alch) => println!("ALCH: {:?}", alch),
                     Record::Unknown(record) => println!("U({}),", record.type_name()), // println!("Unknown record: {:?}", record),
                 },
                 Top::Group(group) => match group {
