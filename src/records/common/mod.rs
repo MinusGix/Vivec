@@ -371,6 +371,11 @@ impl<'data> DataSize for GeneralRecord<'data> {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum ConversionError<T> {
+    InvalidEnumerationValue(T),
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum FromRecordError<'data> {
     /// An unexpected end of fields
