@@ -507,7 +507,10 @@ impl TypeNamed<'static> for EnchantedEffectCollection {
 }
 impl DataSize for EnchantedEffectCollection {
     fn data_size(&self) -> usize {
-        self.effect_id.data_size() + self.item.data_size() + self.conditions.data_size()
+        self.enchanted_item.data_size()
+            + self.effect_id.data_size()
+            + self.item.data_size()
+            + self.conditions.data_size()
     }
 }
 impl Writable for EnchantedEffectCollection {
@@ -519,5 +522,117 @@ impl Writable for EnchantedEffectCollection {
         self.effect_id.write_to(w)?;
         self.item.write_to(w)?;
         self.conditions.write_to(w)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{assert_size_output, util::Position3};
+
+    #[test]
+    fn test_data() {
+        let weight = 4.29;
+        let data = DATA { weight };
+        let body = assert_size_output!(data);
+        assert_eq!(&body[..4], b"DATA");
+        assert_eq!(body[4..6], 4u16.to_le_bytes());
+        assert_eq!(body[6..], (weight as f32).to_le_bytes());
+    }
+
+    #[test]
+    fn test_enit() {
+        let enit = ENIT {
+            potion_value: 0xaabbccdd,
+            flags: ENITFlags { flags: 0x0 },
+            addiction: FormId::new(0x1054aa66),
+            addiction_chance: 0x1,
+            use_sound: FormId::new(0x0),
+        };
+        let body = assert_size_output!(enit);
+        assert_eq!(&body[..4], b"ENIT");
+        assert_eq!(body[4..6], ((4 + 4 + 4 + 4 + 4) as u16).to_le_bytes());
+        assert_eq!(
+            &body[6..],
+            [
+                0xdd, 0xcc, 0xbb, 0xaa, 0x0, 0x0, 0x0, 0x0, 0x66, 0xaa, 0x54, 0x10, 0x1, 0x0, 0x0,
+                0x0, 0x0, 0x0, 0x0, 0x0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_efit() {
+        let magnitude = 4.29;
+        let area_of_effect = 5529582;
+        let duration = 5;
+        let efit = EFIT {
+            magnitude,
+            area_of_effect,
+            duration,
+        };
+        let body = assert_size_output!(efit);
+        assert_eq!(&body[..4], b"EFIT");
+        assert_eq!(body[4..6], ((4 + 4 + 4) as u16).to_le_bytes());
+        assert_eq!(&body[6..10], magnitude.to_le_bytes());
+        assert_eq!(&body[10..14], area_of_effect.to_le_bytes());
+        assert_eq!(&body[14..18], duration.to_le_bytes());
+    }
+
+    #[test]
+    fn test_alch_record() {
+        let alch = ALCHRecord {
+            common: CommonRecordInfo::test_default(),
+            editor_id_index: 0,
+            object_bounds_index: 1,
+            full_name_index: None,
+            keyword_collection_index: None,
+            model_collection_index: None,
+            icon_index: None,
+            message_icon_index: None,
+            pickup_sound_index: None,
+            drop_sound_index: None,
+            weight_index: 2,
+            enchanted_effect_collection_index: 3,
+            fields: vec![
+                ALCHField::EDID(edid::EDID {
+                    id: NullTerminatedString::new(b"Testing".as_bstr()),
+                }),
+                ALCHField::OBND(obnd::OBND {
+                    p1: Position3::new(5, 10, 40),
+                    p2: Position3::new(9, 30, 80),
+                }),
+                ALCHField::DATA(DATA { weight: 4.29 }),
+                ALCHField::EnchantedEffectCollection(EnchantedEffectCollection {
+                    enchanted_item: ENIT {
+                        potion_value: 400,
+                        flags: ENITFlags { flags: 0 },
+                        addiction: FormId::new(0),
+                        addiction_chance: 0,
+                        use_sound: FormId::new(0),
+                    },
+                    effect_id: EFID::new(FormId::new(0)),
+                    item: EFIT {
+                        magnitude: 1.0,
+                        area_of_effect: 10,
+                        duration: 0,
+                    },
+                    conditions: vec![ctda::CTDA {
+                        op_data: ctda::OperatorData {
+                            operator: ctda::Operator::Equal,
+                            flags: ctda::Flags::from_byte(0),
+                        },
+                        unknown: [4, 5, 6],
+                        comp_value: ctda::ComparisonValue::Float(4.3),
+                        function_index: 0,
+                        padding: 0,
+                        run_on: ctda::RunOn::Target,
+                        reference: FormId::new(0),
+                        unknown2: -1,
+                    }],
+                }),
+            ],
+        };
+        assert_size_output!(alch);
     }
 }
