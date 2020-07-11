@@ -19,7 +19,7 @@ use std::io::Write;
 /// Note: There can be an Empty-Record of this.
 #[derive(Debug, Clone)]
 pub struct AACTRecord<'data> {
-    common_info: CommonRecordInfo,
+    common: CommonRecordInfo,
     /// Editor id. EDID
     action_name_index: Option<Index>,
     /// RGB colors. CNAM (RGBU)
@@ -48,7 +48,7 @@ impl<'data> FromRecord<'data> for AACTRecord<'data> {
         Ok((
             &[],
             AACTRecord {
-                common_info: record.common_info,
+                common: record.common,
                 action_name_index: edid_index,
                 rgb_index: cname_index,
                 fields,
@@ -65,7 +65,7 @@ impl<'data> DataSize for AACTRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
         4 + // data size len
-        self.common_info.data_size() +
+        self.common.data_size() +
         self.fields.data_size()
     }
 }
@@ -77,7 +77,7 @@ impl<'data> Writable for AACTRecord<'data> {
         self.type_name().write_to(w)?;
         // TODO: assert that size fits within a u32
         (self.fields_size() as u32).write_to(w)?;
-        self.common_info.write_to(w)?;
+        self.common.write_to(w)?;
         for field in self.fields.iter() {
             field.write_to(w)?;
         }
@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn aactrecord_check() {
         let record = AACTRecord {
-            common_info: CommonRecordInfo::test_default(),
+            common: CommonRecordInfo::test_default(),
             action_name_index: None,
             rgb_index: None,
             fields: vec![],

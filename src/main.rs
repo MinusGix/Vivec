@@ -78,7 +78,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
         match top {
             GeneralTop::Record(record) => {
                 if record
-                    .common_info
+                    .common
                     .flags
                     .is(records::common::record_flag::COMPRESSED)
                 {

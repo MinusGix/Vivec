@@ -113,7 +113,7 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
         Ok((
             &[],
             ALCHRecord {
-                common: record.common_info,
+                common: record.common,
                 editor_id_index,
                 object_bounds_index,
                 full_name_index,

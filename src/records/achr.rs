@@ -23,7 +23,7 @@ use std::io::Write;
 /// doing things.
 #[derive(Debug, Clone)]
 pub struct ACHRRecord<'data> {
-    pub common_info: CommonRecordInfo,
+    pub common: CommonRecordInfo,
     /// EDID
     pub editor_id_index: Option<Index>,
     /// VMAD
@@ -147,7 +147,7 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
         Ok((
             &[],
             ACHRRecord {
-                common_info: record.common_info,
+                common: record.common,
                 editor_id_index,
                 script_index,
                 base_npc_index,
@@ -189,7 +189,7 @@ impl<'data> Writable for ACHRRecord<'data> {
         self.type_name().write_to(w)?;
         // TODO: assert that size fits within a u32
         (self.fields_size() as u32).write_to(w)?;
-        self.common_info.write_to(w)?;
+        self.common.write_to(w)?;
         for field in self.fields.iter() {
             field.write_to(w)?;
         }
@@ -200,7 +200,7 @@ impl<'data> DataSize for ACHRRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
             4 + // data size
-            self.common_info.data_size() +
+            self.common.data_size() +
             self.fields_size()
     }
 }

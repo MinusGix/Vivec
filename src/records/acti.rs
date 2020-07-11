@@ -118,7 +118,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
         Ok((
             &[],
             ACTIRecord {
-                common: record.common_info,
+                common: record.common,
 
                 editor_id_index: edid_index,
                 script_index: vmad_index,

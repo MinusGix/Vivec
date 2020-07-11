@@ -20,7 +20,7 @@ use std::io::Write;
 /// Note: there can be an Empty-Record of this
 #[derive(Debug, Clone)]
 pub struct ADDNRecord<'data> {
-    pub common_info: CommonRecordInfo,
+    pub common: CommonRecordInfo,
     /// EDID
     pub editor_id_index: Option<Index>,
     /// OBND
@@ -76,7 +76,7 @@ impl<'data> FromRecord<'data> for ADDNRecord<'data> {
         Ok((
             &[],
             ADDNRecord {
-                common_info: record.common_info,
+                common: record.common,
                 editor_id_index: edid_index,
                 object_bounds_index: obnd_index,
                 model_collection_index: modl_collection_index,
@@ -97,7 +97,7 @@ impl<'data> DataSize for ADDNRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
             4 + // data len
-            self.common_info.data_size() +
+            self.common.data_size() +
             self.fields_size()
     }
 }
@@ -109,7 +109,7 @@ impl<'data> Writable for ADDNRecord<'data> {
         self.type_name().write_to(w)?;
         // TODO: assert size fits within
         (self.fields_size() as u32).write_to(w)?;
-        self.common_info.write_to(w)?;
+        self.common.write_to(w)?;
         for field in self.fields.iter() {
             field.write_to(w)?;
         }

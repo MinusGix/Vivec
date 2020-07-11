@@ -17,7 +17,7 @@ use std::io::Write;
 #[derive(Debug, Clone)]
 /// Header record for mod file
 pub struct TES4Record<'data> {
-    common_info: CommonRecordInfo,
+    common: CommonRecordInfo,
 
     // The usize fields are indices into other_fields
     /// HEDR
@@ -44,7 +44,7 @@ impl<'data> Writable for TES4Record<'data> {
         self.type_name().write_to(w)?;
         // TODO: assert that size fits within a u32
         (self.fields_size() as u32).write_to(w)?;
-        self.common_info.write_to(w)?;
+        self.common.write_to(w)?;
         for field in self.fields.iter() {
             field.write_to(w)?;
         }
@@ -55,7 +55,7 @@ impl<'data> DataSize for TES4Record<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
             4 + // data size
-            self.common_info.data_size() +
+            self.common.data_size() +
             self.fields_size()
     }
 }
@@ -120,7 +120,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
         Ok((
             &[],
             TES4Record {
-                common_info: record.common_info.clone(),
+                common: record.common.clone(),
 
                 header_index: hedr_index,
                 author_index: cnam_index,
@@ -424,7 +424,7 @@ mod tests {
     fn test_tes4() {
         // TODO: it'd be better to have more fields active to be a better test
         let tes4 = TES4Record {
-            common_info: CommonRecordInfo::test_default(),
+            common: CommonRecordInfo::test_default(),
             header_index: 0,
             author_index: None,
             description_index: None,

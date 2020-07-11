@@ -256,7 +256,7 @@ impl CommonRecordInfo {
     }
     /// Extracts the common record information from that record
     pub fn from_field(record: &GeneralRecord<'_>) -> CommonRecordInfo {
-        record.common_info.clone()
+        record.common.clone()
     }
 
     #[cfg(test)]
@@ -300,7 +300,7 @@ impl StaticDataSize for CommonRecordInfo {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct GeneralRecord<'data> {
     pub type_name: RecordName<'data>,
-    pub common_info: CommonRecordInfo,
+    pub common: CommonRecordInfo,
     /// The fields
     /// Stored in data
     pub fields: Vec<GeneralField<'data>>,
@@ -331,7 +331,7 @@ impl<'data> GeneralRecord<'data> {
             data,
             GeneralRecord {
                 type_name,
-                common_info: CommonRecordInfo::new(
+                common: CommonRecordInfo::new(
                     RecordFlags::new(flags),
                     id,
                     version_control_info,
@@ -355,7 +355,7 @@ impl<'data> Writable for GeneralRecord<'data> {
         self.type_name().write_to(w)?;
         // TODO: assert fields_size is u32
         (self.fields_size() as u32).write_to(w)?;
-        self.common_info.write_to(w)?;
+        self.common.write_to(w)?;
         for field in self.fields.iter() {
             field.write_to(w)?;
         }
@@ -366,7 +366,7 @@ impl<'data> DataSize for GeneralRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name.len() +
             4 + // data_size
-            self.common_info.data_size() +
+            self.common.data_size() +
             self.fields_size()
     }
 }
