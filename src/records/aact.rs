@@ -27,12 +27,6 @@ pub struct AACTRecord<'data> {
 
     fields: Vec<AACTField<'data>>,
 }
-impl<'data> AACTRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
-    }
-}
-
 impl<'data> FromRecord<'data> for AACTRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<AACTRecord<'data>, FromRecordError> {
         let mut edid_index = None;
@@ -77,12 +71,9 @@ impl<'data> Writable for AACTRecord<'data> {
     {
         self.type_name().write_to(w)?;
         // TODO: assert that size fits within a u32
-        (self.fields_size() as u32).write_to(w)?;
+        (self.fields.data_size() as u32).write_to(w)?;
         self.common.write_to(w)?;
-        for field in self.fields.iter() {
-            field.write_to(w)?;
-        }
-        Ok(())
+        self.fields.write_to(w)
     }
 }
 

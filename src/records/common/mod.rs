@@ -337,10 +337,6 @@ impl<'data> GeneralRecord<'data> {
             },
         ))
     }
-
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
-    }
 }
 impl<'data> TypeNamed<'data> for GeneralRecord<'data> {
     fn type_name(&self) -> &'data BStr {
@@ -352,7 +348,7 @@ impl<'data> DataSize for GeneralRecord<'data> {
         self.type_name.len() +
             4 + // data_size
             self.common.data_size() +
-            self.fields_size()
+            self.fields.data_size()
     }
 }
 impl<'data> Writable for GeneralRecord<'data> {
@@ -362,12 +358,9 @@ impl<'data> Writable for GeneralRecord<'data> {
     {
         self.type_name().write_to(w)?;
         // TODO: assert fields_size is u32
-        (self.fields_size() as u32).write_to(w)?;
+        (self.fields.data_size() as u32).write_to(w)?;
         self.common.write_to(w)?;
-        for field in self.fields.iter() {
-            field.write_to(w)?;
-        }
-        Ok(())
+        self.fields.write_to(w)
     }
 }
 

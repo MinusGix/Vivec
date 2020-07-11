@@ -52,11 +52,6 @@ pub struct ACTIRecord<'data> {
 
     pub fields: Vec<ACTIField<'data>>,
 }
-impl<'data> ACTIRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
-    }
-}
 impl<'data> FromRecord<'data> for ACTIRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError> {
         let mut edid_index = None;
@@ -155,7 +150,7 @@ impl<'data> DataSize for ACTIRecord<'data> {
         self.type_name().data_size() +
             4 + // data len
             self.common.data_size() +
-            self.fields_size()
+            self.fields.data_size()
     }
 }
 impl<'data> Writable for ACTIRecord<'data> {
@@ -165,12 +160,9 @@ impl<'data> Writable for ACTIRecord<'data> {
     {
         self.type_name().write_to(w)?;
         // TODO: assert size fits within
-        (self.fields_size() as u32).write_to(w)?;
+        (self.fields.data_size() as u32).write_to(w)?;
         self.common.write_to(w)?;
-        for field in self.fields.iter() {
-            field.write_to(w)?;
-        }
-        Ok(())
+        self.fields.write_to(w)
     }
 }
 

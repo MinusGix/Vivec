@@ -45,11 +45,6 @@ pub struct ALCHRecord<'data> {
 
     pub fields: Vec<ALCHField<'data>>,
 }
-impl<'data> ALCHRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
-    }
-}
 impl<'data> FromRecord<'data> for ALCHRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError<'data>> {
         let mut editor_id_index = None;
@@ -137,8 +132,8 @@ impl<'data> DataSize for ALCHRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
 			4 + // data len
-			self.common.data_size() +
-			self.fields_size()
+            self.common.data_size() +
+            self.fields.data_size()
     }
 }
 impl<'data> Writable for ALCHRecord<'data> {
@@ -148,12 +143,9 @@ impl<'data> Writable for ALCHRecord<'data> {
     {
         self.type_name().write_to(w)?;
         // TODO: assert size fits within
-        (self.fields_size() as u32).write_to(w)?;
+        (self.fields.data_size() as u32).write_to(w)?;
         self.common.write_to(w)?;
-        for field in self.fields.iter() {
-            field.write_to(w)?;
-        }
-        Ok(())
+        self.fields.write_to(w)
     }
 }
 

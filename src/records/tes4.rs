@@ -37,10 +37,6 @@ pub struct TES4Record<'data> {
     pub fields: Vec<TES4Field<'data>>,
 }
 impl<'data> TES4Record<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
-    }
-
     pub fn header(&self) -> &HEDR {
         if let TES4Field::HEDR(hedr) = &self.fields[self.header_index] {
             hedr
@@ -185,7 +181,7 @@ impl<'data> DataSize for TES4Record<'data> {
         self.type_name().data_size() +
             4 + // data size
             self.common.data_size() +
-            self.fields_size()
+            self.fields.data_size()
     }
 }
 impl<'data> Writable for TES4Record<'data> {
@@ -195,12 +191,9 @@ impl<'data> Writable for TES4Record<'data> {
     {
         self.type_name().write_to(w)?;
         // TODO: assert that size fits within a u32
-        (self.fields_size() as u32).write_to(w)?;
+        (self.fields.data_size() as u32).write_to(w)?;
         self.common.write_to(w)?;
-        for field in self.fields.iter() {
-            field.write_to(w)?;
-        }
-        Ok(())
+        self.fields.write_to(w)
     }
 }
 
