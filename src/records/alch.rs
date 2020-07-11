@@ -303,12 +303,12 @@ impl<'data> FromField<'data> for DATA {
 #[derive(Debug, Clone)]
 pub struct ENIT {
     /// ?
-    potion_value: u32,
-    flags: ENITFlags,
-    addiction: FormId,
-    addiction_chance: u32,
+    pub potion_value: u32,
+    pub flags: ENITFlags,
+    pub addiction: FormId,
+    pub addiction_chance: u32,
     /// ->SNDR
-    use_sound: FormId,
+    pub use_sound: FormId,
 }
 impl FromField<'_> for ENIT {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
@@ -409,11 +409,11 @@ make_formid_field!(
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EFIT {
-    magnitude: f32,
-    area_of_effect: u32,
+    pub magnitude: f32,
+    pub area_of_effect: u32,
     // TODO: make duration an enum of Instant, and Time/Value/whatever
     /// 0 = instant
-    duration: u32,
+    pub duration: u32,
 }
 // calculate cost of an effect as: effect_base_cost * (magnitude * duration / 10) ** 1.1
 // duration=0 uses it as 10
@@ -457,10 +457,10 @@ impl Writable for EFIT {
 
 #[derive(Debug, Clone)]
 pub struct EnchantedEffectCollection {
-    enchanted_item: ENIT,
-    effect_id: EFID,
-    item: EFIT,
-    conditions: Vec<ctda::CTDA>,
+    pub enchanted_item: ENIT,
+    pub effect_id: EFID,
+    pub item: EFIT,
+    pub conditions: Vec<ctda::CTDA>,
 }
 impl EnchantedEffectCollection {
     pub fn collect<'data, I>(
