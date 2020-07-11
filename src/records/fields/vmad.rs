@@ -2,7 +2,7 @@ use super::common::{write_field_header, FromField, FromFieldError, GeneralField,
 use crate::{
     dispatch_all,
     parse::{count, le_f32, le_i16, le_i32, le_u16, le_u32, many, take, PResult, ParseError},
-    records::common::{FormId, TypeNamed, Windows1252String16},
+    records::common::{ConversionError, FormId, TypeNamed, Windows1252String16},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -143,17 +143,14 @@ pub enum VMADObjectFormat {
     /// 2
     IDEnd,
 }
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum VMADObjectFormatConversionError {
-    InvalidValue,
-}
+type VMADObjectFormatConversionError = ConversionError<u16>;
 impl VMADObjectFormat {
     pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = le_u16(data)?;
         let object_format = match VMADObjectFormat::try_from(value) {
             Ok(format) => format,
             Err(e) => match e {
-                VMADObjectFormatConversionError::InvalidValue => {
+                VMADObjectFormatConversionError::InvalidEnumerationValue(_) => {
                     return Err(ParseError::InvalidEnumerationValue);
                 }
             },
@@ -175,7 +172,7 @@ impl TryFrom<u16> for VMADObjectFormat {
         match value {
             1 => Ok(VMADObjectFormat::IDLead),
             2 => Ok(VMADObjectFormat::IDEnd),
-            _ => Err(Self::Error::InvalidValue),
+            x => Err(Self::Error::InvalidEnumerationValue(x)),
         }
     }
 }
