@@ -156,7 +156,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
         }
 
         let hedr_index =
-            hedr_index.expect("Expected there to be a field named HEDR within TES4 Record");
+            hedr_index.ok_or_else(|| FromRecordError::ExpectedField(b"HEDR".as_bstr()))?;
 
         Ok((
             &[],

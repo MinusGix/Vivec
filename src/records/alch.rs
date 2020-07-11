@@ -99,11 +99,14 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
             }
         }
 
-        let editor_id_index = editor_id_index.expect("Expected EDID field");
-        let object_bounds_index = object_bounds_index.expect("Expected OBND field");
-        let weight_index = weight_index.expect("Expected DATA field");
-        let enchanted_effect_collection_index =
-            enchanted_effect_collection_index.expect("Expected ENIT field and following fields");
+        let editor_id_index =
+            editor_id_index.ok_or_else(|| FromRecordError::ExpectedField(b"EDID".as_bstr()))?;
+        let object_bounds_index =
+            object_bounds_index.ok_or_else(|| FromRecordError::ExpectedField(b"OBND".as_bstr()))?;
+        let weight_index =
+            weight_index.ok_or_else(|| FromRecordError::ExpectedField(b"DATA".as_bstr()))?;
+        let enchanted_effect_collection_index = enchanted_effect_collection_index
+            .ok_or_else(|| FromRecordError::ExpectedField(b"ENIT".as_bstr()))?;
 
         Ok((
             &[],

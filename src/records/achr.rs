@@ -141,8 +141,10 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
             }
         }
 
-        let base_npc_index = base_npc_index.expect("Expected base npc index in ACHR record.");
-        let coords_index = coords_index.expect("Expected coordinates in ACHR record.");
+        let base_npc_index =
+            base_npc_index.ok_or_else(|| FromRecordError::ExpectedField(b"NAME".as_bstr()))?;
+        let coords_index =
+            coords_index.ok_or_else(|| FromRecordError::ExpectedField(b"DATA".as_bstr()))?;
 
         Ok((
             &[],

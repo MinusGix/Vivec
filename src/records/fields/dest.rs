@@ -191,7 +191,8 @@ impl<'data> DESTCollection<'data> {
         let mut stage_data = Vec::new();
         for _ in 0..destruction.count {
             let (_, dstd) = get_field(field_iter, b"DSTD".as_bstr())?;
-            let dstd = dstd.expect("Expected DSTD field");
+            let dstd =
+                dstd.ok_or_else(|| FromFieldError::ExpectedSpecificField(b"DSTD".as_bstr()))?;
             let (_, collection) = DSTDCollection::collect(dstd, field_iter)?;
             stage_data.push(collection);
         }
