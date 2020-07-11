@@ -20,4 +20,4 @@ There is quite a number of records, see the (Record Types)[https://en.uesp.net/w
 
 Contributions are welcome. Currently most of what is needed is more Records being supported, and various todos in the source code being fixed (though, some are more 'think about what to do with this once I have a more complete setup').
 If you want to implement a record, then choose one from later in the list as I am attempting to go through the list in alphabetical order.
-Records and fields that implement `TypeNamed`/`StaticTypeNamed`, `DataSize`/`StaticDataSize`, and `Writable` should do so in that order. Implementations of functions on that record/field/thing that are not trait-related should go before all of those.
+Records and fields that implement `FromField`/`FromRecord`, `TypeNamed`/`StaticTypeNamed`, `DataSize`/`StaticDataSize`, and `Writable` should do so in that order. Implementations of functions on that record/field/thing that are not trait-related should go before all of those.
