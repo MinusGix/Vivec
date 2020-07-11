@@ -85,23 +85,6 @@ impl<'data> std::fmt::Debug for GeneralField<'data> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::GeneralField;
-    use crate::assert_size_output;
-    use bstr::ByteSlice;
-
-    #[test]
-    fn general_field_test() {
-        let field = GeneralField::new(
-            b"NEMO".as_bstr(),
-            &[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc],
-        );
-
-        assert_size_output!(field);
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, From)]
 pub enum FromFieldError<'data> {
     /// An unexpected end of fields
@@ -242,4 +225,21 @@ macro_rules! assert_size_output {
 
         data
     }};
+}
+
+#[cfg(test)]
+mod test {
+    use super::GeneralField;
+    use crate::assert_size_output;
+    use bstr::ByteSlice;
+
+    #[test]
+    fn general_field_test() {
+        let field = GeneralField::new(
+            b"NEMO".as_bstr(),
+            &[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc],
+        );
+
+        assert_size_output!(field);
+    }
 }

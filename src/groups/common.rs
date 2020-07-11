@@ -278,27 +278,6 @@ impl<'data> Writable for GroupType<'data> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::assert_size_output;
-
-    #[test]
-    fn test_grouptype() {
-        let g = GroupType::Top(b"GMST".as_bstr());
-        assert_eq!(g.data_size(), 8);
-        let data = assert_size_output!(g);
-        assert_eq!(data[0], b'G');
-        assert_eq!(data[1], b'M');
-        assert_eq!(data[2], b'S');
-        assert_eq!(data[3], b'T');
-        assert_eq!(data[4], 0x00);
-        assert_eq!(data[5], 0x00);
-        assert_eq!(data[6], 0x00);
-        assert_eq!(data[7], 0x00);
-    }
-}
-
 pub fn convert_all_records_into<'data, T>(
     records: Vec<GeneralRecord<'data>>,
 ) -> Result<Vec<T>, FromTopGroupError>
@@ -367,4 +346,25 @@ macro_rules! make_simple_top_group {
             }
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::assert_size_output;
+
+    #[test]
+    fn test_grouptype() {
+        let g = GroupType::Top(b"GMST".as_bstr());
+        assert_eq!(g.data_size(), 8);
+        let data = assert_size_output!(g);
+        assert_eq!(data[0], b'G');
+        assert_eq!(data[1], b'M');
+        assert_eq!(data[2], b'S');
+        assert_eq!(data[3], b'T');
+        assert_eq!(data[4], 0x00);
+        assert_eq!(data[5], 0x00);
+        assert_eq!(data[6], 0x00);
+        assert_eq!(data[7], 0x00);
+    }
 }
