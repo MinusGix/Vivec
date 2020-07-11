@@ -8,6 +8,11 @@ use crate::{
 use bstr::{BStr, ByteSlice};
 use std::{convert::TryFrom, io::Write};
 
+/// A trait for fragment data, since the interpretation of Fragments (and if they exist at all) is dependent on the parent Record
+pub trait ParseFragments<'data>: Sized + DataSize + Writable {
+    fn parse_fragments(data: &'data [u8]) -> PResult<Self>;
+}
+
 /// Contains Papyrus script data
 #[derive(Debug, Clone)]
 pub struct VMAD<'data, Fragment: ParseFragments<'data>> {
@@ -49,10 +54,6 @@ where
         write_field_header(self, w)?;
         self.primary.write_to(w)
     }
-}
-
-pub trait ParseFragments<'data>: Sized + DataSize + Writable {
-    fn parse_fragments(data: &'data [u8]) -> PResult<Self>;
 }
 
 #[derive(Debug, Clone)]
