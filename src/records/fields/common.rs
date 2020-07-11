@@ -55,14 +55,6 @@ impl<'data> GeneralField<'data> {
         Ok((data, GeneralField::new(type_name, field_data)))
     }
 }
-impl<'data> std::fmt::Debug for GeneralField<'data> {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut res = fmt.debug_struct("GeneralField");
-        res.field("type_name", &self.type_name);
-        fmt_data(&mut res, "data", self.data, 10);
-        res.finish()
-    }
-}
 impl<'data> TypeNamed<'data> for GeneralField<'data> {
     fn type_name(&self) -> &'data BStr {
         self.type_name
@@ -82,6 +74,14 @@ impl<'data> DataSize for GeneralField<'data> {
     /// Only valid when data.len() is less than u16::MAX
     fn data_size(&self) -> usize {
         FIELDH_SIZE + self.data.len()
+    }
+}
+impl<'data> std::fmt::Debug for GeneralField<'data> {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut res = fmt.debug_struct("GeneralField");
+        res.field("type_name", &self.type_name);
+        fmt_data(&mut res, "data", self.data, 10);
+        res.finish()
     }
 }
 

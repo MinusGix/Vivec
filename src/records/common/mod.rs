@@ -211,17 +211,17 @@ impl RecordFlags {
         (self.flags & flag) != 0
     }
 }
+impl StaticDataSize for RecordFlags {
+    fn static_data_size() -> usize {
+        u32::static_data_size()
+    }
+}
 impl Writable for RecordFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
         T: Write,
     {
         self.flags.write_to(w)
-    }
-}
-impl StaticDataSize for RecordFlags {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
     }
 }
 
@@ -275,6 +275,15 @@ impl CommonRecordInfo {
         }
     }
 }
+impl StaticDataSize for CommonRecordInfo {
+    fn static_data_size() -> usize {
+        RecordFlags::static_data_size()
+            + u32::static_data_size() // id
+            + VersionControlInfo::static_data_size()
+            + u16::static_data_size() // version
+            + u16::static_data_size() // unknown
+    }
+}
 impl Writable for CommonRecordInfo {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -287,15 +296,6 @@ impl Writable for CommonRecordInfo {
         self.unknown.write_to(w)
     }
 }
-impl StaticDataSize for CommonRecordInfo {
-    fn static_data_size() -> usize {
-        RecordFlags::static_data_size()
-            + u32::static_data_size() // id
-            + VersionControlInfo::static_data_size()
-            + u16::static_data_size() // version
-            + u16::static_data_size() // unknown
-    }
-}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct GeneralRecord<'data> {
@@ -304,11 +304,6 @@ pub struct GeneralRecord<'data> {
     /// The fields
     /// Stored in data
     pub fields: Vec<GeneralField<'data>>,
-}
-impl<'data> TypeNamed<'data> for GeneralRecord<'data> {
-    fn type_name(&self) -> &'data BStr {
-        self.type_name
-    }
 }
 impl<'data> GeneralRecord<'data> {
     pub fn parse(data: &'data [u8]) -> PResult<GeneralRecord<'data>> {
@@ -347,6 +342,19 @@ impl<'data> GeneralRecord<'data> {
         self.fields.iter().fold(0, |acc, x| acc + x.data_size())
     }
 }
+impl<'data> TypeNamed<'data> for GeneralRecord<'data> {
+    fn type_name(&self) -> &'data BStr {
+        self.type_name
+    }
+}
+impl<'data> DataSize for GeneralRecord<'data> {
+    fn data_size(&self) -> usize {
+        self.type_name.len() +
+            4 + // data_size
+            self.common.data_size() +
+            self.fields_size()
+    }
+}
 impl<'data> Writable for GeneralRecord<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -360,14 +368,6 @@ impl<'data> Writable for GeneralRecord<'data> {
             field.write_to(w)?;
         }
         Ok(())
-    }
-}
-impl<'data> DataSize for GeneralRecord<'data> {
-    fn data_size(&self) -> usize {
-        self.type_name.len() +
-            4 + // data_size
-            self.common.data_size() +
-            self.fields_size()
     }
 }
 

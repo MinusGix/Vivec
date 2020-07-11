@@ -77,9 +77,9 @@ pub struct ACHRRecord<'data> {
 
     fields: Vec<ACHRField<'data>>,
 }
-impl<'data> TypeNamed<'static> for ACHRRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
-        b"ACHR".as_bstr()
+impl<'data> ACHRRecord<'data> {
+    pub fn fields_size(&self) -> usize {
+        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
     }
 }
 impl<'data> FromRecord<'data> for ACHRRecord<'data> {
@@ -176,9 +176,9 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
         ))
     }
 }
-impl<'data> ACHRRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
+impl<'data> TypeNamed<'static> for ACHRRecord<'data> {
+    fn type_name(&self) -> &'static BStr {
+        b"ACHR".as_bstr()
     }
 }
 impl<'data> Writable for ACHRRecord<'data> {
@@ -247,6 +247,20 @@ impl<'data> TypeNamed<'data> for ACHRField<'data> {
         )
     }
 }
+impl<'data> DataSize for ACHRField<'data> {
+    fn data_size(&self) -> usize {
+        dispatch_all!(
+            ACHRField,
+            self,
+            [
+                EDID, VMAD, NAME, XEZN, XPRD, XPPA, INAM, PDTO, XRGD, XRGB, XLCM, XAPD, XAPR, XLRT,
+                XHOR, XESP, XOWN, XLCN, XLKR, XIS2, XLRL, XSCL, DATA, Unknown
+            ],
+            x,
+            { x.data_size() }
+        )
+    }
+}
 impl<'data> Writable for ACHRField<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -261,20 +275,6 @@ impl<'data> Writable for ACHRField<'data> {
             ],
             x,
             { x.write_to(w) }
-        )
-    }
-}
-impl<'data> DataSize for ACHRField<'data> {
-    fn data_size(&self) -> usize {
-        dispatch_all!(
-            ACHRField,
-            self,
-            [
-                EDID, VMAD, NAME, XEZN, XPRD, XPPA, INAM, PDTO, XRGD, XRGB, XLCM, XAPD, XAPR, XLRT,
-                XHOR, XESP, XOWN, XLCN, XLKR, XIS2, XLRL, XSCL, DATA, Unknown
-            ],
-            x,
-            { x.data_size() }
         )
     }
 }
@@ -530,16 +530,16 @@ pub struct XAPR {
     formid: FormId,
     delay: f32,
 }
-impl TypeNamed<'static> for XAPR {
-    fn type_name(&self) -> &'static BStr {
-        b"XAPR".as_bstr()
-    }
-}
 impl FromField<'_> for XAPR {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, formid) = FormId::parse(field.data)?;
         let (data, delay) = le_f32(data)?;
         Ok((data, XAPR { formid, delay }))
+    }
+}
+impl TypeNamed<'static> for XAPR {
+    fn type_name(&self) -> &'static BStr {
+        b"XAPR".as_bstr()
     }
 }
 impl StaticDataSize for XAPR {
@@ -576,17 +576,17 @@ pub struct XESP {
     parent: FormId,
     flags: XESPFlags,
 }
-impl TypeNamed<'static> for XESP {
-    fn type_name(&self) -> &'static BStr {
-        b"XESP".as_bstr()
-    }
-}
 impl FromField<'_> for XESP {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, parent) = FormId::parse(field.data)?;
         let (data, flags) = le_u32(data)?;
         let flags = XESPFlags::new(flags);
         Ok((data, XESP { parent, flags }))
+    }
+}
+impl TypeNamed<'static> for XESP {
+    fn type_name(&self) -> &'static BStr {
+        b"XESP".as_bstr()
     }
 }
 impl StaticDataSize for XESP {
@@ -658,16 +658,16 @@ pub struct XLKR {
     /// TODO: better name: target?
     reference: FormId,
 }
-impl TypeNamed<'static> for XLKR {
-    fn type_name(&self) -> &'static BStr {
-        b"XLKR".as_bstr()
-    }
-}
 impl FromField<'_> for XLKR {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, keyword) = FormId::parse(field.data)?;
         let (data, reference) = FormId::parse(data)?;
         Ok((data, XLKR { keyword, reference }))
+    }
+}
+impl TypeNamed<'static> for XLKR {
+    fn type_name(&self) -> &'static BStr {
+        b"XLKR".as_bstr()
     }
 }
 impl StaticDataSize for XLKR {
@@ -711,11 +711,6 @@ pub struct DATA {
     /// in radians
     rotation: Position3<f32>,
 }
-impl TypeNamed<'static> for DATA {
-    fn type_name(&self) -> &'static BStr {
-        b"DATA".as_bstr()
-    }
-}
 impl FromField<'_> for DATA {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, x) = le_f32(field.data)?;
@@ -731,6 +726,11 @@ impl FromField<'_> for DATA {
                 rotation: Position3::new(rx, ry, rz),
             },
         ))
+    }
+}
+impl TypeNamed<'static> for DATA {
+    fn type_name(&self) -> &'static BStr {
+        b"DATA".as_bstr()
     }
 }
 impl StaticDataSize for DATA {

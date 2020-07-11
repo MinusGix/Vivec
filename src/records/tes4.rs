@@ -36,105 +36,6 @@ pub struct TES4Record<'data> {
     /// Note: any modificatons of this will have to be matched in the other fields!
     pub fields: Vec<TES4Field<'data>>,
 }
-impl<'data> Writable for TES4Record<'data> {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        self.type_name().write_to(w)?;
-        // TODO: assert that size fits within a u32
-        (self.fields_size() as u32).write_to(w)?;
-        self.common.write_to(w)?;
-        for field in self.fields.iter() {
-            field.write_to(w)?;
-        }
-        Ok(())
-    }
-}
-impl<'data> DataSize for TES4Record<'data> {
-    fn data_size(&self) -> usize {
-        self.type_name().data_size() +
-            4 + // data size
-            self.common.data_size() +
-            self.fields_size()
-    }
-}
-
-impl<'data> TypeNamed<'static> for TES4Record<'data> {
-    fn type_name(&self) -> &'static BStr {
-        b"TES4".as_bstr()
-    }
-}
-
-impl<'data> FromRecord<'data> for TES4Record<'data> {
-    fn from_record(record: GeneralRecord<'data>) -> PResult<TES4Record, FromRecordError<'data>> {
-        let mut fields = Vec::new();
-        let mut hedr_index: Option<Index> = None;
-        let mut cnam_index: Option<Index> = None;
-        let mut snam_index: Option<Index> = None;
-        let mut mast_data: Vec<(Index, Index)> = Vec::new();
-        let mut onam_index: Option<Index> = None;
-        let mut intv_index: Option<Index> = None;
-        let mut incc_index: Option<Index> = None;
-
-        // TODO: These need to check if it's used up all the space.
-        let mut field_iter = record.fields.into_iter();
-        while let Some(field) = field_iter.next() {
-            match field.type_name.as_ref() {
-                b"HEDR" => collect_one!(HEDR, field => fields; hedr_index),
-                b"CNAM" => collect_one!(CNAM, field => fields; cnam_index),
-                b"SNAM" => collect_one!(SNAM, field => fields; snam_index),
-                b"ONAM" => collect_one!(ONAM, field => fields; onam_index),
-                b"INTV" => collect_one!(INTV, field => fields; intv_index),
-                b"INCC" => collect_one!(INCC, field => fields; incc_index),
-                b"MAST" => {
-                    let (_, mast) = MAST::from_field(field)?;
-                    // Get the required next DATA field
-                    // TODO: support MAST entries without DATA after? in case they become completely removed, since they're currently unused
-                    let field = match field_iter.next() {
-                        Some(field) => field,
-                        None => return Err(FromRecordError::UnexpectedEnd),
-                    };
-                    if field.type_name().as_ref() != b"DATA" {
-                        panic!("ILE: Expected data field after MAST field");
-                    }
-                    let (_, data_field) = DATA::from_field(field)?;
-
-                    let indices = (fields.len(), fields.len() + 1);
-                    fields.push(mast.into());
-                    fields.push(data_field.into());
-
-                    mast_data.push(indices);
-                }
-                b"DATA" => {
-                    // TODO: continue, just add this to the list
-                    panic!("[WARN] Found DATA field in TES4 that did not have a MAST before it.");
-                }
-                _ => fields.push(TES4Field::Unknown(field)),
-            }
-        }
-
-        let hedr_index =
-            hedr_index.expect("Expected there to be a field named HEDR within TES4 Record");
-
-        Ok((
-            &[],
-            TES4Record {
-                common: record.common.clone(),
-
-                header_index: hedr_index,
-                author_index: cnam_index,
-                description_index: snam_index,
-                mast_data_indices: mast_data,
-                overrides_index: onam_index,
-                internal_version_index: intv_index,
-                unknown_incc_index: incc_index,
-                fields,
-            },
-        ))
-    }
-}
-
 impl<'data> TES4Record<'data> {
     pub fn fields_size(&self) -> usize {
         self.fields.iter().fold(0, |acc, x| acc + x.data_size())
@@ -206,6 +107,102 @@ impl<'data> TES4Record<'data> {
         }
     }
 }
+impl<'data> FromRecord<'data> for TES4Record<'data> {
+    fn from_record(record: GeneralRecord<'data>) -> PResult<TES4Record, FromRecordError<'data>> {
+        let mut fields = Vec::new();
+        let mut hedr_index: Option<Index> = None;
+        let mut cnam_index: Option<Index> = None;
+        let mut snam_index: Option<Index> = None;
+        let mut mast_data: Vec<(Index, Index)> = Vec::new();
+        let mut onam_index: Option<Index> = None;
+        let mut intv_index: Option<Index> = None;
+        let mut incc_index: Option<Index> = None;
+
+        // TODO: These need to check if it's used up all the space.
+        let mut field_iter = record.fields.into_iter();
+        while let Some(field) = field_iter.next() {
+            match field.type_name.as_ref() {
+                b"HEDR" => collect_one!(HEDR, field => fields; hedr_index),
+                b"CNAM" => collect_one!(CNAM, field => fields; cnam_index),
+                b"SNAM" => collect_one!(SNAM, field => fields; snam_index),
+                b"ONAM" => collect_one!(ONAM, field => fields; onam_index),
+                b"INTV" => collect_one!(INTV, field => fields; intv_index),
+                b"INCC" => collect_one!(INCC, field => fields; incc_index),
+                b"MAST" => {
+                    let (_, mast) = MAST::from_field(field)?;
+                    // Get the required next DATA field
+                    // TODO: support MAST entries without DATA after? in case they become completely removed, since they're currently unused
+                    let field = match field_iter.next() {
+                        Some(field) => field,
+                        None => return Err(FromRecordError::UnexpectedEnd),
+                    };
+                    if field.type_name().as_ref() != b"DATA" {
+                        panic!("ILE: Expected data field after MAST field");
+                    }
+                    let (_, data_field) = DATA::from_field(field)?;
+
+                    let indices = (fields.len(), fields.len() + 1);
+                    fields.push(mast.into());
+                    fields.push(data_field.into());
+
+                    mast_data.push(indices);
+                }
+                b"DATA" => {
+                    // TODO: continue, just add this to the list
+                    panic!("[WARN] Found DATA field in TES4 that did not have a MAST before it.");
+                }
+                _ => fields.push(TES4Field::Unknown(field)),
+            }
+        }
+
+        let hedr_index =
+            hedr_index.expect("Expected there to be a field named HEDR within TES4 Record");
+
+        Ok((
+            &[],
+            TES4Record {
+                common: record.common.clone(),
+
+                header_index: hedr_index,
+                author_index: cnam_index,
+                description_index: snam_index,
+                mast_data_indices: mast_data,
+                overrides_index: onam_index,
+                internal_version_index: intv_index,
+                unknown_incc_index: incc_index,
+                fields,
+            },
+        ))
+    }
+}
+impl<'data> TypeNamed<'static> for TES4Record<'data> {
+    fn type_name(&self) -> &'static BStr {
+        b"TES4".as_bstr()
+    }
+}
+impl<'data> DataSize for TES4Record<'data> {
+    fn data_size(&self) -> usize {
+        self.type_name().data_size() +
+            4 + // data size
+            self.common.data_size() +
+            self.fields_size()
+    }
+}
+impl<'data> Writable for TES4Record<'data> {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.type_name().write_to(w)?;
+        // TODO: assert that size fits within a u32
+        (self.fields_size() as u32).write_to(w)?;
+        self.common.write_to(w)?;
+        for field in self.fields.iter() {
+            field.write_to(w)?;
+        }
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone, From)]
 pub enum TES4Field<'data> {
@@ -230,6 +227,17 @@ impl<'data> TypeNamed<'data> for TES4Field<'data> {
         )
     }
 }
+impl<'data> DataSize for TES4Field<'data> {
+    fn data_size(&self) -> usize {
+        dispatch_all!(
+            TES4Field,
+            self,
+            [HEDR, CNAM, SNAM, ONAM, INTV, INCC, MAST, DATA, Unknown],
+            x,
+            { x.data_size() }
+        )
+    }
+}
 impl<'data> Writable for TES4Field<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -244,17 +252,6 @@ impl<'data> Writable for TES4Field<'data> {
         )
     }
 }
-impl<'data> DataSize for TES4Field<'data> {
-    fn data_size(&self) -> usize {
-        dispatch_all!(
-            TES4Field,
-            self,
-            [HEDR, CNAM, SNAM, ONAM, INTV, INCC, MAST, DATA, Unknown],
-            x,
-            { x.data_size() }
-        )
-    }
-}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct HEDR {
@@ -264,11 +261,6 @@ pub struct HEDR {
     pub record_count: u32,
     /// Next available object id
     pub next_object_id: u32,
-}
-impl TypeNamed<'static> for HEDR {
-    fn type_name(&self) -> &'static BStr {
-        b"HEDR".as_bstr()
-    }
 }
 impl FromField<'_> for HEDR {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
@@ -285,6 +277,11 @@ impl FromField<'_> for HEDR {
                 next_object_id,
             },
         ))
+    }
+}
+impl TypeNamed<'static> for HEDR {
+    fn type_name(&self) -> &'static BStr {
+        b"HEDR".as_bstr()
     }
 }
 impl StaticDataSize for HEDR {

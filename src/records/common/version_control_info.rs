@@ -43,6 +43,14 @@ impl VersionControlInfo {
         ))
     }
 }
+impl StaticDataSize for VersionControlInfo {
+    fn static_data_size() -> usize {
+        u8::static_data_size() // day
+            + u8::static_data_size() // month
+            + VUID::static_data_size() // last_user_id
+            + VUID::static_data_size() // current_user_id
+    }
+}
 impl Writable for VersionControlInfo {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -52,14 +60,6 @@ impl Writable for VersionControlInfo {
         self.month.write_to(w)?;
         self.last_user_id.write_to(w)?;
         self.current_user_id.write_to(w)
-    }
-}
-impl StaticDataSize for VersionControlInfo {
-    fn static_data_size() -> usize {
-        u8::static_data_size() // day
-            + u8::static_data_size() // month
-            + VUID::static_data_size() // last_user_id
-            + VUID::static_data_size() // current_user_id
     }
 }
 

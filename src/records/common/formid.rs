@@ -25,17 +25,17 @@ impl FormId {
         self.id.to_le_bytes()
     }
 }
+impl StaticDataSize for FormId {
+    fn static_data_size() -> usize {
+        4
+    }
+}
 impl Writable for FormId {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
         T: std::io::Write,
     {
         self.id.write_to(w)
-    }
-}
-impl StaticDataSize for FormId {
-    fn static_data_size() -> usize {
-        4
     }
 }
 

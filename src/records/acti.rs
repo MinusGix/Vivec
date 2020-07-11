@@ -52,6 +52,11 @@ pub struct ACTIRecord<'data> {
 
     pub fields: Vec<ACTIField<'data>>,
 }
+impl<'data> ACTIRecord<'data> {
+    pub fn fields_size(&self) -> usize {
+        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
+    }
+}
 impl<'data> FromRecord<'data> for ACTIRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError> {
         let mut edid_index = None;
@@ -143,11 +148,6 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
 impl<'data> TypeNamed<'static> for ACTIRecord<'data> {
     fn type_name(&self) -> &'static BStr {
         b"ACTI".as_bstr()
-    }
-}
-impl<'data> ACTIRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
     }
 }
 impl<'data> DataSize for ACTIRecord<'data> {

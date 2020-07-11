@@ -27,11 +27,12 @@ pub struct AACTRecord<'data> {
 
     fields: Vec<AACTField<'data>>,
 }
-impl<'data> TypeNamed<'static> for AACTRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
-        b"AACT".as_bstr()
+impl<'data> AACTRecord<'data> {
+    pub fn fields_size(&self) -> usize {
+        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
     }
 }
+
 impl<'data> FromRecord<'data> for AACTRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<AACTRecord<'data>, FromRecordError> {
         let mut edid_index = None;
@@ -56,9 +57,9 @@ impl<'data> FromRecord<'data> for AACTRecord<'data> {
         ))
     }
 }
-impl<'data> AACTRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
+impl<'data> TypeNamed<'static> for AACTRecord<'data> {
+    fn type_name(&self) -> &'static BStr {
+        b"AACT".as_bstr()
     }
 }
 impl<'data> DataSize for AACTRecord<'data> {

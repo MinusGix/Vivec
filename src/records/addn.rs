@@ -38,9 +38,9 @@ pub struct ADDNRecord<'data> {
 
     pub fields: Vec<ADDNField<'data>>,
 }
-impl<'data> TypeNamed<'static> for ADDNRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
-        b"ADDN".as_bstr()
+impl<'data> ADDNRecord<'data> {
+    pub fn fields_size(&self) -> usize {
+        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
     }
 }
 impl<'data> FromRecord<'data> for ADDNRecord<'data> {
@@ -88,9 +88,9 @@ impl<'data> FromRecord<'data> for ADDNRecord<'data> {
         ))
     }
 }
-impl<'data> ADDNRecord<'data> {
-    pub fn fields_size(&self) -> usize {
-        self.fields.iter().fold(0, |acc, x| acc + x.data_size())
+impl<'data> TypeNamed<'static> for ADDNRecord<'data> {
+    fn type_name(&self) -> &'static BStr {
+        b"ADDN".as_bstr()
     }
 }
 impl<'data> DataSize for ADDNRecord<'data> {
@@ -194,17 +194,17 @@ pub struct DNAM {
     /// 0x2: Always loaded - Camera? dust spray/blood spray/fire impact (but not forst)
     pub flags: u16,
 }
-impl TypeNamed<'static> for DNAM {
-    fn type_name(&self) -> &'static BStr {
-        b"DNAM".as_bstr()
-    }
-}
 impl DNAM {
     pub fn new(master_particle_system_cap: u16, flags: u16) -> DNAM {
         DNAM {
             master_particle_system_cap,
             flags,
         }
+    }
+}
+impl TypeNamed<'static> for DNAM {
+    fn type_name(&self) -> &'static BStr {
+        b"DNAM".as_bstr()
     }
 }
 impl FromField<'_> for DNAM {

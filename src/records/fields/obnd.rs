@@ -14,12 +14,6 @@ pub struct OBND {
     pub p1: Position3<i16>,
     pub p2: Position3<i16>,
 }
-impl TypeNamed<'static> for OBND {
-    fn type_name(&self) -> &'static BStr {
-        use bstr::ByteSlice;
-        b"OBND".as_bstr()
-    }
-}
 impl OBND {
     const EXPECTED_BYTES: usize = 12;
 
@@ -49,6 +43,12 @@ impl FromField<'_> for OBND {
             data,
             OBND::new(Position3::new(x1, y1, z1), Position3::new(x2, y2, z2)),
         ))
+    }
+}
+impl TypeNamed<'static> for OBND {
+    fn type_name(&self) -> &'static BStr {
+        use bstr::ByteSlice;
+        b"OBND".as_bstr()
     }
 }
 impl StaticDataSize for OBND {

@@ -16,17 +16,17 @@ macro_rules! make_formid_field {
 				Self { formid }
 			}
 		}
-		impl $crate::records::common::TypeNamed<'static> for $name {
-			fn type_name (&self) -> &'static bstr::BStr {
-				use bstr::ByteSlice;
-				stringify!($type_name).as_bytes().as_bstr()
-			}
-		}
 		impl $crate::records::fields::common::FromField<'_> for $name {
 			fn from_field(field: $crate::records::fields::common::GeneralField<'_>) -> $crate::parse::PResult<Self, $crate::records::fields::common::FromFieldError> {
 				let (data, formid) = $crate::records::common::FormId::parse(field.data)?;
 				// TODO: check that it used up all the data
 				Ok((data, Self::new(formid)))
+			}
+		}
+		impl $crate::records::common::TypeNamed<'static> for $name {
+			fn type_name (&self) -> &'static bstr::BStr {
+				use bstr::ByteSlice;
+				stringify!($type_name).as_bytes().as_bstr()
 			}
 		}
 		impl $crate::util::StaticDataSize for $name {

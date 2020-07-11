@@ -68,14 +68,6 @@ impl<'data> DataSize for GeneralGroup<'data> {
         GROUPH_SIZE + self.data.len()
     }
 }
-pub fn write_group_header<T: DataSize, W: Write>(group: &T, w: &mut W) -> std::io::Result<()> {
-    b"GRUP".as_bstr().write_to(w)?;
-    // TODO: assert that data size fits within u32
-    // data size is equivalent to group size in file format
-    (group.data_size() as u32).write_to(w)?;
-
-    Ok(())
-}
 impl<'data> Writable for GeneralGroup<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -87,6 +79,16 @@ impl<'data> Writable for GeneralGroup<'data> {
         self.data.write_to(w)
     }
 }
+
+pub fn write_group_header<T: DataSize, W: Write>(group: &T, w: &mut W) -> std::io::Result<()> {
+    b"GRUP".as_bstr().write_to(w)?;
+    // TODO: assert that data size fits within u32
+    // data size is equivalent to group size in file format
+    (group.data_size() as u32).write_to(w)?;
+
+    Ok(())
+}
+
 pub trait FromGeneralGroup<'data> {
     /// Panics on conversion failure
     fn from_general_group(group: GeneralGroup<'data>) -> Self;

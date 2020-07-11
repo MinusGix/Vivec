@@ -102,6 +102,18 @@ impl TypeNamed<'static> for DSTD {
         b"DSTD".as_bstr()
     }
 }
+impl StaticDataSize for DSTD {
+    fn static_data_size() -> usize {
+        FIELDH_SIZE +
+        u16::static_data_size() + // health_percent
+			u8::static_data_size() + // damage_stage
+			DSTDFlags::static_data_size() + // flags
+			u32::static_data_size() + // self damage rate
+			FormId::static_data_size() + // explosion id
+			FormId::static_data_size() + // debris id
+			u32::static_data_size() // debris count
+    }
+}
 impl Writable for DSTD {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -115,18 +127,6 @@ impl Writable for DSTD {
         self.explosion_id.write_to(w)?;
         self.debris_id.write_to(w)?;
         self.debris_count.write_to(w)
-    }
-}
-impl StaticDataSize for DSTD {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-        u16::static_data_size() + // health_percent
-			u8::static_data_size() + // damage_stage
-			DSTDFlags::static_data_size() + // flags
-			u32::static_data_size() + // self damage rate
-			FormId::static_data_size() + // explosion id
-			FormId::static_data_size() + // debris id
-			u32::static_data_size() // debris count
     }
 }
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -159,17 +159,17 @@ impl DSTDFlags {
         (self.flags & 0b1000) != 0
     }
 }
+impl StaticDataSize for DSTDFlags {
+    fn static_data_size() -> usize {
+        u8::static_data_size()
+    }
+}
 impl Writable for DSTDFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
         T: Write,
     {
         self.flags.write_to(w)
-    }
-}
-impl StaticDataSize for DSTDFlags {
-    fn static_data_size() -> usize {
-        u8::static_data_size()
     }
 }
 

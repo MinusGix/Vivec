@@ -50,11 +50,6 @@ impl<'data> ALCHRecord<'data> {
         self.fields.iter().fold(0, |acc, x| acc + x.data_size())
     }
 }
-impl<'data> TypeNamed<'static> for ALCHRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
-        b"ALCH".as_bstr()
-    }
-}
 impl<'data> FromRecord<'data> for ALCHRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError<'data>> {
         let mut editor_id_index = None;
@@ -128,6 +123,11 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
                 fields,
             },
         ))
+    }
+}
+impl<'data> TypeNamed<'static> for ALCHRecord<'data> {
+    fn type_name(&self) -> &'static BStr {
+        b"ALCH".as_bstr()
     }
 }
 impl<'data> DataSize for ALCHRecord<'data> {

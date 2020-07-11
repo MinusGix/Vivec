@@ -30,6 +30,11 @@ impl<'data> Windows1252String16<'data> {
         Ok((data, Windows1252String16::from_ascii_bytes(string)))
     }
 }
+impl<'data> DataSize for Windows1252String16<'data> {
+    fn data_size(&self) -> usize {
+        2 + self.value.len()
+    }
+}
 impl<'data> Writable for Windows1252String16<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -38,11 +43,6 @@ impl<'data> Writable for Windows1252String16<'data> {
         // TODO: assert length fits within usize
         (self.value.len() as u16).write_to(w)?;
         self.value.write_to(w)
-    }
-}
-impl<'data> DataSize for Windows1252String16<'data> {
-    fn data_size(&self) -> usize {
-        2 + self.value.len()
     }
 }
 

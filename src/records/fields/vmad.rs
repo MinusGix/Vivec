@@ -146,17 +146,6 @@ pub enum VMADObjectFormat {
 pub enum VMADObjectFormatConversionError {
     InvalidValue,
 }
-impl TryFrom<u16> for VMADObjectFormat {
-    type Error = VMADObjectFormatConversionError;
-
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(VMADObjectFormat::IDLead),
-            2 => Ok(VMADObjectFormat::IDEnd),
-            _ => Err(Self::Error::InvalidValue),
-        }
-    }
-}
 impl VMADObjectFormat {
     pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = le_u16(data)?;
@@ -175,6 +164,17 @@ impl VMADObjectFormat {
         match self {
             VMADObjectFormat::IDLead => 1,
             VMADObjectFormat::IDEnd => 2,
+        }
+    }
+}
+impl TryFrom<u16> for VMADObjectFormat {
+    type Error = VMADObjectFormatConversionError;
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(VMADObjectFormat::IDLead),
+            2 => Ok(VMADObjectFormat::IDEnd),
+            _ => Err(Self::Error::InvalidValue),
         }
     }
 }
@@ -589,7 +589,6 @@ pub struct INFORecordFragments<'data> {
     /// size is the number of bit flags activated in flags (wew)
     pub fragments: Vec<FragmentInfo<'data>>,
 }
-
 impl<'data> ParseFragments<'data> for INFORecordFragments<'data> {
     fn parse_fragments(data: &'data [u8]) -> PResult<Self> {
         let (data, unknown) = take(data, 1usize)?;

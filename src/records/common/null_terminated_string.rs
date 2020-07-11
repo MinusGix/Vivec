@@ -29,6 +29,11 @@ impl<'data> NullTerminatedString<'data> {
         Ok((data, NullTerminatedString::from_ascii_bytes(info)))
     }
 }
+impl<'data> DataSize for NullTerminatedString<'data> {
+    fn data_size(&self) -> usize {
+        self.value.len() + 0x00u8.data_size()
+    }
+}
 impl<'data> Writable for NullTerminatedString<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -36,11 +41,6 @@ impl<'data> Writable for NullTerminatedString<'data> {
     {
         self.value.write_to(w)?;
         0x00u8.write_to(w)
-    }
-}
-impl<'data> DataSize for NullTerminatedString<'data> {
-    fn data_size(&self) -> usize {
-        self.value.len() + 0x00u8.data_size()
     }
 }
 
