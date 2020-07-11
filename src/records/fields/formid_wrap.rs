@@ -23,8 +23,8 @@ macro_rules! make_formid_field {
 				Ok((data, Self::new(formid)))
 			}
 		}
-		impl $crate::records::common::TypeNamed<'static> for $name {
-			fn type_name (&self) -> &'static bstr::BStr {
+		impl $crate::records::common::StaticTypeNamed<'static> for $name {
+			fn static_type_name () -> &'static bstr::BStr {
 				use bstr::ByteSlice;
 				stringify!($type_name).as_bytes().as_bstr()
 			}

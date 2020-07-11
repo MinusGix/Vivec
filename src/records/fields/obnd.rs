@@ -1,7 +1,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     parse::{le_i16, PResult, ParseError},
-    records::common::TypeNamed,
+    records::common::StaticTypeNamed,
     util::{Position3, StaticDataSize, Writable},
 };
 use bstr::BStr;
@@ -45,8 +45,8 @@ impl FromField<'_> for OBND {
         ))
     }
 }
-impl TypeNamed<'static> for OBND {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for OBND {
+    fn static_type_name() -> &'static BStr {
         use bstr::ByteSlice;
         b"OBND".as_bstr()
     }

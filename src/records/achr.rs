@@ -12,7 +12,7 @@ use crate::{
     util::{byte, DataSize, Position3, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FormId, FromRecord, FromRecordError, TypeNamed};
+use common::{FormId, FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -178,8 +178,8 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for ACHRRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
+impl<'data> StaticTypeNamed<'static> for ACHRRecord<'data> {
+    fn static_type_name() -> &'static BStr {
         b"ACHR".as_bstr()
     }
 }
@@ -385,8 +385,8 @@ pub struct XRGB {
     // It's named XRGB, and (maybe) 3 floats, so it's potentially a color, but for what? (check if it always fits in 0.0-1.0)
     pub data: [f32; 3],
 }
-impl TypeNamed<'static> for XRGB {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for XRGB {
+    fn static_type_name() -> &'static BStr {
         b"XRGB".as_bstr()
     }
 }
@@ -539,8 +539,8 @@ impl FromField<'_> for XAPR {
         Ok((data, XAPR { formid, delay }))
     }
 }
-impl TypeNamed<'static> for XAPR {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for XAPR {
+    fn static_type_name() -> &'static BStr {
         b"XAPR".as_bstr()
     }
 }
@@ -586,8 +586,8 @@ impl FromField<'_> for XESP {
         Ok((data, XESP { parent, flags }))
     }
 }
-impl TypeNamed<'static> for XESP {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for XESP {
+    fn static_type_name() -> &'static BStr {
         b"XESP".as_bstr()
     }
 }
@@ -667,8 +667,8 @@ impl FromField<'_> for XLKR {
         Ok((data, XLKR { keyword, reference }))
     }
 }
-impl TypeNamed<'static> for XLKR {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for XLKR {
+    fn static_type_name() -> &'static BStr {
         b"XLKR".as_bstr()
     }
 }
@@ -730,8 +730,8 @@ impl FromField<'_> for DATA {
         ))
     }
 }
-impl TypeNamed<'static> for DATA {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for DATA {
+    fn static_type_name() -> &'static BStr {
         b"DATA".as_bstr()
     }
 }

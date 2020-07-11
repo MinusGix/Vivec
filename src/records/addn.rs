@@ -11,7 +11,7 @@ use crate::{
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FromRecord, FromRecordError, TypeNamed};
+use common::{FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -88,8 +88,8 @@ impl<'data> FromRecord<'data> for ADDNRecord<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for ADDNRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
+impl<'data> StaticTypeNamed<'static> for ADDNRecord<'data> {
+    fn static_type_name() -> &'static BStr {
         b"ADDN".as_bstr()
     }
 }
@@ -202,8 +202,8 @@ impl DNAM {
         }
     }
 }
-impl TypeNamed<'static> for DNAM {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for DNAM {
+    fn static_type_name() -> &'static BStr {
         b"DNAM".as_bstr()
     }
 }

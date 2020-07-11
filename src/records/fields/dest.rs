@@ -2,7 +2,7 @@ use super::common::{write_field_header, FromField, FromFieldError, GeneralField,
 use crate::{
     make_empty_field, make_model_fields, make_single_value_field,
     parse::{le_u16, le_u32, take, PResult},
-    records::common::{get_field, FormId, TypeNamed},
+    records::common::{get_field, FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -36,8 +36,8 @@ impl FromField<'_> for DEST {
         ))
     }
 }
-impl TypeNamed<'static> for DEST {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for DEST {
+    fn static_type_name() -> &'static BStr {
         b"DEST".as_bstr()
     }
 }
@@ -97,8 +97,8 @@ impl FromField<'_> for DSTD {
         ))
     }
 }
-impl TypeNamed<'static> for DSTD {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for DSTD {
+    fn static_type_name() -> &'static BStr {
         b"DSTD".as_bstr()
     }
 }
@@ -206,9 +206,9 @@ impl<'data> DESTCollection<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for DESTCollection<'data> {
-    fn type_name(&self) -> &'static BStr {
-        self.destruction.type_name()
+impl<'data> StaticTypeNamed<'static> for DESTCollection<'data> {
+    fn static_type_name() -> &'static BStr {
+        DEST::static_type_name()
     }
 }
 impl<'data> DataSize for DESTCollection<'data> {
@@ -265,9 +265,9 @@ impl<'data> DSTDCollection<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for DSTDCollection<'data> {
-    fn type_name(&self) -> &'static BStr {
-        self.stage.type_name()
+impl<'data> StaticTypeNamed<'static> for DSTDCollection<'data> {
+    fn static_type_name() -> &'static BStr {
+        DSTD::static_type_name()
     }
 }
 impl<'data> DataSize for DSTDCollection<'data> {

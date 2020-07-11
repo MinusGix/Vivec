@@ -4,7 +4,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     parse::{le_f32, le_i32, le_u16, le_u32, single, take, PResult, ParseError},
-    records::common::{ConversionError, FormId, TypeNamed},
+    records::common::{ConversionError, FormId, StaticTypeNamed},
     util::{StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -57,8 +57,8 @@ impl FromField<'_> for CTDA {
         ))
     }
 }
-impl TypeNamed<'static> for CTDA {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for CTDA {
+    fn static_type_name() -> &'static BStr {
         b"CTDA".as_bstr()
     }
 }

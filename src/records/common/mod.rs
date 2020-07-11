@@ -412,6 +412,17 @@ pub trait FromRecord<'data>: Sized {
 pub trait TypeNamed<'aleph>: Sized {
     fn type_name(&self) -> &'aleph BStr;
 }
+pub trait StaticTypeNamed<'aleph>: Sized {
+    fn static_type_name() -> &'aleph BStr;
+}
+impl<'aleph, T> TypeNamed<'aleph> for T
+where
+    T: StaticTypeNamed<'aleph>,
+{
+    fn type_name(&self) -> &'aleph BStr {
+        T::static_type_name()
+    }
+}
 
 pub fn get_field<'aleph, 'bet, I, F>(
     field_iter: &mut std::iter::Peekable<I>,

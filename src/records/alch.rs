@@ -1,7 +1,7 @@
 use super::{
     common::{
         get_field, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
-        NullTerminatedString, TypeNamed,
+        NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
@@ -128,8 +128,8 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for ALCHRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
+impl<'data> StaticTypeNamed<'static> for ALCHRecord<'data> {
+    fn static_type_name() -> &'static BStr {
         b"ALCH".as_bstr()
     }
 }
@@ -332,8 +332,8 @@ impl FromField<'_> for ENIT {
         ))
     }
 }
-impl TypeNamed<'static> for ENIT {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for ENIT {
+    fn static_type_name() -> &'static BStr {
         b"ENIT".as_bstr()
     }
 }
@@ -436,8 +436,8 @@ impl FromField<'_> for EFIT {
         ))
     }
 }
-impl TypeNamed<'static> for EFIT {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for EFIT {
+    fn static_type_name() -> &'static BStr {
         b"EFIT".as_bstr()
     }
 }
@@ -503,9 +503,9 @@ impl EnchantedEffectCollection {
         ))
     }
 }
-impl TypeNamed<'static> for EnchantedEffectCollection {
-    fn type_name(&self) -> &'static BStr {
-        self.effect_id.type_name()
+impl StaticTypeNamed<'static> for EnchantedEffectCollection {
+    fn static_type_name() -> &'static BStr {
+        ENIT::static_type_name()
     }
 }
 impl DataSize for EnchantedEffectCollection {

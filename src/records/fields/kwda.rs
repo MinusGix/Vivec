@@ -5,7 +5,7 @@ use super::{
 use crate::{
     make_single_value_field,
     parse::{count, le_u32, PResult},
-    records::common::{FormId, TypeNamed},
+    records::common::{FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -75,8 +75,8 @@ impl KWDACollection {
         }
     }
 }
-impl TypeNamed<'static> for KWDACollection {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for KWDACollection {
+    fn static_type_name() -> &'static BStr {
         // TODO: this isn't 100% sensible. It follows what other collections do (return first element), but what we really care about is the KWDA inst
         b"KSIZ".as_bstr()
     }

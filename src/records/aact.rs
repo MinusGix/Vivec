@@ -11,7 +11,7 @@ use crate::{
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FromRecord, FromRecordError, TypeNamed};
+use common::{FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -57,8 +57,8 @@ impl<'data> FromRecord<'data> for AACTRecord<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for AACTRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
+impl<'data> StaticTypeNamed<'static> for AACTRecord<'data> {
+    fn static_type_name() -> &'static BStr {
         b"AACT".as_bstr()
     }
 }

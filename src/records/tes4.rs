@@ -1,7 +1,7 @@
 use super::{
     common::{
         CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
-        NullTerminatedString, TypeNamed,
+        NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
     fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
@@ -175,8 +175,8 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for TES4Record<'data> {
-    fn type_name(&self) -> &'static BStr {
+impl<'data> StaticTypeNamed<'static> for TES4Record<'data> {
+    fn static_type_name() -> &'static BStr {
         b"TES4".as_bstr()
     }
 }
@@ -279,8 +279,8 @@ impl FromField<'_> for HEDR {
         ))
     }
 }
-impl TypeNamed<'static> for HEDR {
-    fn type_name(&self) -> &'static BStr {
+impl StaticTypeNamed<'static> for HEDR {
+    fn static_type_name() -> &'static BStr {
         b"HEDR".as_bstr()
     }
 }

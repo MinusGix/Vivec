@@ -104,8 +104,8 @@ macro_rules! make_empty_field {
         $(#[$outer])*
         #[derive(Debug, Copy, Clone, Eq, PartialEq)]
         pub struct $name;
-        impl $crate::records::common::TypeNamed<'static> for $name {
-            fn type_name(&self) -> &'static BStr {
+        impl $crate::records::common::StaticTypeNamed<'static> for $name {
+            fn static_type_name() -> &'static BStr {
                 stringify!($name).as_bytes().as_bstr()
             }
         }
@@ -148,8 +148,8 @@ macro_rules! make_single_value_field {
             $(#[$inner])*
             pub $field_name: $field_type,
         }
-        impl $crate::records::common::TypeNamed<'static> for $name {
-            fn type_name(&self) -> &'static bstr::BStr {
+        impl $crate::records::common::StaticTypeNamed<'static> for $name {
+            fn static_type_name() -> &'static bstr::BStr {
                 use bstr::ByteSlice;
                 stringify!($name).as_bytes().as_bstr()
             }

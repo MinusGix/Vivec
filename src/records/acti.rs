@@ -1,7 +1,7 @@
 use super::{
     common::{
         lstring::LString, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord,
-        Index, TypeNamed,
+        Index, StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{FromField, FromFieldError, GeneralField},
@@ -145,8 +145,8 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
         ))
     }
 }
-impl<'data> TypeNamed<'static> for ACTIRecord<'data> {
-    fn type_name(&self) -> &'static BStr {
+impl<'data> StaticTypeNamed<'static> for ACTIRecord<'data> {
+    fn static_type_name() -> &'static BStr {
         b"ACTI".as_bstr()
     }
 }

@@ -2,7 +2,7 @@ use super::common::{write_field_header, FromField, FromFieldError, GeneralField,
 use crate::{
     dispatch_all,
     parse::{count, le_f32, le_i16, le_i32, le_u16, le_u32, many, take, PResult, ParseError},
-    records::common::{ConversionError, FormId, TypeNamed, Windows1252String16},
+    records::common::{ConversionError, FormId, StaticTypeNamed, Windows1252String16},
     util::{DataSize, StaticDataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -27,11 +27,11 @@ where
         Ok((data, VMAD { primary }))
     }
 }
-impl<'data, Fragment> TypeNamed<'static> for VMAD<'data, Fragment>
+impl<'data, Fragment> StaticTypeNamed<'static> for VMAD<'data, Fragment>
 where
     Fragment: ParseFragments<'data>,
 {
-    fn type_name(&self) -> &'static BStr {
+    fn static_type_name() -> &'static BStr {
         b"VMAD".as_bstr()
     }
 }
