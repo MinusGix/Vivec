@@ -57,7 +57,7 @@ impl<'data> FromRecord<'data> for ADDNRecord<'data> {
 
         while let Some(field) = field_iter.next() {
             match field.type_name.as_ref() {
-                b"EDID" => collect_one!(EDID, field => fields; edid_index),
+                b"EDID" => collect_one!(edid::EDID, field => fields; edid_index),
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
                 b"MODL" => {
                     let (_, modl) = modl::MODL::from_field(field)?;
@@ -119,7 +119,7 @@ impl<'data> Writable for ADDNRecord<'data> {
 
 #[derive(Debug, Clone, From)]
 pub enum ADDNField<'data> {
-    EDID(EDID<'data>),
+    EDID(edid::EDID<'data>),
     OBND(obnd::OBND),
     MODLCollection(modl::MODLCollection<'data>),
     DATA(DATA),
@@ -163,8 +163,6 @@ impl<'data> Writable for ADDNField<'data> {
         )
     }
 }
-
-pub type EDID<'data> = edid::EDID<'data>;
 
 make_single_value_field!(
     [Debug, Copy, Clone, Eq, PartialEq],

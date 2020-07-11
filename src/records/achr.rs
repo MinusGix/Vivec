@@ -112,7 +112,7 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
 
         for field in record.fields {
             match field.type_name.as_ref() {
-                b"EDID" => collect_one!(EDID, field => fields; editor_id_index),
+                b"EDID" => collect_one!(edid::EDID, field => fields; editor_id_index),
                 b"VMAD" => {
                     collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; script_index)
                 }
@@ -207,7 +207,7 @@ impl<'data> DataSize for ACHRRecord<'data> {
 
 #[derive(Debug, Clone, From)]
 pub enum ACHRField<'data> {
-    EDID(EDID<'data>),
+    EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
     NAME(NAME),
     XEZN(XEZN),
@@ -278,8 +278,6 @@ impl<'data> DataSize for ACHRField<'data> {
         )
     }
 }
-
-pub type EDID<'data> = edid::EDID<'data>;
 
 make_formid_field!(NAME);
 make_formid_field!(XEZN);

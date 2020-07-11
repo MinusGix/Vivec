@@ -74,7 +74,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
         let mut field_iter = record.fields.into_iter().peekable();
         while let Some(field) = field_iter.next() {
             match field.type_name.as_ref() {
-                b"EDID" => collect_one!(EDID, field => fields; edid_index),
+                b"EDID" => collect_one!(edid::EDID, field => fields; edid_index),
                 b"VMAD" => {
                     collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; vmad_index)
                 }
@@ -176,7 +176,7 @@ impl<'data> Writable for ACTIRecord<'data> {
 
 #[derive(Debug, Clone, From)]
 pub enum ACTIField<'data> {
-    EDID(EDID<'data>),
+    EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
     OBND(obnd::OBND),
     FULL(full::FULL),
@@ -276,8 +276,6 @@ impl<'data> Writable for ACTIField<'data> {
         )
     }
 }
-
-pub type EDID<'data> = edid::EDID<'data>;
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], PNAM, color, rgbu::RGBU);
 impl FromField<'_> for PNAM {

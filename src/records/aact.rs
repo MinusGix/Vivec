@@ -39,7 +39,7 @@ impl<'data> FromRecord<'data> for AACTRecord<'data> {
         let mut fields = Vec::new();
         for field in record.fields {
             match field.type_name.as_ref() {
-                b"EDID" => collect_one!(EDID, field => fields; edid_index),
+                b"EDID" => collect_one!(edid::EDID, field => fields; edid_index),
                 b"CNAM" => collect_one!(CNAM, field => fields; cname_index),
                 _ => fields.push(AACTField::Unknown(field)),
             }
@@ -87,7 +87,7 @@ impl<'data> Writable for AACTRecord<'data> {
 
 #[derive(Debug, Clone, From)]
 pub enum AACTField<'data> {
-    EDID(EDID<'data>),
+    EDID(edid::EDID<'data>),
     CNAM(CNAM),
     Unknown(GeneralField<'data>),
 }
@@ -117,8 +117,6 @@ impl<'data> Writable for AACTField<'data> {
         }
     }
 }
-
-type EDID<'data> = edid::EDID<'data>;
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], CNAM, color, rgbu::RGBU);
 impl FromField<'_> for CNAM {
