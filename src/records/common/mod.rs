@@ -10,11 +10,12 @@ pub type Index = usize;
 /// Always four characters
 pub type RecordName<'data> = &'data BStr;
 
-mod formid;
+pub mod formid;
+pub mod full_string;
 pub mod lstring;
-mod null_terminated_string;
-mod version_control_info;
-mod windows1252_string;
+pub mod null_terminated_string;
+pub mod version_control_info;
+pub mod windows1252_string;
 
 pub use formid::*;
 pub use null_terminated_string::*;
