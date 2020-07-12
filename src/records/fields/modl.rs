@@ -113,8 +113,8 @@ macro_rules! make_model_fields {
                 Ok((data, Self { alternate_textures }))
             }
         }
-        impl<'data> $crate::records::common::TypeNamed<'static> for $mods<'data> {
-            fn type_name(&self) -> &'static BStr {
+        impl<'data> $crate::records::common::StaticTypeNamed<'static> for $mods<'data> {
+            fn static_type_name() -> &'static BStr {
                 use bstr::ByteSlice;
                 stringify!($mods).as_bytes().as_bstr()
             }
@@ -150,16 +150,14 @@ macro_rules! make_model_fields {
             where
                 I: std::iter::Iterator<Item = $crate::records::fields::common::GeneralField<'data>>,
             {
+                use $crate::records::common::StaticTypeNamed;
                 let model = modl;
 
                 // TODO: should we allow a MODS field without a previous MODT field?
 
-                let modt_typename = stringify!($modt).as_bytes().as_bstr();
-                let mods_typename = stringify!($mods).as_bytes().as_bstr();
-
-                let (_, modt) = $crate::records::common::get_field::<_, $modt>(field_iter, modt_typename)?;
+                let (_, modt) = $crate::records::common::get_field::<_, $modt>(field_iter, $modt::static_type_name())?;
                 if let Some(modt) = modt {
-                    let (_, mods) = $crate::records::common::get_field(field_iter, mods_typename)?;
+                    let (_, mods) = $crate::records::common::get_field(field_iter, $mods::static_type_name())?;
                     Ok((
                         &[],
                         Self {
@@ -181,9 +179,9 @@ macro_rules! make_model_fields {
             }
         }
         // TODO: this is rather hacky, since a collection doesn't have a name :/
-        impl<'data> $crate::records::common::TypeNamed<'static> for $collection<'data> {
-            fn type_name(&self) -> &'static BStr {
-                self.model.type_name()
+        impl<'data> $crate::records::common::StaticTypeNamed<'static> for $collection<'data> {
+            fn static_type_name() -> &'static BStr {
+                $modl::static_type_name()
             }
         }
         impl<'data> $crate::util::DataSize for $collection<'data> {

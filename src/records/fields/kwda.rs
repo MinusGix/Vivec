@@ -58,10 +58,12 @@ impl KWDACollection {
         let next_field = field_iter.peek();
         if next_field
             .map(|x| x.type_name())
-            .filter(|x| *x == b"KWDA".as_bstr())
+            .filter(|x| *x == KWDA::static_type_name())
             .is_none()
         {
-            Err(FromFieldError::ExpectedSpecificField(b"KWDA".as_bstr()))
+            Err(FromFieldError::ExpectedSpecificField(
+                KWDA::static_type_name(),
+            ))
         } else {
             let field = field_iter.next().unwrap();
             let (_, field) = KWDA::from_field(field, ksiz.amount)?;
@@ -78,7 +80,7 @@ impl KWDACollection {
 impl StaticTypeNamed<'static> for KWDACollection {
     fn static_type_name() -> &'static BStr {
         // TODO: this isn't 100% sensible. It follows what other collections do (return first element), but what we really care about is the KWDA inst
-        b"KSIZ".as_bstr()
+        KSIZ::static_type_name()
     }
 }
 impl DataSize for KWDACollection {

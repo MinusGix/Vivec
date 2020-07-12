@@ -190,9 +190,9 @@ impl<'data> DESTCollection<'data> {
     {
         let mut stage_data = Vec::new();
         for _ in 0..destruction.count {
-            let (_, dstd) = get_field(field_iter, b"DSTD".as_bstr())?;
-            let dstd =
-                dstd.ok_or_else(|| FromFieldError::ExpectedSpecificField(b"DSTD".as_bstr()))?;
+            let (_, dstd) = get_field(field_iter, DSTD::static_type_name())?;
+            let dstd = dstd
+                .ok_or_else(|| FromFieldError::ExpectedSpecificField(DSTD::static_type_name()))?;
             let (_, collection) = DSTDCollection::collect(dstd, field_iter)?;
             stage_data.push(collection);
         }
@@ -241,7 +241,7 @@ impl<'data> DSTDCollection<'data> {
     {
         // TODO: hardcoded names are bad.
 
-        let (_, dmdl) = get_field(field_iter, b"DMDL".as_bstr())?;
+        let (_, dmdl) = get_field(field_iter, DMDL::static_type_name())?;
         let dmdl = if let Some(dmdl) = dmdl {
             let (_, dmdl) = DMDLCollection::collect(dmdl, field_iter)?;
             Some(dmdl)
@@ -249,10 +249,14 @@ impl<'data> DSTDCollection<'data> {
             None
         };
 
-        let (_, dstf) = get_field(field_iter, b"DSTF".as_bstr())?;
+        let (_, dstf) = get_field(field_iter, DSTF::static_type_name())?;
         let dstf = match dstf {
             Some(dstf) => dstf,
-            None => return Err(FromFieldError::ExpectedSpecificField(b"DSTF".as_bstr())),
+            None => {
+                return Err(FromFieldError::ExpectedSpecificField(
+                    DSTF::static_type_name(),
+                ))
+            }
         };
 
         Ok((

@@ -186,8 +186,8 @@ macro_rules! make_single_value_field {
             $(#[$inner])*
             pub $field_name: $field_type,
         }
-        impl<$life> $crate::records::common::TypeNamed<'static> for $name<$life> {
-            fn type_name(&self) -> &'static bstr::BStr {
+        impl<$life> $crate::records::common::StaticTypeNamed<'static> for $name<$life> {
+            fn static_type_name() -> &'static bstr::BStr {
                 use bstr::ByteSlice;
                 stringify!($name).as_bytes().as_bstr()
             }
