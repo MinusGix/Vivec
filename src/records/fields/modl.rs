@@ -75,29 +75,25 @@ macro_rules! make_model_fields {
 
         make_single_value_field!(
             /// Model data.
-            /// TODO: this is unknown. UESP assumes that it is a series of 12 byte structs of positions (Pos3 as 4 bytes per axis)
-            /// I'm skeptical of that, as, for example, OBND uses i16 for it's bounds.
-            /// If it is positions, it's likely a 16-bit integer, and if it is in 12 byte groups
-            /// then it is two positions per every thing.
-            /// This might make sense for a collision box, as you could then specify rectangles of collision
-            /// for now, we just store the data raw
+            /// TODO: this is unknown. UESP has some info, but it's still iffy at best.
             [Debug, Clone, Eq, PartialEq],
             $modt,
-            positions,
+            values,
             refer [u8], // &'data [u8]
             'data
         );
         impl<'data> $crate::records::fields::common::FromField<'data> for $modt<'data> {
             fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>> {
-                if field.data.len() % 12 != 0 {
-                    return Err($crate::parse::ParseError::InvalidByteCount {
-                        found: field.data.len()
-                    }.into());
-                }
+                // The MODT field is scary
+                //if field.data.len() % 12 != 0 {
+                //    return Err($crate::parse::ParseError::InvalidByteCount {
+                //        found: field.data.len()
+                //    }.into());
+                //}
 
-                let (data, positions) = $crate::parse::take(field.data, field.data.len())?;
+                let (data, values) = $crate::parse::take(field.data, field.data.len())?;
                 assert_eq!(data.len(), 0);
-                Ok((data, Self { positions }))
+                Ok((data, Self { values }))
             }
         }
 
@@ -228,7 +224,7 @@ mod tests {
     #[test]
     fn modt_test() {
         let modt = MODT {
-            positions: &[49, 64, 52, 92, 40, 50, 92, 200, 40, 10, 12, 14],
+            values: &[49, 64, 52, 92, 40, 50, 92, 200, 40, 10, 12, 14],
         };
         assert_size_output!(modt);
     }
