@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_equivalent_writeback() {
-        let data = std::fs::read("./ex/Dawnguard.esm").expect("Failed to read data from file");
+        let data = std::fs::read("./ex/Skyrim.esm").expect("Failed to read data from file");
         let (_data, result) = parse_file(data.as_slice()).expect("Failed to parse");
         let mut stored = Vec::new();
         stored.reserve(data.len());

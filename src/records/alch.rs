@@ -582,6 +582,10 @@ mod tests {
                         comp_value: ctda::ComparisonValue::Float(4.3),
                         function_index: 0,
                         padding: 0,
+                        parameters: ctda::Parameters::Normal {
+                            first: 0x0,
+                            second: 0x1,
+                        },
                         run_on: ctda::RunOn::Target,
                         reference: FormId::new(0),
                         unknown2: -1,

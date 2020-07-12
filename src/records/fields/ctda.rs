@@ -25,6 +25,7 @@ pub struct CTDA {
     /// Index into the function list
     pub function_index: FunctionIndex,
     pub padding: u16,
+    pub parameters: Parameters,
     pub run_on: RunOn,
     /// Function reference. Zero if no reference is needed (run_on != Reference)
     pub reference: FormId,
@@ -39,6 +40,7 @@ impl FromField<'_> for CTDA {
         let (data, comp_value) = ComparisonValue::parse(data, op_data.flags)?;
         let (data, function_index) = le_u16(data)?;
         let (data, padding) = le_u16(data)?;
+        let (data, parameters) = Parameters::parse(data, function_index)?;
         let (data, run_on) = RunOn::parse(data)?;
         let (data, reference) = FormId::parse(data)?;
         let (data, unknown2) = le_i32(data)?;
@@ -50,6 +52,7 @@ impl FromField<'_> for CTDA {
                 comp_value,
                 function_index,
                 padding,
+                parameters,
                 run_on,
                 reference,
                 unknown2,
@@ -69,7 +72,8 @@ impl StaticDataSize for CTDA {
 			(u8::static_data_size() * 3) + // unknown
 			ComparisonValue::static_data_size() +
 			u16::static_data_size() + // function index
-			u16::static_data_size() + // padding
+            u16::static_data_size() + // padding
+            Parameters::static_data_size() +
 			RunOn::static_data_size() +
 			FormId::static_data_size() +
 			i32::static_data_size()
@@ -88,6 +92,7 @@ impl Writable for CTDA {
         self.comp_value.write_to(w)?;
         self.function_index.write_to(w)?;
         self.padding.write_to(w)?;
+        self.parameters.write_to(w)?;
         self.run_on.write_to(w)?;
         self.reference.write_to(w)?;
         self.unknown2.write_to(w)
@@ -371,6 +376,10 @@ mod tests {
             comp_value: ComparisonValue::Float(4.3),
             function_index: 0,
             padding: 0,
+            parameters: Parameters::Normal {
+                first: 0x0,
+                second: 0x1,
+            },
             run_on: RunOn::Target,
             reference: FormId::new(0),
             unknown2: -1,
