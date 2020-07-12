@@ -9,7 +9,7 @@ use super::{
     },
 };
 use crate::{
-    collect_one, dispatch_all, make_formid_field, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, make_formid_field, make_single_value_field,
     parse::{count, le_u16, le_u32, PResult},
     util::{DataSize, Writable},
 };
@@ -81,22 +81,13 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
                 b"FULL" => collect_one!(full::FULL, field => fields; full_index),
                 b"MODL" => {
-                    let (_, modl) = modl::MODL::from_field(field)?;
-                    let (_, col) = modl::MODLCollection::collect(modl, &mut field_iter)?;
-                    modl_collection_index = Some(fields.len());
-                    fields.push(ACTIField::MODLCollection(col));
+                    collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; modl_collection_index)
                 }
                 b"DEST" => {
-                    let (_, dest) = dest::DEST::from_field(field)?;
-                    let (_, col) = dest::DESTCollection::collect(dest, &mut field_iter)?;
-                    dest_collection_index = Some(fields.len());
-                    fields.push(ACTIField::DESTCollection(col));
+                    collect_one_collection!(dest::DEST, dest::DESTCollection; field, field_iter => fields; dest_collection_index)
                 }
                 b"KSIZ" => {
-                    let (_, ksiz) = kwda::KSIZ::from_field(field)?;
-                    let (_, col) = kwda::KWDACollection::collect(ksiz, &mut field_iter)?;
-                    keyword_data_index = Some(fields.len());
-                    fields.push(ACTIField::KWDACollection(col));
+                    collect_one_collection!(kwda::KSIZ, kwda::KWDACollection; field, field_iter => fields; keyword_data_index)
                 }
                 b"PNAM" => collect_one!(PNAM, field => fields; pnam_index),
                 b"SNAM" => collect_one!(SNAM, field => fields; snam_index),

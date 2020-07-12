@@ -38,6 +38,23 @@ macro_rules! collect_one {
     }};
 }
 
+/// collect_one_collection!(OpeningFieldType, CollectionType; field_variable, field_iterator => field_vector; index_option);
+#[macro_export]
+macro_rules! collect_one_collection {
+    ($of:ty, $cf:ty; $field:expr, $field_iter:expr => $fields:expr; $o:expr) => {{
+        if $o.is_some() {
+            return Err($crate::records::common::FromRecordError::DuplicateField(
+                stringify!($of).as_bytes().as_bstr(),
+            ));
+        }
+
+        let (_, opening_field) = <$of>::from_field($field)?;
+        let (_, collection) = <$cf>::collect(opening_field, &mut $field_iter)?;
+        $o = Some($fields.len());
+        $fields.push(collection.into());
+    }};
+}
+
 /// collect_many(field_type, field_variable => field_vector; index_vector)
 #[macro_export]
 macro_rules! collect_many {

@@ -10,7 +10,7 @@ use super::{
     },
 };
 use crate::{
-    collect_one, dispatch_all, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, make_single_value_field,
     parse::{le_f32, le_u32, PResult, ParseError},
     util::{DataSize, StaticDataSize, Writable},
 };
@@ -80,27 +80,18 @@ impl<'data> FromRecord<'data> for AMMORecord<'data> {
                 b"OBND" => collect_one!(obnd::OBND, field => fields; object_bounds_index),
                 b"FULL" => collect_one!(full::FULL, field => fields; item_name_index),
                 b"MODL" => {
-                    let (_, modl) = modl::MODL::from_field(field)?;
-                    let (_, col) = modl::MODLCollection::collect(modl, &mut field_iter)?;
-                    model_collection_index = Some(fields.len());
-                    fields.push(col.into());
+                    collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; model_collection_index)
                 }
                 b"ICON" => collect_one!(ICON, field => fields; inventory_image_index),
                 b"MICO" => collect_one!(MICO, field => fields; message_image_index),
                 b"DEST" => {
-                    let (_, dest) = dest::DEST::from_field(field)?;
-                    let (_, col) = dest::DESTCollection::collect(dest, &mut field_iter)?;
-                    destruction_collection_index = Some(fields.len());
-                    fields.push(col.into());
+                    collect_one_collection!(dest::DEST, dest::DESTCollection; field, field_iter => fields; destruction_collection_index)
                 }
                 b"YNAM" => collect_one!(YNAM, field => fields; pickup_sound_index),
                 b"ZNAM" => collect_one!(ZNAM, field => fields; drop_sound_index),
                 b"DESC" => collect_one!(DESC, field => fields; description_index),
                 b"KSIZ" => {
-                    let (_, ksiz) = kwda::KSIZ::from_field(field)?;
-                    let (_, col) = kwda::KWDACollection::collect(ksiz, &mut field_iter)?;
-                    keyword_collection_index = Some(fields.len());
-                    fields.push(col.into());
+                    collect_one_collection!(kwda::KSIZ, kwda::KWDACollection; field, field_iter => fields; keyword_collection_index)
                 }
                 b"DATA" => collect_one!(DATA, field => fields; data_index),
                 b"ONAM" => collect_one!(ONAM, field => fields; short_name_index),

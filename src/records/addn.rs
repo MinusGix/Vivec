@@ -6,7 +6,7 @@ use super::{
     },
 };
 use crate::{
-    collect_one, dispatch_all, make_formid_field, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, make_formid_field, make_single_value_field,
     parse::{le_u16, le_u32, PResult},
     util::{DataSize, StaticDataSize, Writable},
 };
@@ -55,10 +55,7 @@ impl<'data> FromRecord<'data> for ADDNRecord<'data> {
                 b"EDID" => collect_one!(edid::EDID, field => fields; edid_index),
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
                 b"MODL" => {
-                    let (_, modl) = modl::MODL::from_field(field)?;
-                    let (_, col) = modl::MODLCollection::collect(modl, &mut field_iter)?;
-                    modl_collection_index = Some(fields.len());
-                    fields.push(ADDNField::MODLCollection(col));
+                    collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; modl_collection_index)
                 }
                 //b"MODT" => collect_one!(modl::MODT, field => fields; modt_index),
                 b"DATA" => collect_one!(DATA, field => fields; data_index),
