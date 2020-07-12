@@ -5,6 +5,7 @@ use super::{
     },
     fields::{
         common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
+        common_item::{ICON, MICO, YNAM, ZNAM},
         ctda, edid, full, kwda, modl, obnd,
     },
 };
@@ -240,46 +241,6 @@ impl<'data> Writable for ALCHField<'data> {
         )
     }
 }
-
-make_single_value_field!(
-    /// Inventory icon filename
-    [Debug, Clone],
-    ICON,
-    filename,
-    NullTerminatedString,
-    'data
-);
-impl<'data> FromField<'data> for ICON<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, filename) = NullTerminatedString::parse(field.data)?;
-        Ok((data, Self { filename }))
-    }
-}
-
-make_single_value_field!(
-    /// Message icon filename
-    [Debug, Clone],
-    MICO,
-    filename,
-    NullTerminatedString,
-    'data
-);
-impl<'data> FromField<'data> for MICO<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, filename) = NullTerminatedString::parse(field.data)?;
-        Ok((data, Self { filename }))
-    }
-}
-
-make_formid_field!(
-    /// Pickup ->SNDR
-    YNAM
-);
-
-make_formid_field!(
-    /// Drop ->SNDR
-    ZNAM
-);
 
 make_single_value_field!(
     /// Message icon filename
