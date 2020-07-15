@@ -4,8 +4,10 @@ use super::{
         NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
-        common_item::{ICON, MICO, YNAM, ZNAM},
+        common::{
+            item::{ICON, MICO, YNAM, ZNAM},
+            write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
+        },
         ctda, edid, full, kwda, modl, obnd,
     },
 };

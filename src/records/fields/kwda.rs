@@ -1,14 +1,11 @@
-use super::{
-    common::{FromField, FromFieldError, GeneralField},
-    rgbu,
-};
+use super::common::{FromField, FromFieldError, GeneralField};
 use crate::{
     make_single_value_field,
     parse::{count, le_u32, PResult},
     records::common::{FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
 };
-use bstr::{BStr, ByteSlice};
+use bstr::BStr;
 
 make_single_value_field!(
     /// 'Keyword Size'

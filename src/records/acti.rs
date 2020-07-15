@@ -4,8 +4,8 @@ use super::{
         Index, StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{FromField, FromFieldError, GeneralField},
-        dest, edid, full, kwda, modl, obnd, rgbu, vmad,
+        common::{rgbu, FromField, FromFieldError, GeneralField},
+        dest, edid, full, kwda, modl, obnd, vmad,
     },
 };
 use crate::{

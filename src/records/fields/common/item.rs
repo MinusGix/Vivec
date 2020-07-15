@@ -1,6 +1,6 @@
 // Common item (ALCH, AMMO, etc) fields
 
-use super::common::{FromField, FromFieldError, GeneralField};
+use super::{FromField, FromFieldError, GeneralField};
 use crate::{
     make_formid_field, make_single_value_field, parse::PResult,
     records::common::NullTerminatedString,

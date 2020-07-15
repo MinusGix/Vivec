@@ -7,6 +7,10 @@ use bstr::{BStr, ByteSlice};
 use derive_more::From;
 use std::io::Write;
 
+pub mod formid_wrap;
+pub mod item;
+pub mod rgbu;
+
 /// Always four characters
 pub type FieldName<'data> = &'data BStr;
 

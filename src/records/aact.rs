@@ -1,8 +1,8 @@
 use super::{
     common::{self, CommonRecordInfo, GeneralRecord, Index},
     fields::{
-        common::{FromField, FromFieldError, GeneralField},
-        edid, rgbu,
+        common::{rgbu, FromField, FromFieldError, GeneralField},
+        edid,
     },
 };
 use crate::{
