@@ -27,6 +27,7 @@ pub use windows1252_string::*;
 #[macro_export]
 macro_rules! collect_one {
     ($s:ty, $field:expr => $fields:expr; $o:expr) => {{
+        use $crate::records::fields::common::FromField;
         if $o.is_some() {
             use bstr::ByteSlice;
             return Err($crate::records::common::FromRecordError::DuplicateField(
@@ -44,6 +45,7 @@ macro_rules! collect_one {
 #[macro_export]
 macro_rules! collect_one_collection {
     ($of:ty, $cf:ty; $field:expr, $field_iter:expr => $fields:expr; $o:expr) => {{
+        use $crate::records::fields::common::FromField;
         if $o.is_some() {
             use bstr::ByteSlice;
             return Err($crate::records::common::FromRecordError::DuplicateField(
