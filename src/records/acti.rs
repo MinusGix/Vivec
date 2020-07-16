@@ -1,7 +1,7 @@
 use super::{
     common::{
-        lstring::LString, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord,
-        Index, TypeNamed,
+        lstring::LString, CommonRecordInfo, FromRecord, FromRecordError, GeneralRecord, Index,
+        StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{rgbu, FromField, FromFieldError, GeneralField},
@@ -14,7 +14,7 @@ use crate::{
     parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
-use bstr::{BStr, ByteSlice};
+use bstr::BStr;
 use derive_more::From;
 use std::io::Write;
 
@@ -104,8 +104,10 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
             }
         }
 
-        let edid_index = edid_index.unwrap();
-        let obnd_index = obnd_index.unwrap();
+        let edid_index = edid_index
+            .ok_or_else(|| FromRecordError::ExpectedField(edid::EDID::static_type_name()))?;
+        let obnd_index = obnd_index
+            .ok_or_else(|| FromRecordError::ExpectedField(obnd::OBND::static_type_name()))?;
 
         Ok((
             &[],

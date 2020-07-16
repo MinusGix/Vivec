@@ -1,7 +1,7 @@
 use super::{
     common::{
         get_field, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
-        NullTerminatedString, TypeNamed,
+        StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{
@@ -89,14 +89,16 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
             }
         }
 
-        let editor_id_index =
-            editor_id_index.ok_or_else(|| FromRecordError::ExpectedField(b"EDID".as_bstr()))?;
-        let object_bounds_index =
-            object_bounds_index.ok_or_else(|| FromRecordError::ExpectedField(b"OBND".as_bstr()))?;
+        let editor_id_index = editor_id_index
+            .ok_or_else(|| FromRecordError::ExpectedField(edid::EDID::static_type_name()))?;
+        let object_bounds_index = object_bounds_index
+            .ok_or_else(|| FromRecordError::ExpectedField(obnd::OBND::static_type_name()))?;
         let weight_index =
-            weight_index.ok_or_else(|| FromRecordError::ExpectedField(b"DATA".as_bstr()))?;
-        let enchanted_effect_collection_index = enchanted_effect_collection_index
-            .ok_or_else(|| FromRecordError::ExpectedField(b"ENIT".as_bstr()))?;
+            weight_index.ok_or_else(|| FromRecordError::ExpectedField(DATA::static_type_name()))?;
+        let enchanted_effect_collection_index =
+            enchanted_effect_collection_index.ok_or_else(|| {
+                FromRecordError::ExpectedField(EnchantedEffectCollection::static_type_name())
+            })?;
 
         Ok((
             &[],
@@ -456,7 +458,7 @@ impl Writable for EnchantedEffectCollection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_size_output, util::Position3};
+    use crate::{assert_size_output, records::common::NullTerminatedString, util::Position3};
 
     #[test]
     fn test_data() {

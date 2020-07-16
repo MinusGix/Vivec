@@ -12,7 +12,7 @@ use crate::{
     util::{byte, DataSize, Position3, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FormId, FromRecord, FromRecordError, TypeNamed};
+use common::{FormId, FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -136,10 +136,10 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
             }
         }
 
-        let base_npc_index =
-            base_npc_index.ok_or_else(|| FromRecordError::ExpectedField(b"NAME".as_bstr()))?;
+        let base_npc_index = base_npc_index
+            .ok_or_else(|| FromRecordError::ExpectedField(NAME::static_type_name()))?;
         let coords_index =
-            coords_index.ok_or_else(|| FromRecordError::ExpectedField(b"DATA".as_bstr()))?;
+            coords_index.ok_or_else(|| FromRecordError::ExpectedField(DATA::static_type_name()))?;
 
         Ok((
             &[],

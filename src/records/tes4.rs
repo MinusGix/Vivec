@@ -1,7 +1,7 @@
 use super::{
     common::{
         CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
-        NullTerminatedString, TypeNamed,
+        NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
     fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
@@ -11,7 +11,7 @@ use crate::{
     parse::{many, PResult, Parse},
     util::{fmt_data, DataSize, Writable},
 };
-use bstr::{BStr, ByteSlice};
+use bstr::BStr;
 use derive_more::From;
 use std::io::Write;
 
@@ -153,7 +153,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
         }
 
         let hedr_index =
-            hedr_index.ok_or_else(|| FromRecordError::ExpectedField(b"HEDR".as_bstr()))?;
+            hedr_index.ok_or_else(|| FromRecordError::ExpectedField(HEDR::static_type_name()))?;
 
         Ok((
             &[],
