@@ -248,56 +248,27 @@ where
 pub trait StaticDataSize {
     fn static_data_size() -> usize;
 }
-impl StaticDataSize for bool {
-    fn static_data_size() -> usize {
-        1
-    }
+#[macro_export]
+macro_rules! impl_static_data_size {
+    ($t:ty, $size:expr) => {
+        impl $crate::util::StaticDataSize for $t {
+            fn static_data_size() -> usize {
+                $size
+            }
+        }
+    };
 }
-impl StaticDataSize for u8 {
-    fn static_data_size() -> usize {
-        1
-    }
-}
-impl StaticDataSize for i8 {
-    fn static_data_size() -> usize {
-        1
-    }
-}
-impl StaticDataSize for u16 {
-    fn static_data_size() -> usize {
-        2
-    }
-}
-impl StaticDataSize for i16 {
-    fn static_data_size() -> usize {
-        2
-    }
-}
-impl StaticDataSize for u32 {
-    fn static_data_size() -> usize {
-        4
-    }
-}
-impl StaticDataSize for i32 {
-    fn static_data_size() -> usize {
-        4
-    }
-}
-impl StaticDataSize for u64 {
-    fn static_data_size() -> usize {
-        8
-    }
-}
-impl StaticDataSize for i64 {
-    fn static_data_size() -> usize {
-        8
-    }
-}
-impl StaticDataSize for f32 {
-    fn static_data_size() -> usize {
-        4
-    }
-}
+impl_static_data_size!(bool, 1);
+impl_static_data_size!(u8, 1);
+impl_static_data_size!(i8, 1);
+impl_static_data_size!(u16, 2);
+impl_static_data_size!(i16, 2);
+impl_static_data_size!(u32, 4);
+impl_static_data_size!(i32, 4);
+impl_static_data_size!(u64, 8);
+impl_static_data_size!(i64, 8);
+impl_static_data_size!(f32, 4);
+impl_static_data_size!(f64, 8);
 impl<T> StaticDataSize for Position<T>
 where
     T: Sized + Copy + Clone + PartialEq + StaticDataSize,

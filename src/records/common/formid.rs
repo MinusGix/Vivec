@@ -1,6 +1,7 @@
 use crate::{
+    impl_static_data_size,
     parse::{le_u32, PResult},
-    util::{byte, StaticDataSize, Writable},
+    util::{byte, Writable},
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -25,11 +26,7 @@ impl FormId {
         self.id.to_le_bytes()
     }
 }
-impl StaticDataSize for FormId {
-    fn static_data_size() -> usize {
-        4
-    }
-}
+impl_static_data_size!(FormId, u32::static_data_size());
 impl Writable for FormId {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

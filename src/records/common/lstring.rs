@@ -1,4 +1,4 @@
-use crate::util::{StaticDataSize, Writable};
+use crate::{impl_static_data_size, util::Writable};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct LString {
@@ -12,11 +12,7 @@ impl LString {
         Ok((data, Self { index }))
     }
 }
-impl StaticDataSize for LString {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(LString, u32::static_data_size());
 impl Writable for LString {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

@@ -12,9 +12,10 @@ use super::{
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, make_formid_field, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_data_size, make_formid_field,
+    make_single_value_field,
     parse::{le_f32, le_u32, PResult},
-    util::{DataSize, StaticDataSize, Writable},
+    util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use derive_more::From;
@@ -283,16 +284,15 @@ impl StaticTypeNamed<'static> for ENIT {
         b"ENIT".as_bstr()
     }
 }
-impl StaticDataSize for ENIT {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-        	u32::static_data_size() + // potion value
-			ENITFlags::static_data_size() +
-			FormId::static_data_size() + // addiction
-			u32::static_data_size() + // addiction chance
-			FormId::static_data_size() // use sound
-    }
-}
+impl_static_data_size!(
+    ENIT,
+    FIELDH_SIZE +
+    u32::static_data_size() + // potion value
+	ENITFlags::static_data_size() +
+	FormId::static_data_size() + // addiction
+	u32::static_data_size() + // addiction chance
+	FormId::static_data_size() // use sound
+);
 impl Writable for ENIT {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -337,11 +337,7 @@ impl ENITFlags {
         (self.flags & 0x20000) != 0
     }
 }
-impl StaticDataSize for ENITFlags {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(ENITFlags, u32::static_data_size());
 impl Writable for ENITFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -387,11 +383,10 @@ impl StaticTypeNamed<'static> for EFIT {
         b"EFIT".as_bstr()
     }
 }
-impl StaticDataSize for EFIT {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE + f32::static_data_size() + u32::static_data_size() + u32::static_data_size()
-    }
-}
+impl_static_data_size!(
+    EFIT,
+    FIELDH_SIZE + f32::static_data_size() + u32::static_data_size() + u32::static_data_size()
+);
 impl Writable for EFIT {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

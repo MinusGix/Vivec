@@ -1,9 +1,9 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    dispatch_all,
+    dispatch_all, impl_static_data_size,
     parse::{count, le_f32, le_i16, le_i32, le_u16, le_u32, many, take, PResult, ParseError},
     records::common::{ConversionError, FormId, StaticTypeNamed, Windows1252String16},
-    util::{DataSize, StaticDataSize, Writable},
+    util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use std::{convert::TryFrom, io::Write};
@@ -105,6 +105,7 @@ where
     Fragment: ParseFragments<'data>,
 {
     fn data_size(&self) -> usize {
+        use crate::util::StaticDataSize;
         self.version.data_size()
             + self.object_format.data_size()
             + u16::static_data_size() // scripts count size
@@ -176,11 +177,7 @@ impl TryFrom<u16> for VMADObjectFormat {
         }
     }
 }
-impl StaticDataSize for VMADObjectFormat {
-    fn static_data_size() -> usize {
-        u16::static_data_size()
-    }
-}
+impl_static_data_size!(VMADObjectFormat, u16::static_data_size());
 impl Writable for VMADObjectFormat {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -498,13 +495,12 @@ impl VMADPropertyObject {
         }
     }
 }
-impl StaticDataSize for VMADPropertyObject {
-    fn static_data_size() -> usize {
-        FormId::static_data_size() + // formid
-            u16::static_data_size() + // alias
-            u16::static_data_size() // unused
-    }
-}
+impl_static_data_size!(
+    VMADPropertyObject,
+    FormId::static_data_size() + // formid
+    u16::static_data_size() + // alias
+    u16::static_data_size() // unused
+);
 
 #[derive(Debug, Clone)]
 pub struct VMADProperty<'data> {
@@ -558,11 +554,7 @@ impl<'data> ParseFragments<'data> for NoFragments {
         Err(ParseError::ExpectedEOF)
     }
 }
-impl StaticDataSize for NoFragments {
-    fn static_data_size() -> usize {
-        0
-    }
-}
+impl_static_data_size!(NoFragments, 0);
 impl Writable for NoFragments {
     fn write_to<T>(&self, _w: &mut T) -> std::io::Result<()>
     where
@@ -656,11 +648,7 @@ impl INFORecordFragmentsFlags {
         self.flags.count_ones() as u8
     }
 }
-impl StaticDataSize for INFORecordFragmentsFlags {
-    fn static_data_size() -> usize {
-        u8::static_data_size()
-    }
-}
+impl_static_data_size!(INFORecordFragmentsFlags, u8::static_data_size());
 impl Writable for INFORecordFragmentsFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -794,11 +782,7 @@ impl PACKRecordFragmentsFlags {
         self.flags.count_ones() as u8
     }
 }
-impl StaticDataSize for PACKRecordFragmentsFlags {
-    fn static_data_size() -> usize {
-        u8::static_data_size()
-    }
-}
+impl_static_data_size!(PACKRecordFragmentsFlags, u8::static_data_size());
 impl Writable for PACKRecordFragmentsFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

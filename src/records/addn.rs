@@ -6,9 +6,10 @@ use super::{
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, make_formid_field, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_data_size, make_formid_field,
+    make_single_value_field,
     parse::{le_u16, le_u32, PResult},
-    util::{DataSize, StaticDataSize, Writable},
+    util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use common::{FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
@@ -203,13 +204,12 @@ impl FromField<'_> for DNAM {
         Ok((data, DNAM::new(particle_cap, flags)))
     }
 }
-impl StaticDataSize for DNAM {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-            u16::static_data_size() + // master_particle_system_cap
-            u16::static_data_size() // flags
-    }
-}
+impl_static_data_size!(
+    DNAM,
+    FIELDH_SIZE +
+    u16::static_data_size() + // master particle system cap
+    u16::static_data_size() // flags
+);
 impl Writable for DNAM {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

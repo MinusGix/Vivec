@@ -1,9 +1,9 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    make_empty_field, make_model_fields, make_single_value_field,
+    impl_static_data_size, make_empty_field, make_model_fields, make_single_value_field,
     parse::{le_u16, le_u32, take, PResult},
     records::common::{get_field, FormId, StaticTypeNamed, TypeNamed},
-    util::{DataSize, StaticDataSize, Writable},
+    util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use std::io::Write;
@@ -41,11 +41,10 @@ impl StaticTypeNamed<'static> for DEST {
         b"DEST".as_bstr()
     }
 }
-impl StaticDataSize for DEST {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE + u32::static_data_size() + (u8::static_data_size() * 4)
-    }
-}
+impl_static_data_size!(
+    DEST,
+    FIELDH_SIZE + u32::static_data_size() + (u8::static_data_size() * 4)
+);
 impl Writable for DEST {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -102,18 +101,17 @@ impl StaticTypeNamed<'static> for DSTD {
         b"DSTD".as_bstr()
     }
 }
-impl StaticDataSize for DSTD {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-        u16::static_data_size() + // health_percent
-			u8::static_data_size() + // damage_stage
-			DSTDFlags::static_data_size() + // flags
-			u32::static_data_size() + // self damage rate
-			FormId::static_data_size() + // explosion id
-			FormId::static_data_size() + // debris id
-			u32::static_data_size() // debris count
-    }
-}
+impl_static_data_size!(
+    DSTD,
+    FIELDH_SIZE +
+    u16::static_data_size() + // health_percent
+	u8::static_data_size() + // damage_stage
+    DSTDFlags::static_data_size() + // flags
+    u32::static_data_size() + // self damage rate
+	FormId::static_data_size() + // explosion id
+	FormId::static_data_size() + // debris id
+	u32::static_data_size() // debris count
+);
 impl Writable for DSTD {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -159,11 +157,7 @@ impl DSTDFlags {
         (self.flags & 0b1000) != 0
     }
 }
-impl StaticDataSize for DSTDFlags {
-    fn static_data_size() -> usize {
-        u8::static_data_size()
-    }
-}
+impl_static_data_size!(DSTDFlags, u8::static_data_size());
 impl Writable for DSTDFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

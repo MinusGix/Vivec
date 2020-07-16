@@ -1,6 +1,7 @@
 use crate::{
+    impl_static_data_size,
     parse::{take, PResult},
-    util::{StaticDataSize, Writable},
+    util::Writable,
 };
 
 /// Version Control User ID
@@ -43,14 +44,13 @@ impl VersionControlInfo {
         ))
     }
 }
-impl StaticDataSize for VersionControlInfo {
-    fn static_data_size() -> usize {
-        u8::static_data_size() // day
+impl_static_data_size!(
+    VersionControlInfo,
+    u8::static_data_size() // day
             + u8::static_data_size() // month
             + VUID::static_data_size() // last_user_id
             + VUID::static_data_size() // current_user_id
-    }
-}
+);
 impl Writable for VersionControlInfo {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

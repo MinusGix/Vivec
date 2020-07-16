@@ -3,9 +3,10 @@
 
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
+    impl_static_data_size,
     parse::{le_f32, le_i32, le_u16, le_u32, single, take, PResult, ParseError},
     records::common::{ConversionError, FormId, StaticTypeNamed},
-    util::{StaticDataSize, Writable},
+    util::Writable,
 };
 use bstr::{BStr, ByteSlice};
 use std::io::Write;
@@ -65,20 +66,19 @@ impl StaticTypeNamed<'static> for CTDA {
         b"CTDA".as_bstr()
     }
 }
-impl StaticDataSize for CTDA {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-			OperatorData::static_data_size() +
-			(u8::static_data_size() * 3) + // unknown
-			ComparisonValue::static_data_size() +
-			u16::static_data_size() + // function index
-            u16::static_data_size() + // padding
-            Parameters::static_data_size() +
-			RunOn::static_data_size() +
-			FormId::static_data_size() +
-			i32::static_data_size()
-    }
-}
+impl_static_data_size!(
+    CTDA,
+    FIELDH_SIZE +
+	OperatorData::static_data_size() +
+	(u8::static_data_size() * 3) + // unknown
+	ComparisonValue::static_data_size() +
+	u16::static_data_size() + // function index
+    u16::static_data_size() + // padding
+    Parameters::static_data_size() +
+	RunOn::static_data_size() +
+	FormId::static_data_size() +
+	i32::static_data_size()
+);
 impl Writable for CTDA {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -209,11 +209,7 @@ impl OperatorData {
             .map(|x| (data, x))
     }
 }
-impl StaticDataSize for OperatorData {
-    fn static_data_size() -> usize {
-        u8::static_data_size()
-    }
-}
+impl_static_data_size!(OperatorData, u8::static_data_size());
 impl Writable for OperatorData {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -241,11 +237,10 @@ impl ComparisonValue {
         })
     }
 }
-impl StaticDataSize for ComparisonValue {
-    fn static_data_size() -> usize {
-        FormId::static_data_size().max(f32::static_data_size())
-    }
-}
+impl_static_data_size!(
+    ComparisonValue,
+    FormId::static_data_size().max(f32::static_data_size())
+);
 impl Writable for ComparisonValue {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -284,11 +279,7 @@ impl Writable for Parameters {
         }
     }
 }
-impl StaticDataSize for Parameters {
-    fn static_data_size() -> usize {
-        u64::static_data_size()
-    }
-}
+impl_static_data_size!(Parameters, u64::static_data_size());
 
 /// The method of applying the condition
 /// repr: u32
@@ -347,11 +338,7 @@ impl RunOn {
         }
     }
 }
-impl StaticDataSize for RunOn {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(RunOn, u32::static_data_size());
 impl Writable for RunOn {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

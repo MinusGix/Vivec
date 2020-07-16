@@ -1,7 +1,8 @@
 use super::fields::common::{FieldName, FromField, FromFieldError, GeneralField};
 use crate::{
+    impl_static_data_size,
     parse::{le_u16, le_u32, many, take, PResult, ParseError},
-    util::{DataSize, StaticDataSize, Writable},
+    util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use std::io::Write;
@@ -229,11 +230,7 @@ impl RecordFlags {
         (self.flags & flag) != 0
     }
 }
-impl StaticDataSize for RecordFlags {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(RecordFlags, u32::static_data_size());
 impl Writable for RecordFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -293,15 +290,14 @@ impl CommonRecordInfo {
         }
     }
 }
-impl StaticDataSize for CommonRecordInfo {
-    fn static_data_size() -> usize {
-        RecordFlags::static_data_size()
-            + u32::static_data_size() // id
-            + VersionControlInfo::static_data_size()
-            + u16::static_data_size() // version
-            + u16::static_data_size() // unknown
-    }
-}
+impl_static_data_size!(
+    CommonRecordInfo,
+    RecordFlags::static_data_size()
+        + u32::static_data_size()
+        + VersionControlInfo::static_data_size()
+        + u16::static_data_size()
+        + u16::static_data_size() // unknown
+);
 impl Writable for CommonRecordInfo {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

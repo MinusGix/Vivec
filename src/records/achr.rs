@@ -6,10 +6,10 @@ use super::{
     },
 };
 use crate::{
-    collect_many, collect_one, dispatch_all, make_empty_field, make_formid_field,
-    make_single_value_field,
+    collect_many, collect_one, dispatch_all, impl_static_data_size, make_empty_field,
+    make_formid_field, make_single_value_field,
     parse::{le_f32, le_u32, take, PResult, ParseError},
-    util::{byte, DataSize, Position3, StaticDataSize, Writable},
+    util::{byte, DataSize, Position3, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use common::{FormId, FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
@@ -338,12 +338,11 @@ impl<'data> TopicType<'data> {
         }
     }
 }
-impl<'data> StaticDataSize for TopicType<'data> {
-    fn static_data_size() -> usize {
-        u32::static_data_size() + // type integer
-            FormId::static_data_size() // u32 size (formid and 4 char bstr)
-    }
-}
+impl_static_data_size!(
+    TopicType<'_>,
+    u32::static_data_size() + // type integer
+        FormId::static_data_size() // u32 size (formid | 4 char bstr)
+);
 impl<'data> Writable for TopicType<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -391,11 +390,7 @@ impl FromField<'_> for XRGB {
         Ok((data, XRGB { data: [f1, f2, f3] }))
     }
 }
-impl StaticDataSize for XRGB {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE + (f32::static_data_size() * 3)
-    }
-}
+impl_static_data_size!(XRGB, FIELDH_SIZE + (f32::static_data_size() * 3));
 impl Writable for XRGB {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -464,11 +459,7 @@ impl LevelModifier {
         }
     }
 }
-impl StaticDataSize for LevelModifier {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(LevelModifier, u32::static_data_size());
 impl Writable for LevelModifier {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -504,11 +495,7 @@ impl XAPDFlags {
         (self.flags & 0b1) != 0
     }
 }
-impl StaticDataSize for XAPDFlags {
-    fn static_data_size() -> usize {
-        u8::static_data_size()
-    }
-}
+impl_static_data_size!(XAPDFlags, u8::static_data_size());
 impl Writable for XAPDFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -537,13 +524,12 @@ impl StaticTypeNamed<'static> for XAPR {
         b"XAPR".as_bstr()
     }
 }
-impl StaticDataSize for XAPR {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-            FormId::static_data_size() + // formid
-            f32::static_data_size() // delay
-    }
-}
+impl_static_data_size!(
+    XAPR,
+    FIELDH_SIZE +
+    FormId::static_data_size() + // formid
+    f32::static_data_size() // delay
+);
 impl Writable for XAPR {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -584,13 +570,12 @@ impl StaticTypeNamed<'static> for XESP {
         b"XESP".as_bstr()
     }
 }
-impl StaticDataSize for XESP {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-            FormId::static_data_size() + // parent
-            XESPFlags::static_data_size() // flags
-    }
-}
+impl_static_data_size!(
+    XESP,
+    FIELDH_SIZE +
+    FormId::static_data_size() + // parent
+    XESPFlags::static_data_size()
+);
 impl Writable for XESP {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -621,11 +606,7 @@ impl XESPFlags {
         (self.flags & 0b10) != 0
     }
 }
-impl StaticDataSize for XESPFlags {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(XESPFlags, u32::static_data_size());
 impl Writable for XESPFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -665,13 +646,12 @@ impl StaticTypeNamed<'static> for XLKR {
         b"XLKR".as_bstr()
     }
 }
-impl StaticDataSize for XLKR {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-            FormId::static_data_size() + // keyword
-            FormId::static_data_size() // reference
-    }
-}
+impl_static_data_size!(
+    XLKR,
+    FIELDH_SIZE +
+    FormId::static_data_size() + // keyword
+    FormId::static_data_size() // reference
+);
 impl Writable for XLKR {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -728,13 +708,12 @@ impl StaticTypeNamed<'static> for DATA {
         b"DATA".as_bstr()
     }
 }
-impl StaticDataSize for DATA {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-            Position3::<f32>::static_data_size() + // position
-            Position3::<f32>::static_data_size() // rotation
-    }
-}
+impl_static_data_size!(
+    DATA,
+    FIELDH_SIZE +
+    Position3::<f32>::static_data_size() + // position
+    Position3::<f32>::static_data_size() // rotation
+);
 impl Writable for DATA {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

@@ -1,10 +1,11 @@
 use crate::{
+    impl_static_data_size,
     parse::{le_i32, le_u32, tag, take, PResult, ParseError},
     records::common::{
         FormId, FromRecord, FromRecordError, GeneralRecord, RecordName, TypeNamed,
         VersionControlInfo,
     },
-    util::{byte, DataSize, Position, StaticDataSize, Writable},
+    util::{byte, DataSize, Position, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use derive_more::From;
@@ -262,12 +263,11 @@ impl<'data> GroupType<'data> {
         }
     }
 }
-impl<'data> StaticDataSize for GroupType<'data> {
-    fn static_data_size() -> usize {
-        (u8::static_data_size() * 4) + // label
-			i32::static_data_size() // group type enum value
-    }
-}
+impl_static_data_size!(
+    GroupType<'_>,
+    (u8::static_data_size() * 4) + // label
+    i32::static_data_size() // group type enum value
+);
 impl<'data> Writable for GroupType<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

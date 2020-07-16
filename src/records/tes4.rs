@@ -6,9 +6,9 @@ use super::{
     fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
 use crate::{
-    collect_one, dispatch_all, make_single_value_field,
+    collect_one, dispatch_all, impl_static_data_size, make_single_value_field,
     parse::{le_f32, le_u32, le_u64, many, PResult},
-    util::{fmt_data, DataSize, StaticDataSize, Writable},
+    util::{fmt_data, DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use derive_more::From;
@@ -277,14 +277,13 @@ impl StaticTypeNamed<'static> for HEDR {
         b"HEDR".as_bstr()
     }
 }
-impl StaticDataSize for HEDR {
-    fn static_data_size() -> usize {
-        FIELDH_SIZE +
-            f32::static_data_size() + // version
-            u32::static_data_size() + // record count
-            u32::static_data_size() // next_object_id
-    }
-}
+impl_static_data_size!(
+    HEDR,
+    FIELDH_SIZE +
+    f32::static_data_size() + // version
+    u32::static_data_size() + // record count
+    u32::static_data_size() // next object id
+);
 impl Writable for HEDR {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where

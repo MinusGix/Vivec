@@ -12,9 +12,10 @@ use super::{
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    make_single_value_field,
     parse::{le_f32, le_u32, PResult, ParseError},
-    util::{DataSize, StaticDataSize, Writable},
+    util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
 use derive_more::From;
@@ -291,14 +292,13 @@ impl DATALegendaryEdition {
         ))
     }
 }
-impl StaticDataSize for DATALegendaryEdition {
-    fn static_data_size() -> usize {
-        FormId::static_data_size() // projectile id
-            + DATAFlags::static_data_size() // flags
-            + f32::static_data_size() // damage
-            + u32::static_data_size() // value
-    }
-}
+impl_static_data_size!(
+    DATALegendaryEdition,
+    FormId::static_data_size() + // projectile id
+    DATAFlags::static_data_size() + // flags
+    f32::static_data_size() + // damage
+    u32::static_data_size() // value
+);
 impl Writable for DATALegendaryEdition {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -322,11 +322,10 @@ impl DATASpecialEdition {
         Ok((data, Self { le, weight }))
     }
 }
-impl StaticDataSize for DATASpecialEdition {
-    fn static_data_size() -> usize {
-        DATALegendaryEdition::static_data_size() + f32::static_data_size()
-    }
-}
+impl_static_data_size!(
+    DATASpecialEdition,
+    DATALegendaryEdition::static_data_size() + f32::static_data_size()
+);
 impl Writable for DATASpecialEdition {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -418,11 +417,7 @@ impl DATAFlags {
         (self.flags & 0b100) == 0
     }
 }
-impl StaticDataSize for DATAFlags {
-    fn static_data_size() -> usize {
-        u32::static_data_size()
-    }
-}
+impl_static_data_size!(DATAFlags, u32::static_data_size());
 impl Writable for DATAFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
