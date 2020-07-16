@@ -244,7 +244,7 @@ impl<'data> GroupType<'data> {
         }
     }
 
-    pub fn get_name(&self) -> i32 {
+    pub fn code(&self) -> i32 {
         match self {
             GroupType::Top(_) => 0,
             GroupType::WorldChildren(_) => 1,
@@ -274,7 +274,7 @@ impl<'data> Writable for GroupType<'data> {
         T: Write,
     {
         w.write_all(&self.get_label())?;
-        self.get_name().write_to(w)
+        self.code().write_to(w)
     }
 }
 
