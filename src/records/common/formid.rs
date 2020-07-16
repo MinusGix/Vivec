@@ -1,6 +1,6 @@
 use crate::{
     impl_static_data_size,
-    parse::{le_u32, PResult},
+    parse::{PResult, Parse},
     util::{byte, Writable},
 };
 
@@ -18,7 +18,7 @@ impl FormId {
     }
 
     pub fn parse(data: &[u8]) -> PResult<FormId> {
-        let (data, id) = le_u32(data)?;
+        let (data, id) = u32::parse(data)?;
         Ok((data, FormId::new(id)))
     }
 

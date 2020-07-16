@@ -8,7 +8,8 @@ pub struct LString {
 }
 impl LString {
     pub fn parse(data: &[u8]) -> crate::parse::PResult<Self> {
-        let (data, index) = crate::parse::le_u32(data)?;
+        use crate::parse::Parse;
+        let (data, index) = u32::parse(data)?;
         Ok((data, Self { index }))
     }
 }

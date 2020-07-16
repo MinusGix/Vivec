@@ -1,6 +1,6 @@
 use crate::{
     make_single_value_field,
-    parse::{le_u32, take, PResult},
+    parse::{take, PResult, Parse},
     records::common::FormId,
     util::{DataSize, Writable},
 };
@@ -16,11 +16,11 @@ pub struct AlternateTexture<'data> {
 }
 impl<'data> AlternateTexture<'data> {
     pub fn parse(data: &'data [u8]) -> PResult<Self> {
-        let (data, size) = le_u32(data)?;
+        let (data, size) = u32::parse(data)?;
         let (data, name_3d) = take(data, size as usize)?;
         let name_3d = name_3d.as_bstr();
         let (data, texture_set) = FormId::parse(data)?;
-        let (data, index_3d) = le_u32(data)?;
+        let (data, index_3d) = u32::parse(data)?;
         Ok((
             data,
             Self {
@@ -103,7 +103,8 @@ macro_rules! make_model_fields {
         }
         impl<'data> $crate::records::fields::common::FromField<'data> for $mods<'data> {
             fn from_field(field: $crate::records::fields::common::GeneralField<'data>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>> {
-                let (data, count) = $crate::parse::le_u32(field.data)?;
+                use $crate::parse::Parse;
+                let (data, count) = u32::parse(field.data)?;
                 let (data, alternate_textures) = $crate::parse::count(data, $crate::records::fields::modl::AlternateTexture::parse, count as usize)?;
                 assert_eq!(data.len(), 0);
                 Ok((data, Self { alternate_textures }))

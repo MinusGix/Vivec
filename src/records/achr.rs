@@ -8,7 +8,7 @@ use super::{
 use crate::{
     collect_many, collect_one, dispatch_all, impl_static_data_size, impl_static_type_named,
     make_empty_field, make_formid_field, make_single_value_field,
-    parse::{le_f32, le_u32, take, PResult, ParseError},
+    parse::{take, PResult, Parse, ParseError},
     util::{byte, DataSize, Position3, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -276,7 +276,7 @@ make_formid_field!(XEZN);
 make_single_value_field!([Debug, Copy, Clone, PartialEq], XPRD, idle_time, f32);
 impl FromField<'_> for XPRD {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, idle_time) = le_f32(field.data)?;
+        let (data, idle_time) = f32::parse(field.data)?;
         Ok((data, XPRD { idle_time }))
     }
 }
@@ -288,7 +288,7 @@ make_formid_field!(INAM);
 make_single_value_field!([Debug, Clone], PDTO, topic_type, TopicType, 'data);
 impl<'data> FromField<'data> for PDTO<'data> {
     fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, topic_type) = le_u32(field.data)?;
+        let (data, topic_type) = u32::parse(field.data)?;
         let (data, topic_type) = TopicType::parse(data, topic_type)?;
         Ok((data, PDTO { topic_type }))
     }
@@ -376,9 +376,9 @@ pub struct XRGB {
 impl_static_type_named!(XRGB, b"XRGB");
 impl FromField<'_> for XRGB {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, f1) = le_f32(field.data)?;
-        let (data, f2) = le_f32(data)?;
-        let (data, f3) = le_f32(data)?;
+        let (data, f1) = f32::parse(field.data)?;
+        let (data, f2) = f32::parse(data)?;
+        let (data, f3) = f32::parse(data)?;
         Ok((data, XRGB { data: [f1, f2, f3] }))
     }
 }
@@ -404,7 +404,7 @@ make_single_value_field!(
 );
 impl FromField<'_> for XLCM {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, modifier) = le_u32(field.data)?;
+        let (data, modifier) = u32::parse(field.data)?;
         let modifier = match LevelModifier::from_u32(modifier) {
             Some(x) => x,
             None => return Err(ParseError::InvalidEnumerationValue.into()),
@@ -507,7 +507,7 @@ pub struct XAPR {
 impl FromField<'_> for XAPR {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, formid) = FormId::parse(field.data)?;
-        let (data, delay) = le_f32(data)?;
+        let (data, delay) = f32::parse(data)?;
         Ok((data, XAPR { formid, delay }))
     }
 }
@@ -548,7 +548,7 @@ pub struct XESP {
 impl FromField<'_> for XESP {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, parent) = FormId::parse(field.data)?;
-        let (data, flags) = le_u32(data)?;
+        let (data, flags) = u32::parse(data)?;
         let flags = XESPFlags::new(flags);
         Ok((data, XESP { parent, flags }))
     }
@@ -653,7 +653,7 @@ make_formid_field!(XLRL);
 make_single_value_field!([Debug, Copy, Clone, PartialEq], XSCL, scale, f32);
 impl FromField<'_> for XSCL {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, scale) = le_f32(field.data)?;
+        let (data, scale) = f32::parse(field.data)?;
         Ok((data, XSCL { scale }))
     }
 }
@@ -668,12 +668,12 @@ pub struct DATA {
 }
 impl FromField<'_> for DATA {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, x) = le_f32(field.data)?;
-        let (data, y) = le_f32(data)?;
-        let (data, z) = le_f32(data)?;
-        let (data, rx) = le_f32(data)?;
-        let (data, ry) = le_f32(data)?;
-        let (data, rz) = le_f32(data)?;
+        let (data, x) = f32::parse(field.data)?;
+        let (data, y) = f32::parse(data)?;
+        let (data, z) = f32::parse(data)?;
+        let (data, rx) = f32::parse(data)?;
+        let (data, ry) = f32::parse(data)?;
+        let (data, rz) = f32::parse(data)?;
         Ok((
             data,
             DATA {

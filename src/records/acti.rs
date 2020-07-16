@@ -11,7 +11,7 @@ use super::{
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_static_type_named, make_formid_field,
     make_single_value_field,
-    parse::{count, le_u16, le_u32, PResult},
+    parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -305,7 +305,7 @@ make_single_value_field!(
 );
 impl FromField<'_> for FNAM {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, flags) = le_u16(field.data)?;
+        let (data, flags) = u16::parse(field.data)?;
         Ok((data, Self { flags }))
     }
 }

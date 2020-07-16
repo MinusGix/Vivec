@@ -1,6 +1,6 @@
 use super::BStrw;
 use crate::{
-    parse::{le_u16, take, PResult},
+    parse::{take, PResult, Parse},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -25,7 +25,7 @@ impl<'data> Windows1252String16<'data> {
 
     pub fn parse(data: &'data [u8]) -> PResult<Self> {
         // TODO: test that this is little endian
-        let (data, length) = le_u16(data)?;
+        let (data, length) = u16::parse(data)?;
         let (data, string) = take(data, length as usize)?;
         Ok((data, Windows1252String16::from_ascii_bytes(string)))
     }

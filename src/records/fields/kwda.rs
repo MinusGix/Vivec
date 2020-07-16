@@ -1,7 +1,7 @@
 use super::common::{FromField, FromFieldError, GeneralField};
 use crate::{
     impl_static_type_named, make_single_value_field,
-    parse::{count, le_u32, PResult},
+    parse::{count, PResult, Parse},
     records::common::{FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
 };
@@ -17,7 +17,7 @@ make_single_value_field!(
 );
 impl FromField<'_> for KSIZ {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, amount) = le_u32(field.data)?;
+        let (data, amount) = u32::parse(field.data)?;
         Ok((data, Self { amount }))
     }
 }

@@ -8,7 +8,7 @@ use super::{
 use crate::{
     collect_one, dispatch_all, impl_static_data_size, impl_static_type_named,
     make_single_value_field,
-    parse::{le_f32, le_u32, le_u64, many, PResult},
+    parse::{many, PResult, Parse},
     util::{fmt_data, DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -254,9 +254,9 @@ pub struct HEDR {
 }
 impl FromField<'_> for HEDR {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, version) = le_f32(field.data)?;
-        let (data, record_count) = le_u32(data)?;
-        let (data, next_object_id) = le_u32(data)?;
+        let (data, version) = f32::parse(field.data)?;
+        let (data, record_count) = u32::parse(data)?;
+        let (data, next_object_id) = u32::parse(data)?;
         // TODO: assure that it's at the end.
 
         Ok((
@@ -334,7 +334,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], DATA, value, u64);
 impl FromField<'_> for DATA {
     fn from_field(field: GeneralField<'_>) -> PResult<DATA, FromFieldError> {
         // TODO: verify that was all
-        let (data, value) = le_u64(field.data)?;
+        let (data, value) = u64::parse(field.data)?;
         Ok((data, DATA { value }))
     }
 }
@@ -366,7 +366,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], INTV, value, u32);
 impl FromField<'_> for INTV {
     fn from_field(field: GeneralField<'_>) -> PResult<INTV, FromFieldError> {
         // TODO: verify that was all
-        let (data, value) = le_u32(field.data)?;
+        let (data, value) = u32::parse(field.data)?;
         Ok((data, INTV { value }))
     }
 }
@@ -375,7 +375,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], INCC, value, u32);
 impl FromField<'_> for INCC {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         // TODO: verify that was all
-        let (data, value) = le_u32(field.data)?;
+        let (data, value) = u32::parse(field.data)?;
         Ok((data, INCC { value }))
     }
 }

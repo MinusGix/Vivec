@@ -1,7 +1,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     impl_static_data_size, impl_static_type_named,
-    parse::{le_i16, PResult, ParseError},
+    parse::{PResult, Parse, ParseError},
     util::{Position3, Writable},
 };
 use bstr::BStr;
@@ -32,12 +32,12 @@ impl FromField<'_> for OBND {
         }
 
         let data = field.data;
-        let (data, x1) = le_i16(data)?;
-        let (data, y1) = le_i16(data)?;
-        let (data, z1) = le_i16(data)?;
-        let (data, x2) = le_i16(data)?;
-        let (data, y2) = le_i16(data)?;
-        let (data, z2) = le_i16(data)?;
+        let (data, x1) = i16::parse(data)?;
+        let (data, y1) = i16::parse(data)?;
+        let (data, z1) = i16::parse(data)?;
+        let (data, x2) = i16::parse(data)?;
+        let (data, y2) = i16::parse(data)?;
+        let (data, z2) = i16::parse(data)?;
 
         Ok((
             data,

@@ -8,7 +8,7 @@ use super::{
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
     impl_static_type_named, make_formid_field, make_single_value_field,
-    parse::{le_u16, le_u32, PResult},
+    parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -160,7 +160,7 @@ make_single_value_field!(
 );
 impl FromField<'_> for DATA {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, addon_node_index) = le_u32(field.data)?;
+        let (data, addon_node_index) = u32::parse(field.data)?;
         Ok((data, DATA { addon_node_index }))
     }
 }
@@ -191,8 +191,8 @@ impl DNAM {
 impl_static_type_named!(DNAM, b"DNAM");
 impl FromField<'_> for DNAM {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, particle_cap) = le_u16(field.data)?;
-        let (data, flags) = le_u16(data)?;
+        let (data, particle_cap) = u16::parse(field.data)?;
+        let (data, flags) = u16::parse(data)?;
         Ok((data, DNAM::new(particle_cap, flags)))
     }
 }

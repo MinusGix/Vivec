@@ -2,7 +2,7 @@ use super::common::{write_field_header, FromField, FromFieldError, GeneralField,
 use crate::{
     impl_static_data_size, impl_static_type_named, make_empty_field, make_model_fields,
     make_single_value_field,
-    parse::{le_u16, le_u32, take, PResult},
+    parse::{take, PResult, Parse},
     records::common::{get_field, FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
 };
@@ -22,10 +22,10 @@ pub struct DEST {
 }
 impl FromField<'_> for DEST {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, health) = le_u32(field.data)?;
+        let (data, health) = u32::parse(field.data)?;
         let (data, count) = take(data, 1usize)?;
         let (data, flag) = take(data, 1usize)?;
-        let (data, unknown) = le_u16(data)?;
+        let (data, unknown) = u16::parse(data)?;
         Ok((
             data,
             DEST {
@@ -71,14 +71,14 @@ pub struct DSTD {
 }
 impl FromField<'_> for DSTD {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, health_percent) = le_u16(field.data)?;
+        let (data, health_percent) = u16::parse(field.data)?;
         let (data, damage_stage) = take(data, 1usize)?;
         let damage_stage = damage_stage[0];
         let (data, flags) = DSTDFlags::parse(data)?;
-        let (data, self_damage_rate) = le_u32(data)?;
+        let (data, self_damage_rate) = u32::parse(data)?;
         let (data, explosion_id) = FormId::parse(data)?;
         let (data, debris_id) = FormId::parse(data)?;
-        let (data, debris_count) = le_u32(data)?;
+        let (data, debris_count) = u32::parse(data)?;
         Ok((
             data,
             Self {

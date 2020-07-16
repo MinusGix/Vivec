@@ -14,7 +14,7 @@ use super::{
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
     impl_static_type_named, make_formid_field, make_single_value_field,
-    parse::{le_f32, le_u32, PResult},
+    parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -241,7 +241,7 @@ make_single_value_field!(
 );
 impl<'data> FromField<'data> for DATA {
     fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, weight) = le_f32(field.data)?;
+        let (data, weight) = f32::parse(field.data)?;
         Ok((data, Self { weight }))
     }
 }
@@ -258,10 +258,10 @@ pub struct ENIT {
 }
 impl FromField<'_> for ENIT {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, potion_value) = le_u32(field.data)?;
+        let (data, potion_value) = u32::parse(field.data)?;
         let (data, flags) = ENITFlags::parse(data)?;
         let (data, addiction) = FormId::parse(data)?;
-        let (data, addiction_chance) = le_u32(data)?;
+        let (data, addiction_chance) = u32::parse(data)?;
         let (data, use_sound) = FormId::parse(data)?;
         Ok((
             data,
@@ -309,7 +309,7 @@ pub struct ENITFlags {
 }
 impl ENITFlags {
     pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = le_u32(data)?;
+        let (data, flags) = u32::parse(data)?;
         Ok((data, Self { flags }))
     }
 
@@ -357,9 +357,9 @@ pub struct EFIT {
 // magnitude < 1 becomes 1
 impl FromField<'_> for EFIT {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, magnitude) = le_f32(field.data)?;
-        let (data, area_of_effect) = le_u32(data)?;
-        let (data, duration) = le_u32(data)?;
+        let (data, magnitude) = f32::parse(field.data)?;
+        let (data, area_of_effect) = u32::parse(data)?;
+        let (data, duration) = u32::parse(data)?;
         Ok((
             data,
             Self {

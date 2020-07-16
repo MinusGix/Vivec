@@ -1,5 +1,5 @@
 use crate::{
-    parse::{le_u16, take, PResult, ParseError},
+    parse::{take, PResult, Parse, ParseError},
     records::common::TypeNamed,
     util::{fmt_data, DataSize, Writable},
 };
@@ -53,7 +53,7 @@ impl<'data> GeneralField<'data> {
     pub fn parse(data: &'data [u8]) -> PResult<GeneralField<'data>> {
         let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
-        let (data, field_data_size) = le_u16(data)?;
+        let (data, field_data_size) = u16::parse(data)?;
         let (data, field_data) = take(data, field_data_size as usize)?;
 
         Ok((data, GeneralField::new(type_name, field_data)))

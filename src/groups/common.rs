@@ -1,6 +1,6 @@
 use crate::{
     impl_static_data_size,
-    parse::{le_i32, le_u32, tag, take, PResult, ParseError},
+    parse::{tag, take, PResult, Parse, ParseError},
     records::common::{
         FormId, FromRecord, FromRecordError, GeneralRecord, RecordName, TypeNamed,
         VersionControlInfo,
@@ -44,10 +44,10 @@ impl<'data> GeneralGroup<'data> {
     pub fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, _) = tag(data, b"GRUP")?;
         // Size of the entire group, including group header..
-        let (data, group_size) = le_u32(data)?;
+        let (data, group_size) = u32::parse(data)?;
         let (data, group_type) = GroupType::parse(data)?;
         let (data, version_control_info) = VersionControlInfo::parse(data)?;
-        let (data, unknown) = le_u32(data)?;
+        let (data, unknown) = u32::parse(data)?;
         let (data, group_data) = take(data, group_size as usize - GROUPH_SIZE)?;
 
         Ok((
@@ -182,7 +182,7 @@ pub enum GroupType<'data> {
 impl<'data> GroupType<'data> {
     pub fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, label) = take(data, 4)?;
-        let (data, group_type) = le_i32(data)?;
+        let (data, group_type) = i32::parse(data)?;
         Ok((data, GroupType::from_info(group_type, label)))
     }
 

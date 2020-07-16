@@ -1,7 +1,7 @@
 use super::fields::common::{FieldName, FromField, FromFieldError, GeneralField};
 use crate::{
     impl_static_data_size,
-    parse::{le_u16, le_u32, many, take, PResult, ParseError},
+    parse::{many, take, PResult, Parse, ParseError},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -324,13 +324,13 @@ impl<'data> GeneralRecord<'data> {
         let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
 
-        let (data, record_data_size) = le_u32(data)?;
-        let (data, flags) = le_u32(data)?;
-        let (data, id) = le_u32(data)?;
+        let (data, record_data_size) = u32::parse(data)?;
+        let (data, flags) = u32::parse(data)?;
+        let (data, id) = u32::parse(data)?;
         let (data, version_control_info) = VersionControlInfo::parse(data)?;
         // IDEA: Perhaps the version is a four bit integer, and so unkown is simpler the lower bits of it?
-        let (data, version) = le_u16(data)?;
-        let (data, unknown) = le_u16(data)?;
+        let (data, version) = u16::parse(data)?;
+        let (data, unknown) = u16::parse(data)?;
 
         // TODO: verify it's all been used
         let (data, record_data) = take(data, record_data_size as usize)?;

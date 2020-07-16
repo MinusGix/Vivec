@@ -14,7 +14,7 @@ use super::{
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
     impl_static_type_named, make_single_value_field,
-    parse::{le_f32, le_u32, PResult, ParseError},
+    parse::{PResult, Parse, ParseError},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -275,8 +275,8 @@ impl DATALegendaryEdition {
     pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, projectile_id) = FormId::parse(data)?;
         let (data, flags) = DATAFlags::parse(data)?;
-        let (data, damage) = le_f32(data)?;
-        let (data, value) = le_u32(data)?;
+        let (data, damage) = f32::parse(data)?;
+        let (data, value) = u32::parse(data)?;
         Ok((
             data,
             Self {
@@ -314,7 +314,7 @@ pub struct DATASpecialEdition {
 impl DATASpecialEdition {
     pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, le) = DATALegendaryEdition::parse(data)?;
-        let (data, weight) = le_f32(data)?;
+        let (data, weight) = f32::parse(data)?;
         Ok((data, Self { le, weight }))
     }
 }
@@ -387,7 +387,7 @@ pub struct DATAFlags {
 }
 impl DATAFlags {
     pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = le_u32(data)?;
+        let (data, flags) = u32::parse(data)?;
         Ok((data, Self { flags }))
     }
 

@@ -4,7 +4,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     impl_static_data_size, impl_static_type_named,
-    parse::{le_f32, le_i32, le_u16, le_u32, single, take, PResult, ParseError},
+    parse::{single, take, PResult, Parse, ParseError},
     records::common::{ConversionError, FormId},
     util::Writable,
 };
@@ -39,12 +39,12 @@ impl FromField<'_> for CTDA {
         let (data, unknown) = take(data, 3)?;
         let unknown = [unknown[0], unknown[1], unknown[2]];
         let (data, comp_value) = ComparisonValue::parse(data, op_data.flags)?;
-        let (data, function_index) = le_u16(data)?;
-        let (data, padding) = le_u16(data)?;
+        let (data, function_index) = u16::parse(data)?;
+        let (data, padding) = u16::parse(data)?;
         let (data, parameters) = Parameters::parse(data, function_index)?;
         let (data, run_on) = RunOn::parse(data)?;
         let (data, reference) = FormId::parse(data)?;
-        let (data, unknown2) = le_i32(data)?;
+        let (data, unknown2) = i32::parse(data)?;
         Ok((
             data,
             Self {
@@ -228,7 +228,7 @@ impl ComparisonValue {
             let (data, formid) = FormId::parse(data)?;
             (data, ComparisonValue::Glob(formid))
         } else {
-            let (data, float) = le_f32(data)?;
+            let (data, float) = f32::parse(data)?;
             (data, ComparisonValue::Float(float))
         })
     }
@@ -257,8 +257,8 @@ pub enum Parameters {
 impl Parameters {
     // we ignore the function index for now, just parsing it always as two u32s
     pub fn parse(data: &[u8], _findex: FunctionIndex) -> PResult<Self> {
-        let (data, first) = le_u32(data)?;
-        let (data, second) = le_u32(data)?;
+        let (data, first) = u32::parse(data)?;
+        let (data, second) = u32::parse(data)?;
         Ok((data, Parameters::Normal { first, second }))
     }
 }
@@ -315,7 +315,7 @@ impl RunOn {
     }
 
     pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, v) = le_u32(data)?;
+        let (data, v) = u32::parse(data)?;
         Self::from_u32(v).map(|x| (data, x)).map_err(|e| match e {
             RunOnError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
         })
