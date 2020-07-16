@@ -3,7 +3,9 @@
 use super::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     impl_static_data_size, impl_static_type_named, make_formid_field, make_single_value_field,
-    parse::PResult, records::common::NullTerminatedString, util::Writable,
+    parse::PResult,
+    records::common::{lstring::LString, NullTerminatedString},
+    util::Writable,
 };
 use std::io::Write;
 
