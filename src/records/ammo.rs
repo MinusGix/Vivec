@@ -5,7 +5,7 @@ use super::{
     },
     fields::{
         common::{
-            item::{ICON, MICO, YNAM, ZNAM},
+            item::{self, ICON, MICO, YNAM, ZNAM},
             write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
         },
         dest, edid, full, kwda, modl, obnd,
@@ -92,7 +92,7 @@ impl<'data> FromRecord<'data> for AMMORecord<'data> {
                 }
                 b"YNAM" => collect_one!(YNAM, field => fields; pickup_sound_index),
                 b"ZNAM" => collect_one!(ZNAM, field => fields; drop_sound_index),
-                b"DESC" => collect_one!(DESC, field => fields; description_index),
+                b"DESC" => collect_one!(item::DESC, field => fields; description_index),
                 b"KSIZ" => {
                     collect_one_collection!(kwda::KSIZ, kwda::KWDACollection; field, field_iter => fields; keyword_collection_index)
                 }
@@ -162,7 +162,7 @@ pub enum AMMOField<'data> {
     DESTCollection(dest::DESTCollection<'data>),
     YNAM(YNAM),
     ZNAM(ZNAM),
-    DESC(DESC),
+    DESC(item::DESC),
     KWDACollection(kwda::KWDACollection),
     DATA(DATA),
     ONAM(ONAM<'data>),
@@ -247,20 +247,6 @@ impl<'data> Writable for AMMOField<'data> {
             x,
             { x.write_to(w) }
         )
-    }
-}
-
-make_single_value_field!(
-    /// Description
-    [Debug, Copy, Clone, Eq, PartialEq],
-    DESC,
-    description,
-    LString
-);
-impl FromField<'_> for DESC {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, description) = LString::parse(field.data)?;
-        Ok((data, Self { description }))
     }
 }
 

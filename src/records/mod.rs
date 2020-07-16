@@ -13,6 +13,7 @@ pub mod addn;
 pub mod alch;
 pub mod ammo;
 pub mod anio;
+pub mod appa;
 
 pub mod tes4;
 
@@ -30,6 +31,7 @@ pub enum Record<'data> {
     ALCH(alch::ALCHRecord<'data>),
     AMMO(ammo::AMMORecord<'data>),
     ANIO(anio::ANIORecord<'data>),
+    APPA(appa::APPARecord<'data>),
     Unknown(common::GeneralRecord<'data>),
 }
 impl<'data> TypeNamed<'data> for Record<'data> {
@@ -37,7 +39,7 @@ impl<'data> TypeNamed<'data> for Record<'data> {
         dispatch_all!(
             Record,
             self,
-            [TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, Unknown],
+            [TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, Unknown],
             x,
             { x.type_name() }
         )
@@ -48,7 +50,7 @@ impl<'data> DataSize for Record<'data> {
         dispatch_all!(
             Record,
             self,
-            [TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, Unknown],
+            [TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, Unknown],
             x,
             { x.data_size() }
         )
@@ -62,7 +64,7 @@ impl<'data> Writable for Record<'data> {
         dispatch_all!(
             Record,
             self,
-            [TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, Unknown],
+            [TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, Unknown],
             x,
             { x.write_to(w) }
         )
