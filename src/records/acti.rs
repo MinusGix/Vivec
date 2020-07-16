@@ -1,7 +1,7 @@
 use super::{
     common::{
         lstring::LString, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord,
-        Index, StaticTypeNamed, TypeNamed,
+        Index, TypeNamed,
     },
     fields::{
         common::{rgbu, FromField, FromFieldError, GeneralField},
@@ -9,7 +9,8 @@ use super::{
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, make_formid_field, make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_type_named, make_formid_field,
+    make_single_value_field,
     parse::{count, le_u16, le_u32, PResult},
     util::{DataSize, Writable},
 };
@@ -131,11 +132,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for ACTIRecord<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"ACTI".as_bstr()
-    }
-}
+impl_static_type_named!(ACTIRecord<'_>, b"ACTI");
 impl<'data> DataSize for ACTIRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +

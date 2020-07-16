@@ -6,13 +6,13 @@ use super::{
     },
 };
 use crate::{
-    collect_many, collect_one, dispatch_all, impl_static_data_size, make_empty_field,
-    make_formid_field, make_single_value_field,
+    collect_many, collect_one, dispatch_all, impl_static_data_size, impl_static_type_named,
+    make_empty_field, make_formid_field, make_single_value_field,
     parse::{le_f32, le_u32, take, PResult, ParseError},
     util::{byte, DataSize, Position3, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FormId, FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
+use common::{FormId, FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -173,11 +173,7 @@ impl<'data> FromRecord<'data> for ACHRRecord<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for ACHRRecord<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"ACHR".as_bstr()
-    }
-}
+impl_static_type_named!(ACHRRecord<'_>, b"ACHR");
 impl<'data> Writable for ACHRRecord<'data> {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
     where
@@ -377,11 +373,7 @@ pub struct XRGB {
     // It's named XRGB, and (maybe) 3 floats, so it's potentially a color, but for what? (check if it always fits in 0.0-1.0)
     pub data: [f32; 3],
 }
-impl StaticTypeNamed<'static> for XRGB {
-    fn static_type_name() -> &'static BStr {
-        b"XRGB".as_bstr()
-    }
-}
+impl_static_type_named!(XRGB, b"XRGB");
 impl FromField<'_> for XRGB {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, f1) = le_f32(field.data)?;
@@ -519,11 +511,7 @@ impl FromField<'_> for XAPR {
         Ok((data, XAPR { formid, delay }))
     }
 }
-impl StaticTypeNamed<'static> for XAPR {
-    fn static_type_name() -> &'static BStr {
-        b"XAPR".as_bstr()
-    }
-}
+impl_static_type_named!(XAPR, b"XAPR");
 impl_static_data_size!(
     XAPR,
     FIELDH_SIZE +
@@ -565,11 +553,7 @@ impl FromField<'_> for XESP {
         Ok((data, XESP { parent, flags }))
     }
 }
-impl StaticTypeNamed<'static> for XESP {
-    fn static_type_name() -> &'static BStr {
-        b"XESP".as_bstr()
-    }
-}
+impl_static_type_named!(XESP, b"XESP");
 impl_static_data_size!(
     XESP,
     FIELDH_SIZE +
@@ -641,11 +625,7 @@ impl FromField<'_> for XLKR {
         Ok((data, XLKR { keyword, reference }))
     }
 }
-impl StaticTypeNamed<'static> for XLKR {
-    fn static_type_name() -> &'static BStr {
-        b"XLKR".as_bstr()
-    }
-}
+impl_static_type_named!(XLKR, b"XLKR");
 impl_static_data_size!(
     XLKR,
     FIELDH_SIZE +
@@ -703,11 +683,7 @@ impl FromField<'_> for DATA {
         ))
     }
 }
-impl StaticTypeNamed<'static> for DATA {
-    fn static_type_name() -> &'static BStr {
-        b"DATA".as_bstr()
-    }
-}
+impl_static_type_named!(DATA, b"DATA");
 impl_static_data_size!(
     DATA,
     FIELDH_SIZE +

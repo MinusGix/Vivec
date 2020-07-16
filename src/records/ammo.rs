@@ -13,7 +13,7 @@ use super::{
 };
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
-    make_single_value_field,
+    impl_static_type_named, make_single_value_field,
     parse::{le_f32, le_u32, PResult, ParseError},
     util::{DataSize, Writable},
 };
@@ -129,11 +129,7 @@ impl<'data> FromRecord<'data> for AMMORecord<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for AMMORecord<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"AMMO".as_bstr()
-    }
-}
+impl_static_type_named!(AMMORecord<'_>, b"AMMO");
 impl<'data> DataSize for AMMORecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
@@ -359,11 +355,7 @@ impl FromField<'_> for DATA {
         }
     }
 }
-impl StaticTypeNamed<'static> for DATA {
-    fn static_type_name() -> &'static BStr {
-        b"DATA".as_bstr()
-    }
-}
+impl_static_type_named!(DATA, b"DATA");
 impl DataSize for DATA {
     fn data_size(&self) -> usize {
         FIELDH_SIZE

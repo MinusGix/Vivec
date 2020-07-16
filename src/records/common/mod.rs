@@ -422,6 +422,17 @@ pub trait TypeNamed<'aleph>: Sized {
 pub trait StaticTypeNamed<'aleph>: Sized {
     fn static_type_name() -> &'aleph BStr;
 }
+#[macro_export]
+macro_rules! impl_static_type_named {
+    ($t:ty, $e:expr) => {
+        impl $crate::records::common::StaticTypeNamed<'static> for $t {
+            fn static_type_name() -> &'static bstr::BStr {
+                use bstr::ByteSlice;
+                $e.as_bstr()
+            }
+        }
+    };
+}
 impl<'aleph, T> TypeNamed<'aleph> for T
 where
     T: StaticTypeNamed<'aleph>,

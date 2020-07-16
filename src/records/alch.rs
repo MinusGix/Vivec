@@ -1,7 +1,7 @@
 use super::{
     common::{
         get_field, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
-        NullTerminatedString, StaticTypeNamed, TypeNamed,
+        NullTerminatedString, TypeNamed,
     },
     fields::{
         common::{
@@ -12,8 +12,8 @@ use super::{
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_data_size, make_formid_field,
-    make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    impl_static_type_named, make_formid_field, make_single_value_field,
     parse::{le_f32, le_u32, PResult},
     util::{DataSize, Writable},
 };
@@ -118,11 +118,7 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for ALCHRecord<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"ALCH".as_bstr()
-    }
-}
+impl_static_type_named!(ALCHRecord<'_>, b"ALCH");
 impl<'data> DataSize for ALCHRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
@@ -279,11 +275,7 @@ impl FromField<'_> for ENIT {
         ))
     }
 }
-impl StaticTypeNamed<'static> for ENIT {
-    fn static_type_name() -> &'static BStr {
-        b"ENIT".as_bstr()
-    }
-}
+impl_static_type_named!(ENIT, b"ENIT");
 impl_static_data_size!(
     ENIT,
     FIELDH_SIZE +
@@ -378,11 +370,7 @@ impl FromField<'_> for EFIT {
         ))
     }
 }
-impl StaticTypeNamed<'static> for EFIT {
-    fn static_type_name() -> &'static BStr {
-        b"EFIT".as_bstr()
-    }
-}
+impl_static_type_named!(EFIT, b"EFIT");
 impl_static_data_size!(
     EFIT,
     FIELDH_SIZE + f32::static_data_size() + u32::static_data_size() + u32::static_data_size()
@@ -444,11 +432,7 @@ impl EnchantedEffectCollection {
         ))
     }
 }
-impl StaticTypeNamed<'static> for EnchantedEffectCollection {
-    fn static_type_name() -> &'static BStr {
-        ENIT::static_type_name()
-    }
-}
+impl_static_type_named!(EnchantedEffectCollection, ENIT::static_type_name());
 impl DataSize for EnchantedEffectCollection {
     fn data_size(&self) -> usize {
         self.enchanted_item.data_size()

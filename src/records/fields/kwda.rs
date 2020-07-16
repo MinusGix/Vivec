@@ -1,6 +1,6 @@
 use super::common::{FromField, FromFieldError, GeneralField};
 use crate::{
-    make_single_value_field,
+    impl_static_type_named, make_single_value_field,
     parse::{count, le_u32, PResult},
     records::common::{FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
@@ -74,12 +74,7 @@ impl KWDACollection {
         }
     }
 }
-impl StaticTypeNamed<'static> for KWDACollection {
-    fn static_type_name() -> &'static BStr {
-        // TODO: this isn't 100% sensible. It follows what other collections do (return first element), but what we really care about is the KWDA inst
-        KSIZ::static_type_name()
-    }
-}
+impl_static_type_named!(KWDACollection, KSIZ::static_type_name());
 impl DataSize for KWDACollection {
     fn data_size(&self) -> usize {
         self.create_ksiz().data_size() + self.keywords.data_size()

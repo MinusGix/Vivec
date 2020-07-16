@@ -6,12 +6,12 @@ use super::{
     },
 };
 use crate::{
-    collect_one, dispatch_all, make_single_value_field,
+    collect_one, dispatch_all, impl_static_type_named, make_single_value_field,
     parse::PResult,
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
+use common::{FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -51,11 +51,7 @@ impl<'data> FromRecord<'data> for AACTRecord<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for AACTRecord<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"AACT".as_bstr()
-    }
-}
+impl_static_type_named!(AACTRecord<'_>, b"AACT");
 impl<'data> DataSize for AACTRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +

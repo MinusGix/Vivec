@@ -1,12 +1,13 @@
 use super::{
     common::{
         CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
-        NullTerminatedString, StaticTypeNamed, TypeNamed,
+        NullTerminatedString, TypeNamed,
     },
     fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
 use crate::{
-    collect_one, dispatch_all, impl_static_data_size, make_single_value_field,
+    collect_one, dispatch_all, impl_static_data_size, impl_static_type_named,
+    make_single_value_field,
     parse::{le_f32, le_u32, le_u64, many, PResult},
     util::{fmt_data, DataSize, Writable},
 };
@@ -171,11 +172,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for TES4Record<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"TES4".as_bstr()
-    }
-}
+impl_static_type_named!(TES4Record<'_>, b"TES4");
 impl<'data> DataSize for TES4Record<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
@@ -272,11 +269,7 @@ impl FromField<'_> for HEDR {
         ))
     }
 }
-impl StaticTypeNamed<'static> for HEDR {
-    fn static_type_name() -> &'static BStr {
-        b"HEDR".as_bstr()
-    }
-}
+impl_static_type_named!(HEDR, b"HEDR");
 impl_static_data_size!(
     HEDR,
     FIELDH_SIZE +

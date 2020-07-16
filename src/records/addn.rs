@@ -6,13 +6,13 @@ use super::{
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_data_size, make_formid_field,
-    make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    impl_static_type_named, make_formid_field, make_single_value_field,
     parse::{le_u16, le_u32, PResult},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use common::{FromRecord, FromRecordError, StaticTypeNamed, TypeNamed};
+use common::{FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
 use std::io::Write;
 
@@ -81,11 +81,7 @@ impl<'data> FromRecord<'data> for ADDNRecord<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for ADDNRecord<'data> {
-    fn static_type_name() -> &'static BStr {
-        b"ADDN".as_bstr()
-    }
-}
+impl_static_type_named!(ADDNRecord<'_>, b"ADDN");
 impl<'data> DataSize for ADDNRecord<'data> {
     fn data_size(&self) -> usize {
         self.type_name().data_size() +
@@ -192,11 +188,7 @@ impl DNAM {
         }
     }
 }
-impl StaticTypeNamed<'static> for DNAM {
-    fn static_type_name() -> &'static BStr {
-        b"DNAM".as_bstr()
-    }
-}
+impl_static_type_named!(DNAM, b"DNAM");
 impl FromField<'_> for DNAM {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
         let (data, particle_cap) = le_u16(field.data)?;

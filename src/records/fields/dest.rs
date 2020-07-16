@@ -1,6 +1,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    impl_static_data_size, make_empty_field, make_model_fields, make_single_value_field,
+    impl_static_data_size, impl_static_type_named, make_empty_field, make_model_fields,
+    make_single_value_field,
     parse::{le_u16, le_u32, take, PResult},
     records::common::{get_field, FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
@@ -36,11 +37,7 @@ impl FromField<'_> for DEST {
         ))
     }
 }
-impl StaticTypeNamed<'static> for DEST {
-    fn static_type_name() -> &'static BStr {
-        b"DEST".as_bstr()
-    }
-}
+impl_static_type_named!(DEST, b"DEST");
 impl_static_data_size!(
     DEST,
     FIELDH_SIZE + u32::static_data_size() + (u8::static_data_size() * 4)
@@ -96,11 +93,7 @@ impl FromField<'_> for DSTD {
         ))
     }
 }
-impl StaticTypeNamed<'static> for DSTD {
-    fn static_type_name() -> &'static BStr {
-        b"DSTD".as_bstr()
-    }
-}
+impl_static_type_named!(DSTD, b"DSTD");
 impl_static_data_size!(
     DSTD,
     FIELDH_SIZE +
@@ -200,11 +193,7 @@ impl<'data> DESTCollection<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for DESTCollection<'data> {
-    fn static_type_name() -> &'static BStr {
-        DEST::static_type_name()
-    }
-}
+impl_static_type_named!(DESTCollection<'_>, DEST::static_type_name());
 impl<'data> DataSize for DESTCollection<'data> {
     fn data_size(&self) -> usize {
         self.destruction.data_size() + self.stage_data.data_size()
@@ -263,11 +252,7 @@ impl<'data> DSTDCollection<'data> {
         ))
     }
 }
-impl<'data> StaticTypeNamed<'static> for DSTDCollection<'data> {
-    fn static_type_name() -> &'static BStr {
-        DSTD::static_type_name()
-    }
-}
+impl_static_type_named!(DSTDCollection<'_>, DSTD::static_type_name());
 impl<'data> DataSize for DSTDCollection<'data> {
     fn data_size(&self) -> usize {
         self.stage.data_size() + self.model.data_size() + self.end.data_size()

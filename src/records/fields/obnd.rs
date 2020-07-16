@@ -1,8 +1,7 @@
 use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    impl_static_data_size,
+    impl_static_data_size, impl_static_type_named,
     parse::{le_i16, PResult, ParseError},
-    records::common::StaticTypeNamed,
     util::{Position3, Writable},
 };
 use bstr::BStr;
@@ -46,12 +45,7 @@ impl FromField<'_> for OBND {
         ))
     }
 }
-impl StaticTypeNamed<'static> for OBND {
-    fn static_type_name() -> &'static BStr {
-        use bstr::ByteSlice;
-        b"OBND".as_bstr()
-    }
-}
+impl_static_type_named!(OBND, b"OBND");
 impl_static_data_size!(OBND, FIELDH_SIZE + Position3::<i16>::static_data_size() * 2);
 impl Writable for OBND {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
