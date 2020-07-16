@@ -81,3 +81,17 @@ impl Writable for Quality {
         (*self as u32).write_to(w)
     }
 }
+
+make_single_value_field!(
+    /// Description
+    [Debug, Copy, Clone, Eq, PartialEq],
+    DESC,
+    description,
+    LString
+);
+impl FromField<'_> for DESC {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
+        let (data, description) = LString::parse(field.data)?;
+        Ok((data, Self { description }))
+    }
+}
