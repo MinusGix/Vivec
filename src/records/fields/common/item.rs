@@ -3,11 +3,14 @@
 use super::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     impl_static_data_size, impl_static_type_named, make_formid_field, make_single_value_field,
-    parse::PResult,
-    records::common::{lstring::LString, NullTerminatedString},
+    parse::{PResult, Parse, ParseError},
+    records::common::{lstring::LString, ConversionError, NullTerminatedString},
     util::Writable,
 };
-use std::io::Write;
+use std::{
+    convert::{TryFrom, TryInto},
+    io::Write,
+};
 
 make_single_value_field!(
     /// Inventory icon filename
@@ -53,6 +56,12 @@ make_formid_field!(
 pub struct QUAL {
     quality: Quality,
 }
+impl FromField<'_> for QUAL {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
+        let (data, quality) = Quality::parse(field.data)?;
+        Ok((data, Self { quality }))
+    }
+}
 impl_static_type_named!(QUAL, b"QUAL");
 impl_static_data_size!(QUAL, FIELDH_SIZE + Quality::static_data_size());
 impl Writable for QUAL {
@@ -74,6 +83,15 @@ pub enum Quality {
     Expert = 3,
     Master = 4,
 }
+impl Parse for Quality {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, value) = u32::parse(data)?;
+        let quality = value.try_into().map_err(|e| match e {
+            ConversionError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
+        })?;
+        Ok((data, quality))
+    }
+}
 impl_static_data_size!(Quality, u32::static_data_size());
 impl Writable for Quality {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
@@ -81,6 +99,19 @@ impl Writable for Quality {
         T: Write,
     {
         (*self as u32).write_to(w)
+    }
+}
+impl TryFrom<u32> for Quality {
+    type Error = ConversionError<u32>;
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        Ok(match value {
+            0 => Quality::Novice,
+            1 => Quality::Apprentice,
+            2 => Quality::Journeyman,
+            3 => Quality::Expert,
+            4 => Quality::Master,
+            _ => return Err(ConversionError::InvalidEnumerationValue(value)),
+        })
     }
 }
 
