@@ -54,7 +54,7 @@ make_formid_field!(
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct QUAL {
-    quality: Quality,
+    pub quality: Quality,
 }
 impl FromField<'_> for QUAL {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
