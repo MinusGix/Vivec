@@ -12,6 +12,41 @@ use std::{
     io::Write,
 };
 
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct Gold(u32);
+impl Parse for Gold {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, value) = u32::parse(data)?;
+        Ok((data, Self(value)))
+    }
+}
+impl_static_data_size!(Gold, u32::static_data_size());
+impl Writable for Gold {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.0.write_to(w)
+    }
+}
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct Weight(f32);
+impl Parse for Weight {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, value) = f32::parse(data)?;
+        Ok((data, Self(value)))
+    }
+}
+impl_static_data_size!(Weight, f32::static_data_size());
+impl Writable for Weight {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.0.write_to(w)
+    }
+}
+
 make_single_value_field!(
     /// Inventory icon filename
     [Debug, Clone],

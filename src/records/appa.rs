@@ -256,14 +256,13 @@ impl Writable for APPAField<'_> {
 /// These values are not shown in-game
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DATA {
-    /// In gold
-    value: u32,
-    weight: f32,
+    value: item::Gold,
+    weight: item::Weight,
 }
 impl FromField<'_> for DATA {
     fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, value) = u32::parse(field.data)?;
-        let (data, weight) = f32::parse(data)?;
+        let (data, value) = item::Gold::parse(field.data)?;
+        let (data, weight) = item::Weight::parse(data)?;
         Ok((data, DATA { value, weight }))
     }
 }
