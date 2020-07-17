@@ -15,89 +15,130 @@ use bstr::BStr;
 use derive_more::From;
 use std::io::Write;
 
-#[derive(Debug, Clone)]
 /// Header record for mod file
+#[derive(Debug, Clone)]
 pub struct TES4Record<'data> {
     common: CommonRecordInfo,
-
-    // The usize fields are indices into other_fields
-    /// HEDR
-    pub header_index: Index,
-    /// CNAM
-    pub author_index: Option<Index>,
-    /// SNAM
-    pub description_index: Option<Index>,
-    /// MasterCollection
-    pub master_collection_index: Option<Index>,
-    /// ONAM
-    pub overrides_index: Option<Index>,
-    /// unknown if it's required, or even if it's name means internal version
-    pub internal_version_index: Option<Index>,
-    pub unknown_incc_index: Option<Index>,
-    /// Note: any modificatons of this will have to be matched in the other fields!
     pub fields: Vec<TES4Field<'data>>,
 }
 impl<'data> TES4Record<'data> {
+    pub fn header_index(&self) -> Index {
+        self.fields
+            .iter()
+            .position(|x| matches!(x, TES4Field::HEDR(_)))
+            .expect("ILE: Expected TES4 to have a HEDR")
+    }
+
     pub fn header(&self) -> &HEDR {
-        if let TES4Field::HEDR(hedr) = &self.fields[self.header_index] {
-            hedr
-        } else {
-            panic!("ILE: Expected entry at indice to be a HEDR instance");
+        // TODO: I don't particularly like this unreachable bit. It is unreachable, but having to explicitly say it is an annoyance.
+        match &self.fields[self.header_index()] {
+            TES4Field::HEDR(x) => x,
+            _ => panic!("ILE: Unreachable"),
         }
     }
 
-    pub fn author(&self) -> Option<&CNAM> {
-        let index = self.author_index?;
-        if let TES4Field::CNAM(cnam) = &self.fields[index] {
-            Some(cnam)
-        } else {
-            panic!("ILE: Expected entry at indice to be a CNAM instance");
+    pub fn header_mut(&mut self) -> &mut HEDR {
+        let index = self.header_index();
+        match &mut self.fields[index] {
+            TES4Field::HEDR(x) => x,
+            _ => panic!("ILE: Unreachable"),
         }
     }
 
-    pub fn description(&self) -> Option<&SNAM> {
-        let index = self.description_index?;
-        if let TES4Field::SNAM(snam) = &self.fields[index] {
-            Some(snam)
-        } else {
-            panic!("ILE: Expected entry at indice to be a SNAM instance");
-        }
+    pub fn author_index(&self) -> Option<Index> {
+        self.fields
+            .iter()
+            .position(|x| matches!(x, TES4Field::CNAM(_)))
+    }
+    pub fn author(&self) -> Option<&CNAM<'data>> {
+        self.author_index().map(|i| match &self.fields[i] {
+            TES4Field::CNAM(x) => x,
+            _ => panic!("ILE: Unreachable"),
+        })
+    }
+    pub fn author_mut(&mut self) -> Option<&mut CNAM<'data>> {
+        self.author_index().map(move |i| match &mut self.fields[i] {
+            TES4Field::CNAM(x) => x,
+            _ => panic!("ILE: Unreachable"),
+        })
     }
 
-    pub fn master_collection(&self) -> Option<&MasterCollection> {
-        let index = self.master_collection_index?;
-        if let TES4Field::MasterCollection(col) = &self.fields[index] {
-            Some(col)
-        } else {
-            panic!("ILE: Expected entry at indice to be a MasterCollection instance");
-        }
+    pub fn description_index(&self) -> Option<Index> {
+        self.fields
+            .iter()
+            .position(|x| matches!(x, TES4Field::SNAM(_)))
+    }
+    pub fn description(&self) -> Option<&SNAM<'data>> {
+        self.description_index().map(|i| match &self.fields[i] {
+            TES4Field::SNAM(x) => x,
+            _ => panic!("ILE: Unreachable"),
+        })
+    }
+    pub fn description_mut(&mut self) -> Option<&mut SNAM<'data>> {
+        self.description_index()
+            .map(move |i| match &mut self.fields[i] {
+                TES4Field::SNAM(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
     }
 
+    // TODO: this should probably exist automatically, just with zero entries? Would have to decide where to put it in the array..
+    pub fn masters_index(&self) -> Option<Index> {
+        self.fields
+            .iter()
+            .position(|x| matches!(x, TES4Field::MasterCollection(_)))
+    }
+    pub fn masters(&self) -> Option<&MasterCollection<'data>> {
+        self.masters_index().map(|i| match &self.fields[i] {
+            TES4Field::MasterCollection(x) => x,
+            _ => panic!("ILE: Unreachable"),
+        })
+    }
+    pub fn masters_mut(&mut self) -> Option<&mut MasterCollection<'data>> {
+        self.masters_index()
+            .map(move |i| match &mut self.fields[i] {
+                TES4Field::MasterCollection(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
+    }
+
+    pub fn overrides_index(&self) -> Option<Index> {
+        self.fields
+            .iter()
+            .position(|x| matches!(x, TES4Field::ONAM(_)))
+    }
     pub fn overrides(&self) -> Option<&ONAM> {
-        let index = self.overrides_index?;
-        if let TES4Field::ONAM(onam) = &self.fields[index] {
-            Some(onam)
-        } else {
-            panic!("ILE: Expected entry at indice to be an ONAM instance");
-        }
+        self.overrides_index().map(|i| match &self.fields[i] {
+            TES4Field::ONAM(x) => x,
+            _ => panic!("ILE: Unreachable"),
+        })
+    }
+    pub fn overrides_mut(&mut self) -> Option<&mut ONAM> {
+        self.overrides_index()
+            .map(move |i| match &mut self.fields[i] {
+                TES4Field::ONAM(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
     }
 
+    pub fn internal_version_index(&self) -> Option<Index> {
+        self.fields
+            .iter()
+            .position(|x| matches!(x, TES4Field::INTV(_)))
+    }
     pub fn internal_version(&self) -> Option<&INTV> {
-        let index = self.internal_version_index?;
-        if let TES4Field::INTV(intv) = &self.fields[index] {
-            Some(intv)
-        } else {
-            panic!("ILE: Expected entry at indice to be an INTV instance");
-        }
+        self.internal_version_index()
+            .map(|i| match &self.fields[i] {
+                TES4Field::INTV(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
     }
-
-    pub fn unknown_incc(&self) -> Option<&INCC> {
-        let index = self.unknown_incc_index?;
-        if let TES4Field::INCC(incc) = &self.fields[index] {
-            Some(incc)
-        } else {
-            panic!("ILE: Expected entry at indice to be an INCC instance");
-        }
+    pub fn internal_version_mut(&mut self) -> Option<&mut INTV> {
+        self.internal_version_index()
+            .map(move |i| match &mut self.fields[i] {
+                TES4Field::INTV(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
     }
 }
 impl<'data> FromRecord<'data> for TES4Record<'data> {
@@ -132,24 +173,17 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
             }
         }
 
-        let hedr_index =
-            hedr_index.ok_or_else(|| FromRecordError::ExpectedField(HEDR::static_type_name()))?;
-
-        Ok((
-            &[],
-            TES4Record {
-                common: record.common.clone(),
-
-                header_index: hedr_index,
-                author_index: cnam_index,
-                description_index: snam_index,
-                master_collection_index: mast_collection_index,
-                overrides_index: onam_index,
-                internal_version_index: intv_index,
-                unknown_incc_index: incc_index,
-                fields,
-            },
-        ))
+        if hedr_index.is_none() {
+            Err(FromRecordError::ExpectedField(HEDR::static_type_name()))
+        } else {
+            Ok((
+                &[],
+                TES4Record {
+                    common: record.common.clone(),
+                    fields,
+                },
+            ))
+        }
     }
 }
 impl_static_type_named!(TES4Record<'_>, b"TES4");
@@ -495,13 +529,6 @@ mod tests {
         // TODO: it'd be better to have more fields active to be a better test
         let tes4 = TES4Record {
             common: CommonRecordInfo::test_default(),
-            header_index: 0,
-            author_index: None,
-            description_index: None,
-            master_collection_index: None,
-            overrides_index: None,
-            internal_version_index: None,
-            unknown_incc_index: None,
             fields: vec![TES4Field::HEDR(HEDR {
                 version: 1.7,
                 record_count: 2,
