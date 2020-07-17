@@ -64,7 +64,7 @@ impl<'data> TES4Record<'data> {
         }
     }
 
-    pub fn master_collection(&self, mast_data_index: usize) -> Option<&MasterCollection> {
+    pub fn master_collection(&self) -> Option<&MasterCollection> {
         let index = self.master_collection_index?;
         if let TES4Field::MasterCollection(col) = &self.fields[index] {
             Some(col)
