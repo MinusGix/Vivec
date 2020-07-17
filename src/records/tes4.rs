@@ -1,13 +1,13 @@
 use super::{
     common::{
-        CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
+        get_field, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
         NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
     fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
 use crate::{
-    collect_one, dispatch_all, impl_static_data_size, impl_static_type_named,
-    make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    impl_static_type_named, make_single_value_field,
     parse::{many, PResult, Parse},
     util::{fmt_data, DataSize, Writable},
 };
@@ -27,8 +27,8 @@ pub struct TES4Record<'data> {
     pub author_index: Option<Index>,
     /// SNAM
     pub description_index: Option<Index>,
-    /// (MAST idx, DATA idx)
-    pub mast_data_indices: Vec<(Index, Index)>,
+    /// MasterCollection
+    pub master_collection_index: Option<Index>,
     /// ONAM
     pub overrides_index: Option<Index>,
     /// unknown if it's required, or even if it's name means internal version
@@ -64,16 +64,12 @@ impl<'data> TES4Record<'data> {
         }
     }
 
-    pub fn mast_data(&self, mast_data_index: usize) -> Option<(&MAST, &DATA)> {
-        let (mast_index, data_index) = self.mast_data_indices[mast_data_index];
-        if let TES4Field::MAST(mast) = &self.fields[mast_index] {
-            if let TES4Field::DATA(data) = &self.fields[data_index] {
-                Some((mast, data))
-            } else {
-                panic!("ILE: Expected entry at indice to be a DATA instance");
-            }
+    pub fn master_collection(&self, mast_data_index: usize) -> Option<&MasterCollection> {
+        let index = self.master_collection_index?;
+        if let TES4Field::MasterCollection(col) = &self.fields[index] {
+            Some(col)
         } else {
-            panic!("ILE: Expected entry at indice to be a MAST instance");
+            panic!("ILE: Expected entry at indice to be a MasterCollection instance");
         }
     }
 
@@ -110,13 +106,13 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
         let mut hedr_index: Option<Index> = None;
         let mut cnam_index: Option<Index> = None;
         let mut snam_index: Option<Index> = None;
-        let mut mast_data: Vec<(Index, Index)> = Vec::new();
+        let mut mast_collection_index: Option<Index> = None;
         let mut onam_index: Option<Index> = None;
         let mut intv_index: Option<Index> = None;
         let mut incc_index: Option<Index> = None;
 
         // TODO: These need to check if it's used up all the space.
-        let mut field_iter = record.fields.into_iter();
+        let mut field_iter = record.fields.into_iter().peekable();
         while let Some(field) = field_iter.next() {
             match field.type_name.as_ref() {
                 b"HEDR" => collect_one!(HEDR, field => fields; hedr_index),
@@ -126,23 +122,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
                 b"INTV" => collect_one!(INTV, field => fields; intv_index),
                 b"INCC" => collect_one!(INCC, field => fields; incc_index),
                 b"MAST" => {
-                    let (_, mast) = MAST::from_field(field)?;
-                    // Get the required next DATA field
-                    // TODO: support MAST entries without DATA after? in case they become completely removed, since they're currently unused
-                    let field = match field_iter.next() {
-                        Some(field) => field,
-                        None => return Err(FromRecordError::UnexpectedEnd),
-                    };
-                    if field.type_name().as_ref() != b"DATA" {
-                        panic!("ILE: Expected data field after MAST field");
-                    }
-                    let (_, data_field) = DATA::from_field(field)?;
-
-                    let indices = (fields.len(), fields.len() + 1);
-                    fields.push(mast.into());
-                    fields.push(data_field.into());
-
-                    mast_data.push(indices);
+                    collect_one_collection!(MAST, MasterCollection; field, field_iter => fields; mast_collection_index)
                 }
                 b"DATA" => {
                     // TODO: continue, just add this to the list
@@ -163,7 +143,7 @@ impl<'data> FromRecord<'data> for TES4Record<'data> {
                 header_index: hedr_index,
                 author_index: cnam_index,
                 description_index: snam_index,
-                mast_data_indices: mast_data,
+                master_collection_index: mast_collection_index,
                 overrides_index: onam_index,
                 internal_version_index: intv_index,
                 unknown_incc_index: incc_index,
@@ -202,8 +182,7 @@ pub enum TES4Field<'data> {
     ONAM(ONAM),
     INTV(INTV),
     INCC(INCC),
-    MAST(MAST<'data>),
-    DATA(DATA),
+    MasterCollection(MasterCollection<'data>),
     Unknown(GeneralField<'data>),
 }
 impl<'data> TypeNamed<'data> for TES4Field<'data> {
@@ -211,7 +190,16 @@ impl<'data> TypeNamed<'data> for TES4Field<'data> {
         dispatch_all!(
             TES4Field,
             self,
-            [HEDR, CNAM, SNAM, ONAM, INTV, INCC, MAST, DATA, Unknown],
+            [
+                HEDR,
+                CNAM,
+                SNAM,
+                ONAM,
+                INTV,
+                INCC,
+                MasterCollection,
+                Unknown
+            ],
             x,
             { x.type_name() }
         )
@@ -222,7 +210,16 @@ impl<'data> DataSize for TES4Field<'data> {
         dispatch_all!(
             TES4Field,
             self,
-            [HEDR, CNAM, SNAM, ONAM, INTV, INCC, MAST, DATA, Unknown],
+            [
+                HEDR,
+                CNAM,
+                SNAM,
+                ONAM,
+                INTV,
+                INCC,
+                MasterCollection,
+                Unknown
+            ],
             x,
             { x.data_size() }
         )
@@ -236,7 +233,16 @@ impl<'data> Writable for TES4Field<'data> {
         dispatch_all!(
             TES4Field,
             self,
-            [HEDR, CNAM, SNAM, ONAM, INTV, INCC, MAST, DATA, Unknown],
+            [
+                HEDR,
+                CNAM,
+                SNAM,
+                ONAM,
+                INTV,
+                INCC,
+                MasterCollection,
+                Unknown
+            ],
             x,
             { x.write_to(w) }
         )
@@ -312,6 +318,88 @@ impl<'data> FromField<'data> for SNAM<'data> {
     fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, description) = NullTerminatedString::parse(field.data)?;
         Ok((data, SNAM { description }))
+    }
+}
+
+/// Holds a MAST,DATA pair
+#[derive(Debug, Clone)]
+pub struct MASTCollection<'data> {
+    master: MAST<'data>,
+    data: DATA,
+}
+impl<'data> MASTCollection<'data> {
+    pub fn collect<I>(
+        master: MAST<'data>,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<'data, Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>,
+    {
+        let (_, data) = get_field(field_iter, DATA::static_type_name())?;
+        let data =
+            data.ok_or_else(|| FromFieldError::ExpectedSpecificField(DATA::static_type_name()))?;
+
+        Ok((&[], Self { master, data }))
+    }
+}
+impl_static_type_named!(MASTCollection<'_>, MAST::static_type_name());
+impl DataSize for MASTCollection<'_> {
+    fn data_size(&self) -> usize {
+        self.master.data_size() + self.data.data_size()
+    }
+}
+impl Writable for MASTCollection<'_> {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.master.write_to(w)?;
+        self.data.write_to(w)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MasterCollection<'data> {
+    masters: Vec<MASTCollection<'data>>,
+}
+impl<'data> MasterCollection<'data> {
+    pub fn collect<I>(
+        master: MAST<'data>,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<'data, Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>,
+    {
+        let mut masters = Vec::new();
+        let (_, col) = MASTCollection::collect(master, field_iter)?;
+        masters.push(col);
+
+        loop {
+            let (_, master) = get_field(field_iter, MAST::static_type_name())?;
+            match master {
+                Some(master) => {
+                    let (_, col) = MASTCollection::collect(master, field_iter)?;
+                    masters.push(col);
+                }
+                _ => break,
+            }
+        }
+
+        Ok((&[], Self { masters }))
+    }
+}
+impl_static_type_named!(MasterCollection<'_>, MASTCollection::static_type_name());
+impl DataSize for MasterCollection<'_> {
+    fn data_size(&self) -> usize {
+        self.masters.data_size()
+    }
+}
+impl Writable for MasterCollection<'_> {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.masters.write_to(w)
     }
 }
 
@@ -410,7 +498,7 @@ mod tests {
             header_index: 0,
             author_index: None,
             description_index: None,
-            mast_data_indices: vec![],
+            master_collection_index: None,
             overrides_index: None,
             internal_version_index: None,
             unknown_incc_index: None,
