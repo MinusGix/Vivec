@@ -418,17 +418,13 @@ impl FromField<'_> for XLCM {
     }
 }
 
-/// Repr u32
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
 pub enum LevelModifier {
-    /// 0
-    Easy,
-    /// 1
-    Medium,
-    /// 2
-    Hard,
-    /// 3
-    VeryHard,
+    Easy = 0,
+    Medium = 1,
+    Hard = 2,
+    VeryHard = 3,
     // TODO: there is a None field, what is it's value?
 }
 impl LevelModifier {
@@ -443,12 +439,7 @@ impl LevelModifier {
     }
 
     pub fn code(&self) -> u32 {
-        match self {
-            LevelModifier::Easy => 0,
-            LevelModifier::Medium => 1,
-            LevelModifier::Hard => 2,
-            LevelModifier::VeryHard => 3,
-        }
+        *self as u32
     }
 }
 impl_static_data_size!(LevelModifier, u32::static_data_size());

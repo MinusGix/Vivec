@@ -136,13 +136,12 @@ where
     }
 }
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(i16)]
 pub enum VMADObjectFormat {
     /// [formid:4][alias:2][unused:2]
-    /// 1
-    IDLead,
+    IDLead = 1,
     /// [unused:2][alias:2][formid:4]
-    /// 2
-    IDEnd,
+    IDEnd = 2,
 }
 type VMADObjectFormatConversionError = ConversionError<u16>;
 impl VMADObjectFormat {
@@ -160,10 +159,7 @@ impl VMADObjectFormat {
     }
 
     pub fn code(&self) -> i16 {
-        match self {
-            VMADObjectFormat::IDLead => 1,
-            VMADObjectFormat::IDEnd => 2,
-        }
+        *self as i16
     }
 }
 impl TryFrom<u16> for VMADObjectFormat {

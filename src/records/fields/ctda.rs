@@ -97,19 +97,20 @@ impl Writable for CTDA {
 // Repr 3 bits, upper
 // The actual ''operator'' is a full byte, but the lower 5 bits are used for flags
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u8)]
 pub enum Operator {
-    /// 0, ==
-    Equal,
-    /// 1, !=
-    NotEqual,
-    /// 2, >
-    GreaterThan,
-    /// 3, >=
-    GreaterThanEqual,
-    /// 4, <
-    LessThan,
-    /// 5, <=
-    LessThanEqual,
+    /// ==
+    Equal = 0,
+    /// !=
+    NotEqual = 1,
+    /// >
+    GreaterThan = 2,
+    /// >=
+    GreaterThanEqual = 3,
+    /// <
+    LessThan = 4,
+    /// <=
+    LessThanEqual = 5,
 }
 type OperatorError = ConversionError<u8>;
 impl Operator {
@@ -133,15 +134,9 @@ impl Operator {
         })
     }
 
+    /// Returns the code of the enum, but not in the correct bit position.
     pub fn code(&self) -> u8 {
-        match self {
-            Operator::Equal => 0,
-            Operator::NotEqual => 1,
-            Operator::GreaterThan => 2,
-            Operator::GreaterThanEqual => 3,
-            Operator::LessThan => 4,
-            Operator::LessThanEqual => 5,
-        }
+        *self as u8
     }
 
     /// Returns u8 with bits set in correct position
@@ -277,25 +272,21 @@ impl Writable for Parameters {
 impl_static_data_size!(Parameters, u64::static_data_size());
 
 /// The method of applying the condition
-/// repr: u32
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
 pub enum RunOn {
-    /// 0
-    Subject,
-    /// 1
-    Target,
-    /// 2, related to reference field
-    Reference,
-    /// 3
-    CombatTarget,
-    /// 4, use a reference linked to another reference
-    LinkedReferenced,
-    /// 5, use quest alias data
-    QuestAlias,
-    /// 6
-    PackageData,
-    /// 7, use radiant event data
-    EventData,
+    Subject = 0,
+    Target = 1,
+    /// related to reference field
+    Reference = 2,
+    CombatTarget = 3,
+    /// use a reference linked to another reference
+    LinkedReferenced = 4,
+    /// use quest alias data
+    QuestAlias = 5,
+    PackageData = 6,
+    /// use radiant event data
+    EventData = 7,
 }
 type RunOnError = ConversionError<u32>;
 impl RunOn {
@@ -321,16 +312,7 @@ impl RunOn {
     }
 
     pub fn code(&self) -> u32 {
-        match self {
-            RunOn::Subject => 0,
-            RunOn::Target => 1,
-            RunOn::Reference => 2,
-            RunOn::CombatTarget => 3,
-            RunOn::LinkedReferenced => 4,
-            RunOn::QuestAlias => 5,
-            RunOn::PackageData => 6,
-            RunOn::EventData => 7,
-        }
+        *self as u32
     }
 }
 impl_static_data_size!(RunOn, u32::static_data_size());
