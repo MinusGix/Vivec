@@ -18,7 +18,7 @@ use std::io::Write;
 /// Header record for mod file
 #[derive(Debug, Clone)]
 pub struct TES4Record<'data> {
-    common: CommonRecordInfo,
+    pub common: CommonRecordInfo,
     pub fields: Vec<TES4Field<'data>>,
 }
 impl<'data> TES4Record<'data> {
