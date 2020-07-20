@@ -1,6 +1,6 @@
 use super::BStrw;
 use crate::{
-    parse::PResult,
+    parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -21,8 +21,9 @@ impl<'data> FullString<'data> {
     pub fn from_ascii_bytes(value: &'data [u8]) -> Self {
         Self::new(value.as_bstr())
     }
-
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+}
+impl<'data> Parse<'data> for FullString<'data> {
+    fn parse(data: &'data [u8]) -> PResult<'data, Self> {
         Ok((&[], Self::from_ascii_bytes(data)))
     }
 }
