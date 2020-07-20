@@ -1,12 +1,12 @@
 use super::{
     common::{self, CommonRecordInfo, GeneralRecord, Index},
     fields::{
-        common::{rgbu, FromField, FromFieldError, GeneralField},
+        common::{rgbu, GeneralField},
         edid,
     },
 };
 use crate::{
-    collect_one, dispatch_all, impl_static_type_named, make_single_value_field,
+    collect_one, dispatch_all, impl_from_field, impl_static_type_named, make_single_value_field,
     parse::PResult,
     util::{DataSize, Writable},
 };
@@ -107,12 +107,7 @@ impl<'data> Writable for AACTField<'data> {
 }
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], CNAM, color, rgbu::RGBU);
-impl FromField<'_> for CNAM {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, color) = rgbu::RGBU::parse(field.data)?;
-        Ok((data, Self { color }))
-    }
-}
+impl_from_field!(CNAM, [color: rgbu::RGBU]);
 
 #[cfg(test)]
 mod tests {

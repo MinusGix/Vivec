@@ -1,6 +1,6 @@
-use super::common::{FromField, FromFieldError, GeneralField};
+use super::common::{FromFieldError, GeneralField};
 use crate::{
-    impl_static_type_named, make_single_value_field,
+    impl_from_field, impl_static_type_named, make_single_value_field,
     parse::{count, PResult, Parse},
     records::common::{FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
@@ -14,12 +14,7 @@ make_single_value_field!(
     amount,
     u32
 );
-impl FromField<'_> for KSIZ {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, amount) = u32::parse(field.data)?;
-        Ok((data, Self { amount }))
-    }
-}
+impl_from_field!(KSIZ, [amount: u32]);
 
 make_single_value_field!(
     /// 'Keyword array'

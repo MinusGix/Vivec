@@ -4,12 +4,12 @@ use super::{
         TypeNamed,
     },
     fields::{
-        common::{item, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
+        common::{item, write_field_header, GeneralField, FIELDH_SIZE},
         dest, edid, full, modl, obnd, vmad,
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
     impl_static_type_named,
     parse::{PResult, Parse},
     util::{DataSize, Writable},
@@ -259,13 +259,7 @@ pub struct DATA {
     value: item::Gold,
     weight: item::Weight,
 }
-impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, value) = item::Gold::parse(field.data)?;
-        let (data, weight) = item::Weight::parse(data)?;
-        Ok((data, DATA { value, weight }))
-    }
-}
+impl_from_field!(DATA, [value: item::Gold, weight: item::Weight]);
 impl_static_type_named!(DATA, b"DATA");
 impl_static_data_size!(
     DATA,

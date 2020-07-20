@@ -6,7 +6,7 @@ use super::{
     fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
     impl_static_type_named, make_single_value_field,
     parse::{many, PResult, Parse},
     util::{fmt_data, DataSize, Writable},
@@ -292,23 +292,7 @@ pub struct HEDR {
     /// Next available object id
     pub next_object_id: u32,
 }
-impl FromField<'_> for HEDR {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, version) = f32::parse(field.data)?;
-        let (data, record_count) = u32::parse(data)?;
-        let (data, next_object_id) = u32::parse(data)?;
-        // TODO: assure that it's at the end.
-
-        Ok((
-            data,
-            HEDR {
-                version,
-                record_count,
-                next_object_id,
-            },
-        ))
-    }
-}
+impl_from_field!(HEDR, [version: f32, record_count: u32, next_object_id: u32]);
 impl_static_type_named!(HEDR, b"HEDR");
 impl_static_data_size!(
     HEDR,
@@ -335,12 +319,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], CNAM,
     NullTerminatedString,
     'data
 );
-impl<'data> FromField<'data> for CNAM<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, author) = NullTerminatedString::parse(field.data)?;
-        Ok((data, CNAM { author }))
-    }
-}
+impl_from_field!(CNAM, 'data, [author: NullTerminatedString]);
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], SNAM,
     /// max-size: 512 bytes (including null!)
@@ -348,12 +327,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], SNAM,
     NullTerminatedString,
     'data
 );
-impl<'data> FromField<'data> for SNAM<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, description) = NullTerminatedString::parse(field.data)?;
-        Ok((data, SNAM { description }))
-    }
-}
+impl_from_field!(SNAM, 'data, [description: NullTerminatedString]);
 
 /// Holds a MAST,DATA pair
 #[derive(Debug, Clone)]
@@ -445,21 +419,10 @@ make_single_value_field!(
     NullTerminatedString,
     'data
 );
-impl<'data> FromField<'data> for MAST<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, filename) = NullTerminatedString::parse(field.data)?;
-        Ok((data, MAST { filename }))
-    }
-}
+impl_from_field!(MAST, 'data, [filename: NullTerminatedString]);
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], DATA, value, u64);
-impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> PResult<DATA, FromFieldError> {
-        // TODO: verify that was all
-        let (data, value) = u64::parse(field.data)?;
-        Ok((data, DATA { value }))
-    }
-}
+impl_from_field!(DATA, [value: u64]);
 
 make_single_value_field!(
     [Clone, Eq, PartialEq],
@@ -485,22 +448,10 @@ impl std::fmt::Debug for ONAM {
 }
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], INTV, value, u32);
-impl FromField<'_> for INTV {
-    fn from_field(field: GeneralField<'_>) -> PResult<INTV, FromFieldError> {
-        // TODO: verify that was all
-        let (data, value) = u32::parse(field.data)?;
-        Ok((data, INTV { value }))
-    }
-}
+impl_from_field!(INTV, [value: u32]);
 
 make_single_value_field!([Debug, Clone, Eq, PartialEq], INCC, value, u32);
-impl FromField<'_> for INCC {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        // TODO: verify that was all
-        let (data, value) = u32::parse(field.data)?;
-        Ok((data, INCC { value }))
-    }
-}
+impl_from_field!(INCC, [value: u32]);
 
 #[cfg(test)]
 mod tests {

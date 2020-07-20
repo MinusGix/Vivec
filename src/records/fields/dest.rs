@@ -1,7 +1,7 @@
-use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
+use super::common::{write_field_header, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    impl_static_data_size, impl_static_type_named, make_empty_field, make_model_fields,
-    make_single_value_field,
+    impl_from_field, impl_static_data_size, impl_static_type_named, make_empty_field,
+    make_model_fields, make_single_value_field,
     parse::{take, PResult, Parse},
     records::common::{get_field, FormId, StaticTypeNamed},
     util::{DataSize, Writable},
@@ -13,30 +13,14 @@ use std::io::Write;
 #[derive(Debug, Clone)]
 pub struct DEST {
     pub health: u32,
-    // TODO: is this talking about the other records that follow DEST entries?
+    // TODO: is this talking about the other fields that follow DEST entries?
     /// Number of destruction sections that follow
     pub count: u8,
     /// 0b1: VATs enabled
     pub flags: u8,
     pub unknown: u16,
 }
-impl FromField<'_> for DEST {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, health) = u32::parse(field.data)?;
-        let (data, count) = take(data, 1usize)?;
-        let (data, flag) = take(data, 1usize)?;
-        let (data, unknown) = u16::parse(data)?;
-        Ok((
-            data,
-            DEST {
-                health,
-                count: count[0],
-                flags: flag[0],
-                unknown,
-            },
-        ))
-    }
-}
+impl_from_field!(DEST, [health: u32, count: u8, flags: u8, unknown: u16]);
 impl_static_type_named!(DEST, b"DEST");
 impl_static_data_size!(
     DEST,
@@ -69,30 +53,18 @@ pub struct DSTD {
     pub debris_id: FormId,
     pub debris_count: u32,
 }
-impl FromField<'_> for DSTD {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, health_percent) = u16::parse(field.data)?;
-        let (data, damage_stage) = take(data, 1usize)?;
-        let damage_stage = damage_stage[0];
-        let (data, flags) = DSTDFlags::parse(data)?;
-        let (data, self_damage_rate) = u32::parse(data)?;
-        let (data, explosion_id) = FormId::parse(data)?;
-        let (data, debris_id) = FormId::parse(data)?;
-        let (data, debris_count) = u32::parse(data)?;
-        Ok((
-            data,
-            Self {
-                health_percent,
-                damage_stage,
-                flags,
-                self_damage_rate,
-                explosion_id,
-                debris_id,
-                debris_count,
-            },
-        ))
-    }
-}
+impl_from_field!(
+    DSTD,
+    [
+        health_percent: u16,
+        damage_stage: u8,
+        flags: DSTDFlags,
+        self_damage_rate: u32,
+        explosion_id: FormId,
+        debris_id: FormId,
+        debris_count: u32
+    ]
+);
 impl_static_type_named!(DSTD, b"DSTD");
 impl_static_data_size!(
     DSTD,

@@ -6,13 +6,13 @@ use super::{
     fields::{
         common::{
             item::{ICON, MICO, YNAM, ZNAM},
-            write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
+            write_field_header, FromFieldError, GeneralField, FIELDH_SIZE,
         },
         ctda, edid, full, kwda, modl, obnd,
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
     impl_static_type_named, make_formid_field, make_single_value_field,
     parse::{PResult, Parse},
     util::{DataSize, Writable},
@@ -241,12 +241,7 @@ make_single_value_field!(
     weight,
     f32
 );
-impl<'data> FromField<'data> for DATA {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, weight) = f32::parse(field.data)?;
-        Ok((data, Self { weight }))
-    }
-}
+impl_from_field!(DATA, [weight: f32]);
 
 #[derive(Debug, Clone)]
 pub struct ENIT {
@@ -258,25 +253,16 @@ pub struct ENIT {
     /// ->SNDR
     pub use_sound: FormId,
 }
-impl FromField<'_> for ENIT {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, potion_value) = u32::parse(field.data)?;
-        let (data, flags) = ENITFlags::parse(data)?;
-        let (data, addiction) = FormId::parse(data)?;
-        let (data, addiction_chance) = u32::parse(data)?;
-        let (data, use_sound) = FormId::parse(data)?;
-        Ok((
-            data,
-            Self {
-                potion_value,
-                flags,
-                addiction,
-                addiction_chance,
-                use_sound,
-            },
-        ))
-    }
-}
+impl_from_field!(
+    ENIT,
+    [
+        potion_value: u32,
+        flags: ENITFlags,
+        addiction: FormId,
+        addiction_chance: u32,
+        use_sound: FormId
+    ]
+);
 impl_static_type_named!(ENIT, b"ENIT");
 impl_static_data_size!(
     ENIT,
@@ -357,21 +343,7 @@ pub struct EFIT {
 // calculate cost of an effect as: effect_base_cost * (magnitude * duration / 10) ** 1.1
 // duration=0 uses it as 10
 // magnitude < 1 becomes 1
-impl FromField<'_> for EFIT {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, magnitude) = f32::parse(field.data)?;
-        let (data, area_of_effect) = u32::parse(data)?;
-        let (data, duration) = u32::parse(data)?;
-        Ok((
-            data,
-            Self {
-                magnitude,
-                area_of_effect,
-                duration,
-            },
-        ))
-    }
-}
+impl_from_field!(EFIT, [magnitude: f32, area_of_effect: u32, duration: u32]);
 impl_static_type_named!(EFIT, b"EFIT");
 impl_static_data_size!(
     EFIT,

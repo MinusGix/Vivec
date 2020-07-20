@@ -2,7 +2,8 @@
 
 use super::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
-    impl_static_data_size, impl_static_type_named, make_formid_field, make_single_value_field,
+    impl_from_field, impl_static_data_size, impl_static_type_named, make_formid_field,
+    make_single_value_field,
     parse::{PResult, Parse, ParseError},
     records::common::{lstring::LString, ConversionError, NullTerminatedString},
     util::Writable,
@@ -91,12 +92,7 @@ make_formid_field!(
 pub struct QUAL {
     pub quality: Quality,
 }
-impl FromField<'_> for QUAL {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, quality) = Quality::parse(field.data)?;
-        Ok((data, Self { quality }))
-    }
-}
+impl_from_field!(QUAL, [quality: Quality]);
 impl_static_type_named!(QUAL, b"QUAL");
 impl_static_data_size!(QUAL, FIELDH_SIZE + Quality::static_data_size());
 impl Writable for QUAL {
@@ -157,9 +153,4 @@ make_single_value_field!(
     description,
     LString
 );
-impl FromField<'_> for DESC {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, description) = LString::parse(field.data)?;
-        Ok((data, Self { description }))
-    }
-}
+impl_from_field!(DESC, [description: LString]);

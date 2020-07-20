@@ -1,5 +1,4 @@
-use super::common::{FromField, FromFieldError, GeneralField};
-use crate::{make_single_value_field, parse::PResult, records::common::lstring::LString};
+use crate::{impl_from_field, make_single_value_field, records::common::lstring::LString};
 
 make_single_value_field!(
     /// Ingame name
@@ -8,9 +7,4 @@ make_single_value_field!(
     name,
     LString
 );
-impl FromField<'_> for FULL {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, name) = LString::parse(field.data)?;
-        Ok((data, Self { name }))
-    }
-}
+impl_from_field!(FULL, [name: LString]);

@@ -1,12 +1,12 @@
 use super::{
     common::{self, CommonRecordInfo, GeneralRecord, Index},
     fields::{
-        common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
+        common::{write_field_header, GeneralField, FIELDH_SIZE},
         edid, modl, obnd,
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_data_size,
+    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
     impl_static_type_named, make_formid_field, make_single_value_field,
     parse::{PResult, Parse},
     util::{DataSize, Writable},
@@ -158,12 +158,7 @@ make_single_value_field!(
     addon_node_index,
     u32
 );
-impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, addon_node_index) = u32::parse(field.data)?;
-        Ok((data, DATA { addon_node_index }))
-    }
-}
+impl_from_field!(DATA, [addon_node_index: u32]);
 
 make_formid_field!(
     /// FormId for a SOUN record
@@ -188,14 +183,8 @@ impl DNAM {
         }
     }
 }
+impl_from_field!(DNAM, [master_particle_system_cap: u16, flags: u16]);
 impl_static_type_named!(DNAM, b"DNAM");
-impl FromField<'_> for DNAM {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, particle_cap) = u16::parse(field.data)?;
-        let (data, flags) = u16::parse(data)?;
-        Ok((data, DNAM::new(particle_cap, flags)))
-    }
-}
 impl_static_data_size!(
     DNAM,
     FIELDH_SIZE +

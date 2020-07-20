@@ -3,13 +3,10 @@ use super::{
         CommonRecordInfo, FromRecord, FromRecordError, GeneralRecord, Index, NullTerminatedString,
         StaticTypeNamed, TypeNamed,
     },
-    fields::{
-        common::{FromField, FromFieldError, GeneralField},
-        edid, modl,
-    },
+    fields::{common::GeneralField, edid, modl},
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_type_named,
+    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_type_named,
     make_single_value_field,
     parse::PResult,
     util::{DataSize, Writable},
@@ -128,10 +125,4 @@ make_single_value_field!(
     NullTerminatedString,
     'data
 );
-impl<'data> FromField<'data> for BNAM<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, unload_event) = NullTerminatedString::parse(field.data)?;
-        // TODO: check that is all.
-        Ok((data, Self { unload_event }))
-    }
-}
+impl_from_field!(BNAM, 'data, [unload_event: NullTerminatedString]);

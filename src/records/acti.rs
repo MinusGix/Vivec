@@ -4,13 +4,13 @@ use super::{
         StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{rgbu, FromField, FromFieldError, GeneralField},
+        common::{rgbu, GeneralField},
         dest, edid, full, kwda, modl, obnd, vmad,
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_static_type_named, make_formid_field,
-    make_single_value_field,
+    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_type_named,
+    make_formid_field, make_single_value_field,
     parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
@@ -260,12 +260,7 @@ impl<'data> Writable for ACTIField<'data> {
 }
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], PNAM, color, rgbu::RGBU);
-impl FromField<'_> for PNAM {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, color) = rgbu::RGBU::parse(field.data)?;
-        Ok((data, Self { color }))
-    }
-}
+impl_from_field!(PNAM, [color: rgbu::RGBU]);
 
 make_formid_field!(
     /// ->SNDR uesp: 'nirnroot has the wow-wow sound here' (quality comment, I approve)
@@ -289,28 +284,19 @@ make_single_value_field!(
     verb,
     LString
 );
-impl FromField<'_> for RNAM {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, verb) = LString::parse(field.data)?;
-        Ok((data, Self { verb }))
-    }
-}
+impl_from_field!(RNAM, [verb: LString]);
 
 make_single_value_field!(
     /// Flags
     [Debug, Copy, Clone, Eq, PartialEq],
     FNAM,
+    /// TODO: make this it's own flag-structure
     /// 0b1 = No displacement (related to water type)
     /// 0b10 = ignored by sandbox
     flags,
     u16
 );
-impl FromField<'_> for FNAM {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, flags) = u16::parse(field.data)?;
-        Ok((data, Self { flags }))
-    }
-}
+impl_from_field!(FNAM, [flags: u16]);
 
 make_formid_field!(
     /// ->KWYD form id for interaction purposes (??? What)

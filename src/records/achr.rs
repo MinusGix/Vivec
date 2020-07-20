@@ -6,8 +6,8 @@ use super::{
     },
 };
 use crate::{
-    collect_many, collect_one, dispatch_all, impl_static_data_size, impl_static_type_named,
-    make_empty_field, make_formid_field, make_single_value_field,
+    collect_many, collect_one, dispatch_all, impl_from_field, impl_static_data_size,
+    impl_static_type_named, make_empty_field, make_formid_field, make_single_value_field,
     parse::{take, PResult, Parse, ParseError},
     util::{byte, DataSize, Position3, Writable},
 };
@@ -462,17 +462,7 @@ impl Writable for LevelModifier {
 }
 
 make_single_value_field!([Debug, Copy, Clone, Eq, PartialEq], XAPD, flags, XAPDFlags);
-impl FromField<'_> for XAPD {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, flags) = take(field.data, 1)?;
-        Ok((
-            data,
-            XAPD {
-                flags: XAPDFlags::new(flags[0]),
-            },
-        ))
-    }
-}
+impl_from_field!(XAPD, [flags: XAPDFlags]);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct XAPDFlags {
     /// 0b1: parent activate only
@@ -485,6 +475,12 @@ impl XAPDFlags {
 
     pub fn is_parent_activate_only(&self) -> bool {
         (self.flags & 0b1) != 0
+    }
+}
+impl Parse for XAPDFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = u8::parse(data)?;
+        Ok((data, Self { flags }))
     }
 }
 impl_static_data_size!(XAPDFlags, u8::static_data_size());
@@ -504,13 +500,7 @@ pub struct XAPR {
     formid: FormId,
     delay: f32,
 }
-impl FromField<'_> for XAPR {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, formid) = FormId::parse(field.data)?;
-        let (data, delay) = f32::parse(data)?;
-        Ok((data, XAPR { formid, delay }))
-    }
-}
+impl_from_field!(XAPR, [formid: FormId, delay: f32]);
 impl_static_type_named!(XAPR, b"XAPR");
 impl_static_data_size!(
     XAPR,
@@ -545,14 +535,7 @@ pub struct XESP {
     parent: FormId,
     flags: XESPFlags,
 }
-impl FromField<'_> for XESP {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, parent) = FormId::parse(field.data)?;
-        let (data, flags) = u32::parse(data)?;
-        let flags = XESPFlags::new(flags);
-        Ok((data, XESP { parent, flags }))
-    }
-}
+impl_from_field!(XESP, [parent: FormId, flags: XESPFlags]);
 impl_static_type_named!(XESP, b"XESP");
 impl_static_data_size!(
     XESP,
@@ -590,6 +573,12 @@ impl XESPFlags {
         (self.flags & 0b10) != 0
     }
 }
+impl Parse for XESPFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = u32::parse(data)?;
+        Ok((data, Self { flags }))
+    }
+}
 impl_static_data_size!(XESPFlags, u32::static_data_size());
 impl Writable for XESPFlags {
     fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
@@ -618,13 +607,7 @@ pub struct XLKR {
     /// TODO: better name: target?
     reference: FormId,
 }
-impl FromField<'_> for XLKR {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, keyword) = FormId::parse(field.data)?;
-        let (data, reference) = FormId::parse(data)?;
-        Ok((data, XLKR { keyword, reference }))
-    }
-}
+impl_from_field!(XLKR, [keyword: FormId, reference: FormId]);
 impl_static_type_named!(XLKR, b"XLKR");
 impl_static_data_size!(
     XLKR,
@@ -651,12 +634,7 @@ make_empty_field!(
 make_formid_field!(XLRL);
 
 make_single_value_field!([Debug, Copy, Clone, PartialEq], XSCL, scale, f32);
-impl FromField<'_> for XSCL {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, scale) = f32::parse(field.data)?;
-        Ok((data, XSCL { scale }))
-    }
-}
+impl_from_field!(XSCL, [scale: f32]);
 
 #[derive(Debug, Clone)]
 pub struct DATA {
