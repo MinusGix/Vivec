@@ -56,12 +56,7 @@ make_single_value_field!(
     NullTerminatedString,
     'data
 );
-impl<'data> FromField<'data> for ICON<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, filename) = NullTerminatedString::parse(field.data)?;
-        Ok((data, Self { filename }))
-    }
-}
+impl_from_field!(ICON, 'data, [filename: NullTerminatedString]);
 
 make_single_value_field!(
     /// Message icon filename
@@ -71,12 +66,7 @@ make_single_value_field!(
     NullTerminatedString,
     'data
 );
-impl<'data> FromField<'data> for MICO<'data> {
-    fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
-        let (data, filename) = NullTerminatedString::parse(field.data)?;
-        Ok((data, Self { filename }))
-    }
-}
+impl_from_field!(MICO, 'data, [filename: NullTerminatedString]);
 
 make_formid_field!(
     /// Pickup ->SNDR
