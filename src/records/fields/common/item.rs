@@ -4,9 +4,9 @@ use super::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_
 use crate::{
     impl_from_field, impl_static_data_size, impl_static_type_named, make_formid_field,
     make_single_value_field,
-    parse::{PResult, Parse, ParseError},
+    parse::{take, PResult, Parse, ParseError},
     records::common::{lstring::LString, ConversionError, NullTerminatedString},
-    util::Writable,
+    util::{DataSize, StaticDataSize, Writable},
 };
 use std::{
     convert::{TryFrom, TryInto},
@@ -144,3 +144,204 @@ make_single_value_field!(
     LString
 );
 impl_from_field!(DESC, [description: LString]);
+
+#[derive(Debug, Clone)]
+pub struct BODT {
+    pub part_node_flags: BodyPartNodeFlags,
+    pub flags: BODTFlags,
+    /// UESP thinks this is junk data. it is in the padding position
+    pub unknown: [u8; 3],
+    /// Some rare records of BODT do not have the skill field.
+    /// It defaults to ArmorSkill::None, but we can't / shouldn't store it like that.
+    pub skill: Option<ArmorSkill>,
+}
+impl FromField<'_> for BODT {
+    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
+        let (data, part_node_flags) = BodyPartNodeFlags::parse(field.data)?;
+        let (data, flags) = BODTFlags::parse(data)?;
+        let (data, unknown) = take(data, 3)?;
+        let unknown = [unknown[0], unknown[1], unknown[2]];
+        let (data, skill) = if !data.is_empty() {
+            let (data, skill) = ArmorSkill::parse(data)?;
+            (data, Some(skill))
+        } else {
+            (data, None)
+        };
+
+        Ok((
+            data,
+            Self {
+                part_node_flags,
+                flags,
+                unknown,
+                skill,
+            },
+        ))
+    }
+}
+impl_static_type_named!(BODT, b"BODT");
+impl DataSize for BODT {
+    fn data_size(&self) -> usize {
+        FIELDH_SIZE
+            + self.part_node_flags.data_size()
+            + self.flags.data_size()
+            + (u8::static_data_size() * 3)
+            + self.skill.data_size()
+    }
+}
+impl Writable for BODT {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        write_field_header(self, w)?;
+        self.part_node_flags.write_to(w)?;
+        self.flags.write_to(w)?;
+        self.unknown[0].write_to(w)?;
+        self.unknown[1].write_to(w)?;
+        self.unknown[2].write_to(w)?;
+        if let Some(skill) = &self.skill {
+            skill.write_to(w)?;
+        }
+        Ok(())
+    }
+}
+
+// TODO: implement getters and comments on bit meanings
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct BodyPartNodeFlags {
+    pub flags: u32,
+}
+impl Parse for BodyPartNodeFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = u32::parse(data)?;
+        Ok((data, Self { flags }))
+    }
+}
+impl_static_data_size!(BodyPartNodeFlags, u32::static_data_size());
+impl Writable for BodyPartNodeFlags {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.flags.write_to(w)
+    }
+}
+
+// TODO: implement getters and comments on bit meanings
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct BODTFlags {
+    /// 0x1: Modulates voice. (ARMA only)
+    /// 0x10: Non-playable (ARMO only)
+    pub flags: u8,
+}
+impl Parse for BODTFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = u8::parse(data)?;
+        Ok((data, Self { flags }))
+    }
+}
+impl_static_data_size!(BODTFlags, u8::static_data_size());
+impl Writable for BODTFlags {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.flags.write_to(w)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
+pub enum ArmorSkill {
+    LightArmor = 0,
+    HeavyArmor = 1,
+    /// No armor value
+    None = 2,
+}
+impl ArmorSkill {
+    pub fn code(&self) -> u32 {
+        *self as u32
+    }
+}
+impl Parse for ArmorSkill {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, value) = u32::parse(data)?;
+        let skill = value.try_into().map_err(|e| match e {
+            ConversionError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
+        })?;
+        Ok((data, skill))
+    }
+}
+impl_static_data_size!(ArmorSkill, u32::static_data_size());
+impl Writable for ArmorSkill {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        self.code().write_to(w)
+    }
+}
+impl TryFrom<u32> for ArmorSkill {
+    type Error = ConversionError<u32>;
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        Ok(match value {
+            0 => ArmorSkill::LightArmor,
+            1 => ArmorSkill::HeavyArmor,
+            2 => ArmorSkill::None,
+            _ => return Err(ConversionError::InvalidEnumerationValue(value)),
+        })
+    }
+}
+
+/// Essentially a 'new'/'updated' trimmed down version of BODT
+#[derive(Debug, Clone)]
+pub struct BOD2 {
+    pub part_node_flags: BodyPartNodeFlags,
+    pub skill: ArmorSkill,
+}
+impl_from_field!(
+    BOD2,
+    [part_node_flags: BodyPartNodeFlags, skill: ArmorSkill]
+);
+impl_static_type_named!(BOD2, b"BOD2");
+impl_static_data_size!(
+    BOD2,
+    FIELDH_SIZE + BodyPartNodeFlags::static_data_size() + ArmorSkill::static_data_size()
+);
+impl Writable for BOD2 {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        write_field_header(self, w)?;
+        self.part_node_flags.write_to(w)?;
+        self.skill.write_to(w)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::assert_size_output;
+
+    #[test]
+    fn test_bodt() {
+        let bodt = BODT {
+            part_node_flags: BodyPartNodeFlags { flags: 0x0 },
+            flags: BODTFlags { flags: 0x0 },
+            unknown: [0, 0, 0],
+            skill: Some(ArmorSkill::HeavyArmor),
+        };
+        assert_size_output!(bodt);
+    }
+
+    #[test]
+    fn test_bod2() {
+        let bod2 = BOD2 {
+            part_node_flags: BodyPartNodeFlags { flags: 0x0 },
+            skill: ArmorSkill::HeavyArmor,
+        };
+        assert_size_output!(bod2);
+    }
+}

@@ -4,7 +4,7 @@ use super::{
         StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
+        common::{item, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
         edid,
     },
 };
@@ -49,8 +49,8 @@ impl<'data> FromRecord<'data> for ARMARecord<'data> {
         while let Some(field) = field_iter.next() {
             match field.type_name().as_ref() {
                 b"EDID" => collect_one!(edid::EDID, field => fields; edid_index),
-                b"BODT" => collect_one!(BODT, field => fields; bodt_index),
-                b"BOD2" => collect_one!(BOD2, field => fields; bod2_index),
+                b"BODT" => collect_one!(item::BODT, field => fields; bodt_index),
+                b"BOD2" => collect_one!(item::BOD2, field => fields; bod2_index),
                 b"RNAM" => collect_one!(RNAM, field => fields; rnam_index),
                 b"DNAM" => collect_one!(DNAM, field => fields; dnam_index),
                 b"MOD2" => {
@@ -86,7 +86,9 @@ impl<'data> FromRecord<'data> for ARMARecord<'data> {
             ))
         // TODO: check if it should be one or the other depending on version
         } else if bod2_index.is_none() && bodt_index.is_none() {
-            Err(FromRecordError::ExpectedField(BOD2::static_type_name()))
+            Err(FromRecordError::ExpectedField(
+                item::BOD2::static_type_name(),
+            ))
         } else if rnam_index.is_none() {
             Err(FromRecordError::ExpectedField(RNAM::static_type_name()))
         } else if dnam_index.is_none() {
@@ -127,8 +129,8 @@ impl Writable for ARMARecord<'_> {
 #[derive(Debug, Clone, From)]
 pub enum ARMAField<'data> {
     EDID(edid::EDID<'data>),
-    BODT(BODT),
-    BOD2(BOD2),
+    BODT(item::BODT),
+    BOD2(item::BOD2),
     RNAM(RNAM),
     DNAM(DNAM),
     MOD2Collection(MOD2Collection<'data>),
@@ -232,181 +234,6 @@ impl Writable for ARMAField<'_> {
             x,
             { x.write_to(w) }
         )
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct BODT {
-    pub part_node_flags: BodyPartNodeFlags,
-    pub flags: BODTFlags,
-    /// UESP thinks this is junk data. it is in the padding position
-    pub unknown: [u8; 3],
-    /// Some rare records of BODT do not have the skill field.
-    /// It defaults to ArmorSkill::None, but we can't / shouldn't store it like that.
-    pub skill: Option<ArmorSkill>,
-}
-impl FromField<'_> for BODT {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, part_node_flags) = BodyPartNodeFlags::parse(field.data)?;
-        let (data, flags) = BODTFlags::parse(data)?;
-        let (data, unknown) = take(data, 3)?;
-        let unknown = [unknown[0], unknown[1], unknown[2]];
-        let (data, skill) = if !data.is_empty() {
-            let (data, skill) = ArmorSkill::parse(data)?;
-            (data, Some(skill))
-        } else {
-            (data, None)
-        };
-
-        Ok((
-            data,
-            Self {
-                part_node_flags,
-                flags,
-                unknown,
-                skill,
-            },
-        ))
-    }
-}
-impl_static_type_named!(BODT, b"BODT");
-impl DataSize for BODT {
-    fn data_size(&self) -> usize {
-        FIELDH_SIZE
-            + self.part_node_flags.data_size()
-            + self.flags.data_size()
-            + (u8::static_data_size() * 3)
-            + self.skill.data_size()
-    }
-}
-impl Writable for BODT {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        write_field_header(self, w)?;
-        self.part_node_flags.write_to(w)?;
-        self.flags.write_to(w)?;
-        self.unknown[0].write_to(w)?;
-        self.unknown[1].write_to(w)?;
-        self.unknown[2].write_to(w)?;
-        if let Some(skill) = &self.skill {
-            skill.write_to(w)?;
-        }
-        Ok(())
-    }
-}
-
-// TODO: implement getters and comments on bit meanings
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct BodyPartNodeFlags {
-    pub flags: u32,
-}
-impl Parse for BodyPartNodeFlags {
-    fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = u32::parse(data)?;
-        Ok((data, Self { flags }))
-    }
-}
-impl_static_data_size!(BodyPartNodeFlags, u32::static_data_size());
-impl Writable for BodyPartNodeFlags {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        self.flags.write_to(w)
-    }
-}
-
-// TODO: implement getters and comments on bit meanings
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct BODTFlags {
-    /// 0x1: Modulates voice. (ARMA only)
-    /// 0x10: Non-playable (ARMO only)
-    pub flags: u8,
-}
-impl Parse for BODTFlags {
-    fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = u8::parse(data)?;
-        Ok((data, Self { flags }))
-    }
-}
-impl_static_data_size!(BODTFlags, u8::static_data_size());
-impl Writable for BODTFlags {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        self.flags.write_to(w)
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[repr(u32)]
-pub enum ArmorSkill {
-    LightArmor = 0,
-    HeavyArmor = 1,
-    /// No armor value
-    None = 2,
-}
-impl ArmorSkill {
-    pub fn code(&self) -> u32 {
-        *self as u32
-    }
-}
-impl Parse for ArmorSkill {
-    fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, value) = u32::parse(data)?;
-        let skill = value.try_into().map_err(|e| match e {
-            ConversionError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
-        })?;
-        Ok((data, skill))
-    }
-}
-impl_static_data_size!(ArmorSkill, u32::static_data_size());
-impl Writable for ArmorSkill {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        self.code().write_to(w)
-    }
-}
-impl TryFrom<u32> for ArmorSkill {
-    type Error = ConversionError<u32>;
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        Ok(match value {
-            0 => ArmorSkill::LightArmor,
-            1 => ArmorSkill::HeavyArmor,
-            2 => ArmorSkill::None,
-            _ => return Err(ConversionError::InvalidEnumerationValue(value)),
-        })
-    }
-}
-
-/// Essentially a 'new'/'updated' trimmed down version of BODT
-#[derive(Debug, Clone)]
-pub struct BOD2 {
-    pub part_node_flags: BodyPartNodeFlags,
-    pub skill: ArmorSkill,
-}
-impl_from_field!(
-    BOD2,
-    [part_node_flags: BodyPartNodeFlags, skill: ArmorSkill]
-);
-impl_static_type_named!(BOD2, b"BOD2");
-impl_static_data_size!(
-    BOD2,
-    FIELDH_SIZE + BodyPartNodeFlags::static_data_size() + ArmorSkill::static_data_size()
-);
-impl Writable for BOD2 {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        write_field_header(self, w)?;
-        self.part_node_flags.write_to(w)?;
-        self.skill.write_to(w)
     }
 }
 
@@ -533,26 +360,6 @@ impl Writable for MODLList {
 mod tests {
     use super::*;
     use crate::assert_size_output;
-
-    #[test]
-    fn test_bodt() {
-        let bodt = BODT {
-            part_node_flags: BodyPartNodeFlags { flags: 0x0 },
-            flags: BODTFlags { flags: 0x0 },
-            unknown: [0, 0, 0],
-            skill: Some(ArmorSkill::HeavyArmor),
-        };
-        assert_size_output!(bodt);
-    }
-
-    #[test]
-    fn test_bod2() {
-        let bod2 = BOD2 {
-            part_node_flags: BodyPartNodeFlags { flags: 0x0 },
-            skill: ArmorSkill::HeavyArmor,
-        };
-        assert_size_output!(bod2);
-    }
 
     #[test]
     fn test_dnam() {
