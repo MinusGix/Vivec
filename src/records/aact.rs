@@ -19,13 +19,13 @@ use std::io::Write;
 /// Note: There can be an Empty-Record of this.
 #[derive(Debug, Clone)]
 pub struct AACTRecord<'data> {
-    common: CommonRecordInfo,
+    pub common: CommonRecordInfo,
     /// Editor id. EDID
-    action_name_index: Option<Index>,
+    pub action_name_index: Option<Index>,
     /// RGB colors. CNAM (RGBU)
-    rgb_index: Option<Index>,
+    pub rgb_index: Option<Index>,
 
-    fields: Vec<AACTField<'data>>,
+    pub fields: Vec<AACTField<'data>>,
 }
 impl<'data> FromRecord<'data> for AACTRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<AACTRecord<'data>, FromRecordError> {
