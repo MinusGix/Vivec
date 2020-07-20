@@ -4,10 +4,7 @@ use super::{
         StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{
-            item::{ICON, MICO, YNAM, ZNAM},
-            object, write_field_header, FromFieldError, GeneralField, FIELDH_SIZE,
-        },
+        common::{item, object, write_field_header, FromFieldError, GeneralField, FIELDH_SIZE},
         ctda, edid, kwda, modl, obnd,
     },
 };
@@ -77,10 +74,10 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
                 b"MODL" => {
                     collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; model_collection_index)
                 }
-                b"ICON" => collect_one!(ICON, field => fields; icon_index),
-                b"MICO" => collect_one!(MICO, field => fields; message_icon_index),
-                b"YNAM" => collect_one!(YNAM, field => fields; pickup_sound_index),
-                b"ZNAM" => collect_one!(ZNAM, field => fields; drop_sound_index),
+                b"ICON" => collect_one!(item::ICON, field => fields; icon_index),
+                b"MICO" => collect_one!(item::MICO, field => fields; message_icon_index),
+                b"YNAM" => collect_one!(item::YNAM, field => fields; pickup_sound_index),
+                b"ZNAM" => collect_one!(item::ZNAM, field => fields; drop_sound_index),
                 b"DATA" => collect_one!(DATA, field => fields; weight_index),
                 b"ENIT" => {
                     collect_one_collection!(ENIT, EnchantedEffectCollection; field, field_iter => fields; enchanted_effect_collection_index)
@@ -150,10 +147,10 @@ pub enum ALCHField<'data> {
     // TODO: note: UESP says that there may be more than one KWDA entry? I didn't see that in a quick skim through a handful of skyrim entries
     KWDACollection(kwda::KWDACollection),
     MODLCollection(modl::MODLCollection<'data>),
-    ICON(ICON<'data>),
-    MICO(MICO<'data>),
-    YNAM(YNAM),
-    ZNAM(ZNAM),
+    ICON(item::ICON<'data>),
+    MICO(item::MICO<'data>),
+    YNAM(item::YNAM),
+    ZNAM(item::ZNAM),
     DATA(DATA),
     EnchantedEffectCollection(EnchantedEffectCollection),
     Unknown(GeneralField<'data>),

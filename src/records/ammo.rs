@@ -5,8 +5,7 @@ use super::{
     },
     fields::{
         common::{
-            item::{self, ICON, MICO, YNAM, ZNAM},
-            object, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
+            item, object, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
         },
         dest, edid, kwda, modl, obnd,
     },
@@ -85,13 +84,13 @@ impl<'data> FromRecord<'data> for AMMORecord<'data> {
                 b"MODL" => {
                     collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; model_collection_index)
                 }
-                b"ICON" => collect_one!(ICON, field => fields; inventory_image_index),
-                b"MICO" => collect_one!(MICO, field => fields; message_image_index),
+                b"ICON" => collect_one!(item::ICON, field => fields; inventory_image_index),
+                b"MICO" => collect_one!(item::MICO, field => fields; message_image_index),
                 b"DEST" => {
                     collect_one_collection!(dest::DEST, dest::DESTCollection; field, field_iter => fields; destruction_collection_index)
                 }
-                b"YNAM" => collect_one!(YNAM, field => fields; pickup_sound_index),
-                b"ZNAM" => collect_one!(ZNAM, field => fields; drop_sound_index),
+                b"YNAM" => collect_one!(item::YNAM, field => fields; pickup_sound_index),
+                b"ZNAM" => collect_one!(item::ZNAM, field => fields; drop_sound_index),
                 b"DESC" => collect_one!(item::DESC, field => fields; description_index),
                 b"KSIZ" => {
                     collect_one_collection!(kwda::KSIZ, kwda::KWDACollection; field, field_iter => fields; keyword_collection_index)
@@ -157,11 +156,11 @@ pub enum AMMOField<'data> {
     OBND(obnd::OBND),
     FULL(object::FULL),
     MODLCollection(modl::MODLCollection<'data>),
-    ICON(ICON<'data>),
-    MICO(MICO<'data>),
+    ICON(item::ICON<'data>),
+    MICO(item::MICO<'data>),
     DESTCollection(dest::DESTCollection<'data>),
-    YNAM(YNAM),
-    ZNAM(ZNAM),
+    YNAM(item::YNAM),
+    ZNAM(item::ZNAM),
     DESC(item::DESC),
     KWDACollection(kwda::KWDACollection),
     DATA(DATA),
