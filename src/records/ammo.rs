@@ -6,9 +6,9 @@ use super::{
     fields::{
         common::{
             item::{self, ICON, MICO, YNAM, ZNAM},
-            write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
+            object, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
         },
-        dest, edid, full, kwda, modl, obnd,
+        dest, edid, kwda, modl, obnd,
     },
 };
 use crate::{
@@ -81,7 +81,7 @@ impl<'data> FromRecord<'data> for AMMORecord<'data> {
             match field.type_name.as_ref() {
                 b"EDID" => collect_one!(edid::EDID, field => fields; editor_id_index),
                 b"OBND" => collect_one!(obnd::OBND, field => fields; object_bounds_index),
-                b"FULL" => collect_one!(full::FULL, field => fields; item_name_index),
+                b"FULL" => collect_one!(object::FULL, field => fields; item_name_index),
                 b"MODL" => {
                     collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; model_collection_index)
                 }
@@ -155,7 +155,7 @@ impl<'data> Writable for AMMORecord<'data> {
 pub enum AMMOField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),
-    FULL(full::FULL),
+    FULL(object::FULL),
     MODLCollection(modl::MODLCollection<'data>),
     ICON(ICON<'data>),
     MICO(MICO<'data>),

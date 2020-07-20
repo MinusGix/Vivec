@@ -6,9 +6,9 @@ use super::{
     fields::{
         common::{
             item::{ICON, MICO, YNAM, ZNAM},
-            write_field_header, FromFieldError, GeneralField, FIELDH_SIZE,
+            object, write_field_header, FromFieldError, GeneralField, FIELDH_SIZE,
         },
-        ctda, edid, full, kwda, modl, obnd,
+        ctda, edid, kwda, modl, obnd,
     },
 };
 use crate::{
@@ -70,7 +70,7 @@ impl<'data> FromRecord<'data> for ALCHRecord<'data> {
             match field.type_name.as_ref() {
                 b"EDID" => collect_one!(edid::EDID, field => fields; editor_id_index),
                 b"OBND" => collect_one!(obnd::OBND, field => fields; object_bounds_index),
-                b"FULL" => collect_one!(full::FULL, field => fields; full_name_index),
+                b"FULL" => collect_one!(object::FULL, field => fields; full_name_index),
                 b"KSIZ" => {
                     collect_one_collection!(kwda::KSIZ, kwda::KWDACollection; field, field_iter => fields; keyword_collection_index)
                 }
@@ -146,7 +146,7 @@ impl<'data> Writable for ALCHRecord<'data> {
 pub enum ALCHField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),
-    FULL(full::FULL),
+    FULL(object::FULL),
     // TODO: note: UESP says that there may be more than one KWDA entry? I didn't see that in a quick skim through a handful of skyrim entries
     KWDACollection(kwda::KWDACollection),
     MODLCollection(modl::MODLCollection<'data>),

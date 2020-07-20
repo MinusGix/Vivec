@@ -4,8 +4,8 @@ use super::{
         StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{rgbu, GeneralField},
-        dest, edid, full, kwda, modl, obnd, vmad,
+        common::{object, rgbu, GeneralField},
+        dest, edid, kwda, modl, obnd, vmad,
     },
 };
 use crate::{
@@ -80,7 +80,7 @@ impl<'data> FromRecord<'data> for ACTIRecord<'data> {
                     collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; vmad_index)
                 }
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
-                b"FULL" => collect_one!(full::FULL, field => fields; full_index),
+                b"FULL" => collect_one!(object::FULL, field => fields; full_index),
                 b"MODL" => {
                     collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; modl_collection_index)
                 }
@@ -161,7 +161,7 @@ pub enum ACTIField<'data> {
     EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
     OBND(obnd::OBND),
-    FULL(full::FULL),
+    FULL(object::FULL),
     MODLCollection(modl::MODLCollection<'data>),
     DESTCollection(dest::DESTCollection<'data>),
     KWDACollection(kwda::KWDACollection),

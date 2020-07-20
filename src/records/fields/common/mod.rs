@@ -9,6 +9,7 @@ use std::io::Write;
 
 pub mod formid_wrap;
 pub mod item;
+pub mod object;
 pub mod rgbu;
 
 /// Always four characters

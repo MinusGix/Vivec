@@ -4,8 +4,8 @@ use super::{
         TypeNamed,
     },
     fields::{
-        common::{item, write_field_header, GeneralField, FIELDH_SIZE},
-        dest, edid, full, modl, obnd, vmad,
+        common::{item, object, write_field_header, GeneralField, FIELDH_SIZE},
+        dest, edid, modl, obnd, vmad,
     },
 };
 use crate::{
@@ -78,7 +78,7 @@ impl<'data> FromRecord<'data> for APPARecord<'data> {
                     collect_one!(vmad::VMAD<'data, vmad::NoFragments>, field => fields; script_index)
                 }
                 b"OBND" => collect_one!(obnd::OBND, field => fields; object_bounds_index),
-                b"FULL" => collect_one!(full::FULL, field => fields; name_index),
+                b"FULL" => collect_one!(object::FULL, field => fields; name_index),
                 b"MODL" => {
                     collect_one_collection!(modl::MODL, modl::MODLCollection; field, field_iter => fields; model_collection_index)
                 }
@@ -101,7 +101,7 @@ impl<'data> FromRecord<'data> for APPARecord<'data> {
         let object_bounds_index = object_bounds_index
             .ok_or_else(|| FromRecordError::ExpectedField(obnd::OBND::static_type_name()))?;
         let name_index = name_index
-            .ok_or_else(|| FromRecordError::ExpectedField(full::FULL::static_type_name()))?;
+            .ok_or_else(|| FromRecordError::ExpectedField(object::FULL::static_type_name()))?;
         let quality_index = quality_index
             .ok_or_else(|| FromRecordError::ExpectedField(item::QUAL::static_type_name()))?;
         let description_index = description_index
@@ -159,7 +159,7 @@ pub enum APPAField<'data> {
     EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
     OBND(obnd::OBND),
-    FULL(full::FULL),
+    FULL(object::FULL),
     MODLCollection(modl::MODLCollection<'data>),
     ICON(item::ICON<'data>),
     MICO(item::MICO<'data>),
