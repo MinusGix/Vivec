@@ -5,7 +5,6 @@ use crate::{
     records::common::{FormId, StaticTypeNamed, TypeNamed},
     util::{DataSize, Writable},
 };
-use bstr::BStr;
 
 make_single_value_field!(
     /// 'Keyword Size'

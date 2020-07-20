@@ -11,7 +11,7 @@ use crate::{
     parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
-use bstr::{BStr, ByteSlice};
+use bstr::BStr;
 use common::{FromRecord, FromRecordError, TypeNamed};
 use derive_more::From;
 use std::io::Write;

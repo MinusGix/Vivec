@@ -8,7 +8,6 @@ use crate::{
     records::common::{ConversionError, FormId},
     util::Writable,
 };
-use bstr::{BStr, ByteSlice};
 use std::io::Write;
 
 pub type FunctionIndex = u16;

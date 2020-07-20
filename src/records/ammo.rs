@@ -1,7 +1,7 @@
 use super::{
     common::{
-        full_string, lstring::LString, CommonRecordInfo, FormId, FromRecord, FromRecordError,
-        GeneralRecord, Index, StaticTypeNamed, TypeNamed,
+        full_string, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
+        StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{
@@ -17,7 +17,7 @@ use crate::{
     parse::{PResult, Parse, ParseError},
     util::{DataSize, Writable},
 };
-use bstr::{BStr, ByteSlice};
+use bstr::BStr;
 use derive_more::From;
 use full_string::FullString;
 use std::io::Write;

@@ -1,7 +1,7 @@
 use crate::{
     impl_static_data_size,
     parse::{PResult, Parse},
-    util::{byte, Writable},
+    util::Writable,
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

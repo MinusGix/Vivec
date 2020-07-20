@@ -4,7 +4,6 @@ use crate::{
     parse::{PResult, Parse, ParseError},
     util::{Position3, Writable},
 };
-use bstr::BStr;
 
 /// Object Bounds
 /// bin format:

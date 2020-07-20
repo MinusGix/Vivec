@@ -3,7 +3,7 @@ use crate::{
     impl_static_data_size, impl_static_type_named, make_empty_field, make_model_fields,
     make_single_value_field,
     parse::{take, PResult, Parse},
-    records::common::{get_field, FormId, StaticTypeNamed, TypeNamed},
+    records::common::{get_field, FormId, StaticTypeNamed},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
