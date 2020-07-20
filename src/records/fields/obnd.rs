@@ -1,7 +1,7 @@
-use super::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE};
+use super::common::{write_field_header, FIELDH_SIZE};
 use crate::{
-    impl_static_data_size, impl_static_type_named,
-    parse::{PResult, Parse, ParseError},
+    impl_from_field, impl_static_data_size, impl_static_type_named,
+    parse::Parse,
     util::{Position3, Writable},
 };
 
@@ -14,36 +14,11 @@ pub struct OBND {
     pub p2: Position3<i16>,
 }
 impl OBND {
-    const EXPECTED_BYTES: usize = 12;
-
     pub fn new(p1: Position3<i16>, p2: Position3<i16>) -> OBND {
         OBND { p1, p2 }
     }
 }
-impl FromField<'_> for OBND {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        if field.data.len() != OBND::EXPECTED_BYTES {
-            return Err(ParseError::ExpectedExact {
-                expected: OBND::EXPECTED_BYTES,
-                found: field.data.len(),
-            }
-            .into());
-        }
-
-        let data = field.data;
-        let (data, x1) = i16::parse(data)?;
-        let (data, y1) = i16::parse(data)?;
-        let (data, z1) = i16::parse(data)?;
-        let (data, x2) = i16::parse(data)?;
-        let (data, y2) = i16::parse(data)?;
-        let (data, z2) = i16::parse(data)?;
-
-        Ok((
-            data,
-            OBND::new(Position3::new(x1, y1, z1), Position3::new(x2, y2, z2)),
-        ))
-    }
-}
+impl_from_field!(OBND, [p1: Position3<i16>, p2: Position3<i16>]);
 impl_static_type_named!(OBND, b"OBND");
 impl_static_data_size!(OBND, FIELDH_SIZE + Position3::<i16>::static_data_size() * 2);
 impl Writable for OBND {

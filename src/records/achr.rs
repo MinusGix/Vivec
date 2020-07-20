@@ -644,23 +644,7 @@ pub struct DATA {
     /// in radians
     rotation: Position3<f32>,
 }
-impl FromField<'_> for DATA {
-    fn from_field(field: GeneralField<'_>) -> PResult<Self, FromFieldError> {
-        let (data, x) = f32::parse(field.data)?;
-        let (data, y) = f32::parse(data)?;
-        let (data, z) = f32::parse(data)?;
-        let (data, rx) = f32::parse(data)?;
-        let (data, ry) = f32::parse(data)?;
-        let (data, rz) = f32::parse(data)?;
-        Ok((
-            data,
-            DATA {
-                position: Position3::new(x, y, z),
-                rotation: Position3::new(rx, ry, rz),
-            },
-        ))
-    }
-}
+impl_from_field!(DATA, [position: Position3<f32>, rotation: Position3<f32>]);
 impl_static_type_named!(DATA, b"DATA");
 impl_static_data_size!(
     DATA,

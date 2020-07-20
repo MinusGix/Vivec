@@ -1,4 +1,7 @@
-use crate::records::common::BStrw;
+use crate::{
+    parse::{PResult, Parse},
+    records::common::BStrw,
+};
 use bstr::ByteSlice;
 use std::io::Write;
 
@@ -17,6 +20,16 @@ where
 }
 // Allow types that implement Eq to also have position have Eq
 impl<T> Eq for Position<T> where T: Copy + Clone + PartialEq + Eq {}
+impl<T> Parse for Position<T>
+where
+    T: Copy + Clone + PartialEq + Parse,
+{
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, x) = T::parse(data)?;
+        let (data, y) = T::parse(data)?;
+        Ok((data, Position::new(x, y)))
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Position3<T: Copy + Clone + PartialEq> {
@@ -40,6 +53,17 @@ where
 {
     fn from(p: Position<T>) -> Self {
         Position3::new(p.x, p.y, Default::default())
+    }
+}
+impl<T> Parse for Position3<T>
+where
+    T: Copy + Clone + PartialEq + Parse,
+{
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, x) = T::parse(data)?;
+        let (data, y) = T::parse(data)?;
+        let (data, z) = T::parse(data)?;
+        Ok((data, Position3::new(x, y, z)))
     }
 }
 
