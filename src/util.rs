@@ -20,11 +20,11 @@ where
 }
 // Allow types that implement Eq to also have position have Eq
 impl<T> Eq for Position<T> where T: Copy + Clone + PartialEq + Eq {}
-impl<T> Parse for Position<T>
+impl<'aleph, T> Parse<'aleph> for Position<T>
 where
-    T: Copy + Clone + PartialEq + Parse,
+    T: Copy + Clone + PartialEq + Parse<'aleph>,
 {
-    fn parse(data: &[u8]) -> PResult<Self> {
+    fn parse(data: &'aleph [u8]) -> PResult<'aleph, Self> {
         let (data, x) = T::parse(data)?;
         let (data, y) = T::parse(data)?;
         Ok((data, Position::new(x, y)))
@@ -55,11 +55,11 @@ where
         Position3::new(p.x, p.y, Default::default())
     }
 }
-impl<T> Parse for Position3<T>
+impl<'aleph, T> Parse<'aleph> for Position3<T>
 where
-    T: Copy + Clone + PartialEq + Parse,
+    T: Copy + Clone + PartialEq + Parse<'aleph>,
 {
-    fn parse(data: &[u8]) -> PResult<Self> {
+    fn parse(data: &'aleph [u8]) -> PResult<'aleph, Self> {
         let (data, x) = T::parse(data)?;
         let (data, y) = T::parse(data)?;
         let (data, z) = T::parse(data)?;

@@ -468,7 +468,7 @@ impl XAPDFlags {
         (self.flags & 0b1) != 0
     }
 }
-impl Parse for XAPDFlags {
+impl Parse<'_> for XAPDFlags {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, flags) = u8::parse(data)?;
         Ok((data, Self { flags }))
@@ -564,7 +564,7 @@ impl XESPFlags {
         (self.flags & 0b10) != 0
     }
 }
-impl Parse for XESPFlags {
+impl Parse<'_> for XESPFlags {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, flags) = u32::parse(data)?;
         Ok((data, Self { flags }))

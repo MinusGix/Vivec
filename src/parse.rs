@@ -137,51 +137,51 @@ where
     Ok((data, result))
 }
 
-pub trait Parse: Sized {
-    fn parse(data: &[u8]) -> PResult<Self>;
+pub trait Parse<'aleph>: Sized {
+    fn parse(data: &'aleph [u8]) -> PResult<'aleph, Self>;
 }
-impl Parse for u8 {
+impl Parse<'_> for u8 {
     fn parse(data: &[u8]) -> PResult<Self> {
         single(data)
     }
 }
-impl Parse for i8 {
+impl Parse<'_> for i8 {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = single(data)?;
         Ok((data, i8::from_le_bytes([value])))
     }
 }
-impl Parse for u16 {
+impl Parse<'_> for u16 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_u16(data)
     }
 }
-impl Parse for i16 {
+impl Parse<'_> for i16 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_i16(data)
     }
 }
-impl Parse for u32 {
+impl Parse<'_> for u32 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_u32(data)
     }
 }
-impl Parse for i32 {
+impl Parse<'_> for i32 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_i32(data)
     }
 }
-impl Parse for u64 {
+impl Parse<'_> for u64 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_u64(data)
     }
 }
-impl Parse for i64 {
+impl Parse<'_> for i64 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_i64(data)
     }
 }
-impl Parse for f32 {
+impl Parse<'_> for f32 {
     fn parse(data: &[u8]) -> PResult<Self> {
         le_f32(data)
     }

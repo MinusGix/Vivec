@@ -15,7 +15,7 @@ use std::{
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Gold(u32);
-impl Parse for Gold {
+impl Parse<'_> for Gold {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u32::parse(data)?;
         Ok((data, Self(value)))
@@ -32,7 +32,7 @@ impl Writable for Gold {
 }
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Weight(f32);
-impl Parse for Weight {
+impl Parse<'_> for Weight {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = f32::parse(data)?;
         Ok((data, Self(value)))
@@ -104,7 +104,7 @@ pub enum Quality {
     Expert = 3,
     Master = 4,
 }
-impl Parse for Quality {
+impl Parse<'_> for Quality {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u32::parse(data)?;
         let quality = value.try_into().map_err(|e| match e {
@@ -212,7 +212,7 @@ impl Writable for BODT {
 pub struct BodyPartNodeFlags {
     pub flags: u32,
 }
-impl Parse for BodyPartNodeFlags {
+impl Parse<'_> for BodyPartNodeFlags {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, flags) = u32::parse(data)?;
         Ok((data, Self { flags }))
@@ -235,7 +235,7 @@ pub struct BODTFlags {
     /// 0x10: Non-playable (ARMO only)
     pub flags: u8,
 }
-impl Parse for BODTFlags {
+impl Parse<'_> for BODTFlags {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, flags) = u8::parse(data)?;
         Ok((data, Self { flags }))
@@ -264,7 +264,7 @@ impl ArmorSkill {
         *self as u32
     }
 }
-impl Parse for ArmorSkill {
+impl Parse<'_> for ArmorSkill {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u32::parse(data)?;
         let skill = value.try_into().map_err(|e| match e {
