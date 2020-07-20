@@ -241,23 +241,6 @@ macro_rules! impl_from_field {
     };
 }
 
-#[macro_export]
-macro_rules! assert_size_output {
-    ($name:ident) => {{
-        use $crate::util::{DataSize, Writable};
-        let mut data = Vec::new();
-        let data_size = $name.data_size();
-        data.reserve(data_size);
-        $name.write_to(&mut data).unwrap();
-        println!("data: {:#?}", data);
-        println!("data size: {}", data_size);
-        println!("data len: {}", data.len());
-        assert_eq!(data_size, data.len());
-
-        data
-    }};
-}
-
 #[cfg(test)]
 mod test {
     use super::GeneralField;
