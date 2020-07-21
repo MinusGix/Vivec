@@ -1,7 +1,7 @@
 use super::{
     common::{
-        get_field, CommonRecordInfo, ConversionError, FromRecord, FromRecordError, GeneralRecord,
-        StaticTypeNamed, TypeNamed,
+        get_field, CommonRecordInfo, ConversionError, FieldList, FromRecord, FromRecordError,
+        GeneralRecord, StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{item, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
@@ -14,10 +14,13 @@ use crate::{
     parse::{take, PResult, Parse, ParseError},
     util::{DataSize, StaticDataSize, Writable},
 };
+use bstr::BStr;
 use derive_more::From;
 use std::{
     convert::{TryFrom, TryInto},
+    fmt::Debug,
     io::Write,
+    marker::PhantomData,
 };
 
 #[derive(Debug, Clone)]
@@ -141,7 +144,7 @@ pub enum ARMAField<'data> {
     NAM1(NAM1),
     NAM2(NAM2),
     NAM3(NAM3),
-    MODLList(MODLList),
+    MODLList(MODLList<'data>),
     SNDD(SNDD),
     ONAM(ONAM),
     Unknown(GeneralField<'data>),
@@ -316,45 +319,7 @@ make_formid_field!(
     ONAM
 );
 
-#[derive(Debug, Clone)]
-pub struct MODLList {
-    races: Vec<MODL>,
-}
-impl MODLList {
-    pub fn collect<'aleph, I>(
-        first: MODL,
-        field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'aleph>>
-    where
-        I: std::iter::Iterator<Item = GeneralField<'aleph>>,
-    {
-        let mut races = vec![first];
-
-        loop {
-            let (_, modl) = get_field(field_iter, MODL::static_type_name())?;
-            match modl {
-                Some(modl) => races.push(modl),
-                None => break,
-            };
-        }
-
-        Ok((&[], Self { races }))
-    }
-}
-impl_static_type_named!(MODLList, MODL::static_type_name());
-impl DataSize for MODLList {
-    fn data_size(&self) -> usize {
-        self.races.data_size()
-    }
-}
-impl Writable for MODLList {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        self.races.write_to(w)
-    }
-}
+type MODLList<'unused> = FieldList<'unused, MODL>;
 
 #[cfg(test)]
 mod tests {

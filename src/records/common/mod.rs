@@ -5,7 +5,7 @@ use crate::{
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
-use std::io::Write;
+use std::{fmt::Debug, io::Write};
 
 pub type Index = usize;
 /// Always four characters
@@ -467,6 +467,71 @@ where
         assert_eq!(field.type_name(), expected_field_name);
         let (_, field): (_, F) = F::from_field(field)?;
         Ok((&[], Some(field)))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FieldList<
+    'data,
+    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+> {
+    list: Vec<T>,
+    // TODO: is this good a way to do this?
+    _marker: std::marker::PhantomData<&'data [u8]>,
+}
+impl<'data, T> FieldList<'data, T>
+where
+    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+{
+    pub fn collect<I>(
+        first: T,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>,
+    {
+        let mut list = vec![first];
+        loop {
+            let (_, entry) = get_field(field_iter, T::static_type_name())?;
+            match entry {
+                Some(entry) => list.push(entry),
+                None => break,
+            };
+        }
+        Ok((
+            &[],
+            Self {
+                list,
+                _marker: std::marker::PhantomData,
+            },
+        ))
+    }
+}
+impl<'data, T> StaticTypeNamed for FieldList<'data, T>
+where
+    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+{
+    fn static_type_name() -> &'static BStr {
+        T::static_type_name()
+    }
+}
+impl<'data, T> DataSize for FieldList<'data, T>
+where
+    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+{
+    fn data_size(&self) -> usize {
+        self.list.data_size()
+    }
+}
+impl<'data, T> Writable for FieldList<'data, T>
+where
+    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+{
+    fn write_to<U>(&self, w: &mut U) -> std::io::Result<()>
+    where
+        U: Write,
+    {
+        self.list.write_to(w)
     }
 }
 
