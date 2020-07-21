@@ -4,14 +4,13 @@ use super::{
         TypeNamed,
     },
     fields::{
-        common::{item, object, write_field_header, GeneralField, FIELDH_SIZE},
+        common::{item, object, GeneralField},
         dest, edid, modl, obnd, vmad,
     },
 };
 use crate::{
-    collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
-    impl_static_type_named,
-    parse::{PResult, Parse},
+    collect_one, collect_one_collection, dispatch_all, impl_static_type_named,
+    parse::PResult,
     util::{DataSize, Writable},
 };
 use bstr::BStr;
@@ -91,7 +90,7 @@ impl<'data> FromRecord<'data> for APPARecord<'data> {
                 b"ZNAM" => collect_one!(item::ZNAM, field => fields; drop_sound_index),
                 b"QUAL" => collect_one!(item::QUAL, field => fields; quality_index),
                 b"DESC" => collect_one!(item::DESC, field => fields; description_index),
-                b"DATA" => collect_one!(DATA, field => fields; data_index),
+                b"DATA" => collect_one!(item::DATA, field => fields; data_index),
                 _ => fields.push(field.into()),
             }
         }
@@ -106,8 +105,8 @@ impl<'data> FromRecord<'data> for APPARecord<'data> {
             .ok_or_else(|| FromRecordError::ExpectedField(item::QUAL::static_type_name()))?;
         let description_index = description_index
             .ok_or_else(|| FromRecordError::ExpectedField(item::DESC::static_type_name()))?;
-        let data_index =
-            data_index.ok_or_else(|| FromRecordError::ExpectedField(DATA::static_type_name()))?;
+        let data_index = data_index
+            .ok_or_else(|| FromRecordError::ExpectedField(item::DATA::static_type_name()))?;
 
         Ok((
             &[],
@@ -168,7 +167,7 @@ pub enum APPAField<'data> {
     ZNAM(item::ZNAM),
     QUAL(item::QUAL),
     DESC(item::DESC),
-    DATA(DATA),
+    DATA(item::DATA),
     Unknown(GeneralField<'data>),
 }
 impl<'data> TypeNamed<'data> for APPAField<'data> {
@@ -250,28 +249,5 @@ impl Writable for APPAField<'_> {
             x,
             { x.write_to(w) }
         )
-    }
-}
-
-/// These values are not shown in-game
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct DATA {
-    value: item::Gold,
-    weight: item::Weight,
-}
-impl_from_field!(DATA, [value: item::Gold, weight: item::Weight]);
-impl_static_type_named!(DATA, b"DATA");
-impl_static_data_size!(
-    DATA,
-    FIELDH_SIZE + u32::static_data_size() + f32::static_data_size()
-);
-impl Writable for DATA {
-    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
-    where
-        T: Write,
-    {
-        write_field_header(self, w)?;
-        self.value.write_to(w)?;
-        self.weight.write_to(w)
     }
 }

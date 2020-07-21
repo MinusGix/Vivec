@@ -320,6 +320,28 @@ impl Writable for BOD2 {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct DATA {
+    value: Gold,
+    weight: Weight,
+}
+impl_from_field!(DATA, [value: Gold, weight: Weight]);
+impl_static_type_named!(DATA, b"DATA");
+impl_static_data_size!(
+    DATA,
+    FIELDH_SIZE + u32::static_data_size() + f32::static_data_size()
+);
+impl Writable for DATA {
+    fn write_to<T>(&self, w: &mut T) -> std::io::Result<()>
+    where
+        T: Write,
+    {
+        write_field_header(self, w)?;
+        self.value.write_to(w)?;
+        self.weight.write_to(w)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
