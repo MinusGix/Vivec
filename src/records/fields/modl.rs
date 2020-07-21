@@ -110,7 +110,7 @@ macro_rules! make_model_fields {
                 Ok((data, Self { alternate_textures }))
             }
         }
-        impl<'data> $crate::records::common::StaticTypeNamed<'static> for $mods<'data> {
+        impl<'data> $crate::records::common::StaticTypeNamed for $mods<'data> {
             fn static_type_name() -> &'static bstr::BStr {
                 use bstr::ByteSlice;
                 stringify!($mods).as_bytes().as_bstr()
@@ -176,7 +176,7 @@ macro_rules! make_model_fields {
             }
         }
         // TODO: this is rather hacky, since a collection doesn't have a name :/
-        impl<'data> $crate::records::common::StaticTypeNamed<'static> for $collection<'data> {
+        impl<'data> $crate::records::common::StaticTypeNamed for $collection<'data> {
             fn static_type_name() -> &'static bstr::BStr {
                 $modl::static_type_name()
             }

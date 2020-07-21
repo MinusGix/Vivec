@@ -322,7 +322,7 @@ macro_rules! make_simple_top_group {
                 ))
             }
         }
-        impl<$life> $crate::records::common::StaticTypeNamed<'static> for $group_name<$life> {
+        impl<$life> $crate::records::common::StaticTypeNamed for $group_name<$life> {
             fn static_type_name() -> &'static bstr::BStr {
 				use bstr::ByteSlice;
                 stringify!($name).as_bytes().as_bstr()

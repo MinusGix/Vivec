@@ -27,7 +27,7 @@ where
         Ok((data, VMAD { primary }))
     }
 }
-impl<'data, Fragment> StaticTypeNamed<'static> for VMAD<'data, Fragment>
+impl<'data, Fragment> StaticTypeNamed for VMAD<'data, Fragment>
 where
     Fragment: ParseFragments<'data>,
 {

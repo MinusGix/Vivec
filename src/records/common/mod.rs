@@ -423,13 +423,13 @@ pub trait FromRecord<'data>: Sized {
 pub trait TypeNamed<'aleph>: Sized {
     fn type_name(&self) -> &'aleph BStr;
 }
-pub trait StaticTypeNamed<'aleph>: Sized {
-    fn static_type_name() -> &'aleph BStr;
+pub trait StaticTypeNamed: Sized {
+    fn static_type_name() -> &'static BStr;
 }
 #[macro_export]
 macro_rules! impl_static_type_named {
     ($t:ty, $e:expr) => {
-        impl $crate::records::common::StaticTypeNamed<'static> for $t {
+        impl $crate::records::common::StaticTypeNamed for $t {
             fn static_type_name() -> &'static bstr::BStr {
                 use bstr::ByteSlice;
                 $e.as_bstr()
@@ -437,11 +437,11 @@ macro_rules! impl_static_type_named {
         }
     };
 }
-impl<'aleph, T> TypeNamed<'aleph> for T
+impl<T> TypeNamed<'static> for T
 where
-    T: StaticTypeNamed<'aleph>,
+    T: StaticTypeNamed,
 {
-    fn type_name(&self) -> &'aleph BStr {
+    fn type_name(&self) -> &'static BStr {
         T::static_type_name()
     }
 }
