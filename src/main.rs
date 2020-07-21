@@ -96,6 +96,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
                     b"ANIO" => records::anio::ANIORecord::from_record(record)?.1.into(),
                     b"APPA" => records::appa::APPARecord::from_record(record)?.1.into(),
                     b"ARMA" => records::arma::ARMARecord::from_record(record)?.1.into(),
+                    b"ARMO" => records::armo::ARMORecord::from_record(record)?.1.into(),
                     _ => record.into(),
                 }));
             }
@@ -111,6 +112,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
                         b"ANIO" => groups::anio::ANIOGroup::from_top_group(group)?.1.into(),
                         b"APPA" => groups::appa::APPAGroup::from_top_group(group)?.1.into(),
                         b"ARMA" => groups::arma::ARMAGroup::from_top_group(group)?.1.into(),
+                        b"ARMO" => groups::armo::ARMOGroup::from_top_group(group)?.1.into(),
                         _ => group.into(),
                     }
                 }
@@ -141,6 +143,7 @@ fn main() {
                     Record::ANIO(anio) => println!("ANIO: {:?}", anio),
                     Record::APPA(appa) => println!("APPA: {:?}", appa),
                     Record::ARMA(arma) => println!("ARMA: {:?}", arma),
+                    Record::ARMO(armo) => println!("ARMO; {:?}", armo),
                     Record::Unknown(record) => println!("U({}),", record.type_name()), // println!("Unknown record: {:?}", record),
                 },
                 Top::Group(group) => match group {
@@ -154,6 +157,7 @@ fn main() {
                     Group::ANIO(group) => println!("ANIO group: {} entries", group.records.len()),
                     Group::APPA(group) => println!("APPA group: {} entries", group.records.len()),
                     Group::ARMA(group) => println!("ARMA group: {} entries", group.records.len()),
+                    Group::ARMO(group) => println!("ARMO group: {} entries", group.records.len()),
                     _ => print!("G, "),
                 },
             };
