@@ -567,7 +567,7 @@ macro_rules! make_field_getter {
     };
 
     (optional: $index_name:ident, $name:ident, $name_mut:ident, $field_variant:path, $field_type:ty) => {
-        pub fn $index_name(&self) -> Option<Index> {
+        pub fn $index_name(&self) -> Option<$crate::records::common::Index> {
             self.fields
                 .iter()
                 .position(|x| matches!(x, $field_variant(_)))
