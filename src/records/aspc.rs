@@ -3,7 +3,7 @@ use super::{
     fields::{common::GeneralField, edid, obnd},
 };
 use crate::{
-    collect_one, dispatch_all, impl_static_type_named, make_formid_field,
+    collect_one, dispatch_all, impl_static_type_named, make_field_getter, make_formid_field,
     parse::PResult,
     util::{DataSize, Writable},
 };
@@ -13,6 +13,47 @@ use derive_more::From;
 pub struct ASPCRecord<'data> {
     pub common: CommonRecordInfo,
     pub fields: Vec<ASPCField<'data>>,
+}
+impl<'data> ASPCRecord<'data> {
+    make_field_getter!(
+        editor_id_index,
+        editor_id,
+        editor_id_mut,
+        ASPCField::EDID,
+        edid::EDID<'data>
+    );
+
+    make_field_getter!(
+        object_bounds_index,
+        object_bounds,
+        object_bounds_mut,
+        ASPCField::OBND,
+        obnd::OBND
+    );
+
+    make_field_getter!(
+        optional: ambient_sound_index,
+        ambient_sound,
+        ambient_sound_mut,
+        ASPCField::SNAM,
+        SNAM
+    );
+
+    make_field_getter!(
+        optional: region_sound_index,
+        region_sound,
+        region_sound_mut,
+        ASPCField::RDAT,
+        RDAT
+    );
+
+    make_field_getter!(
+        optional: reverb_index,
+        reverb,
+        reverb_mut,
+        ASPCField::BNAM,
+        BNAM
+    );
 }
 impl<'data> FromRecord<'data> for ASPCRecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError<'data>> {

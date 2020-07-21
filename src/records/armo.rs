@@ -10,7 +10,7 @@ use super::{
 };
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_type_named,
-    make_formid_field, make_model_fields, make_single_value_field,
+    make_field_getter, make_formid_field, make_model_fields, make_single_value_field,
     parse::{PResult, Parse},
     util::{DataSize, StaticDataSize, Writable},
 };
@@ -21,6 +21,150 @@ use std::io::Write;
 pub struct ARMORecord<'data> {
     common: CommonRecordInfo,
     fields: Vec<ARMOField<'data>>,
+}
+impl<'data> ARMORecord<'data> {
+    make_field_getter!(
+        editor_id_index,
+        editor_id,
+        editor_id_mut,
+        ARMOField::EDID,
+        edid::EDID<'data>
+    );
+
+    make_field_getter!(
+        optional: script_index,
+        script,
+        script_mut,
+        ARMOField::VMAD,
+        vmad::VMAD<'data, vmad::NoFragments>
+    );
+
+    make_field_getter!(
+        optional: object_bounds_index,
+        object_bounds,
+        object_bounds_mut,
+        ARMOField::OBND,
+        obnd::OBND
+    );
+
+    make_field_getter!(
+        optional: enchantment_index,
+        enchantment,
+        enchantment_mut,
+        ARMOField::Enchantment,
+        Enchantment
+    );
+
+    make_field_getter!(
+        optional: model_index,
+        model,
+        model_mut,
+        ARMOField::MODLCollection,
+        modl::MODLCollection<'data>
+    );
+
+    make_field_getter!(
+        optional: inventory_mod2_index,
+        inventory_mod2,
+        inventory_mod2_mut,
+        ARMOField::InventoryMO2LCollection,
+        InventoryMOD2LCollection<'data>
+    );
+    make_field_getter!(
+        optional: inventory_mod4_index,
+        inventory_mod4,
+        inventory_mod4_mut,
+        ARMOField::InventoryMO4LCollection,
+        InventoryMOD4LCollection<'data>
+    );
+
+    // TODO: make getter for BODT|BOD2
+
+    make_field_getter!(
+        optional: destruction_index,
+        destruction,
+        destruction_mut,
+        ARMOField::DESTCollection,
+        dest::DESTCollection<'data>
+    );
+
+    make_field_getter!(
+        pickup_sound_index,
+        pickup_sound,
+        pickup_sound_mut,
+        ARMOField::YNAM,
+        item::YNAM
+    );
+    make_field_getter!(
+        drop_sound_index,
+        drop_sound,
+        drop_sound_mut,
+        ARMOField::ZNAM,
+        item::ZNAM
+    );
+
+    make_field_getter!(
+        optional: ragdoll_index,
+        ragdoll,
+        ragdoll_mut,
+        ARMOField::BMCT,
+        BMCT<'data>
+    );
+
+    make_field_getter!(
+        optional: equip_slot_index,
+        equip_slot,
+        equip_slot_mut,
+        ARMOField::ETYP,
+        ETYP
+    );
+
+    // TODO: perhaps group bash impact with bash material?
+    make_field_getter!(optional: bash_index, bash, bash_mut, ARMOField::BIDS, BIDS);
+
+    make_field_getter!(
+        optional: bash_material_index,
+        bash_material,
+        bash_material_mut,
+        ARMOField::BAMT,
+        BAMT
+    );
+
+    make_field_getter!(race_index, race, race_mut, ARMOField::RNAM, RNAM);
+
+    make_field_getter!(
+        optional: keywords_index,
+        keywords,
+        keywords_mut,
+        ARMOField::KWDACollection,
+        kwda::KWDACollection
+    );
+
+    make_field_getter!(
+        description_index,
+        description,
+        description_mut,
+        ARMOField::DESC,
+        item::DESC
+    );
+
+    make_field_getter!(
+        optional: armatures_index,
+        armatures,
+        armatures_mut,
+        ARMOField::MODLList,
+        MODLList<'data>
+    );
+
+    make_field_getter!(data_index, data, data_mut, ARMOField::DATA, item::DATA);
+
+    make_field_getter!(
+        optional: template_index,
+        template,
+        template_mut,
+        ARMOField::TNAM,
+        TNAM
+    );
 }
 impl<'data> FromRecord<'data> for ARMORecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError<'data>> {

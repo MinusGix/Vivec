@@ -1,32 +1,132 @@
 use super::{
     common::{
-        get_field, CommonRecordInfo, ConversionError, FieldList, FromRecord, FromRecordError,
-        GeneralRecord, StaticTypeNamed, TypeNamed,
+        CommonRecordInfo, FieldList, FromRecord, FromRecordError, GeneralRecord, StaticTypeNamed,
+        TypeNamed,
     },
     fields::{
-        common::{item, write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
+        common::{item, write_field_header, GeneralField, FIELDH_SIZE},
         edid,
     },
 };
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
-    impl_static_type_named, make_formid_field, make_model_fields, make_single_value_field,
-    parse::{take, PResult, Parse, ParseError},
-    util::{DataSize, StaticDataSize, Writable},
+    impl_static_type_named, make_field_getter, make_formid_field, make_model_fields,
+    make_single_value_field,
+    parse::{PResult, Parse},
+    util::{DataSize, Writable},
 };
-use bstr::BStr;
 use derive_more::From;
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt::Debug,
-    io::Write,
-    marker::PhantomData,
-};
+use std::{fmt::Debug, io::Write};
 
 #[derive(Debug, Clone)]
 pub struct ARMARecord<'data> {
     pub common: CommonRecordInfo,
     pub fields: Vec<ARMAField<'data>>,
+}
+impl<'data> ARMARecord<'data> {
+    make_field_getter!(
+        editor_id_index,
+        editor_id,
+        editor_id_mut,
+        ARMAField::EDID,
+        edid::EDID<'data>
+    );
+
+    // TODO: make BODT/BOD2 getter
+
+    make_field_getter!(
+        primary_race_index,
+        primary_race,
+        primary_race_mut,
+        ARMAField::RNAM,
+        RNAM
+    );
+
+    // TODO: needs a better name
+    make_field_getter!(info_index, info, info_mut, ARMAField::DNAM, DNAM);
+
+    // TODO: the mod2/mod3/mod4/mod5 getters need better names
+    make_field_getter!(
+        optional: mod2_index,
+        mod2,
+        mod2_mut,
+        ARMAField::MOD2Collection,
+        MOD2Collection<'data>
+    );
+    make_field_getter!(
+        optional: mod3_index,
+        mod3,
+        mod3_mut,
+        ARMAField::MOD3Collection,
+        MOD3Collection<'data>
+    );
+    make_field_getter!(
+        optional: mod4_index,
+        mod4,
+        mod4_mut,
+        ARMAField::MOD4Collection,
+        MOD4Collection<'data>
+    );
+    make_field_getter!(
+        optional: mod5_index,
+        mod5,
+        mod5_mut,
+        ARMAField::MOD5Collection,
+        MOD5Collection<'data>
+    );
+
+    make_field_getter!(
+        optional: male_texture_index,
+        male_texture,
+        male_texture_mut,
+        ARMAField::NAM0,
+        NAM0
+    );
+    make_field_getter!(
+        optional: female_texture_index,
+        female_texture,
+        female_texture_mut,
+        ARMAField::NAM1,
+        NAM1
+    );
+    make_field_getter!(
+        optional: male_texture_fp_index,
+        male_texture_fp,
+        male_texture_fp_mut,
+        ARMAField::NAM2,
+        NAM2
+    );
+    make_field_getter!(
+        optional: female_texture_fp_index,
+        female_texture_fp,
+        female_texture_fp_mut,
+        ARMAField::NAM3,
+        NAM3
+    );
+
+    make_field_getter!(
+        optional: races_index,
+        races,
+        races_mut,
+        ARMAField::MODLList,
+        MODLList<'data>
+    );
+
+    make_field_getter!(
+        optional: footstep_sound_index,
+        footstep_sound,
+        footstep_sound_mut,
+        ARMAField::SNDD,
+        SNDD
+    );
+
+    make_field_getter!(
+        optional: art_object_index,
+        art_object,
+        art_object_mut,
+        ARMAField::ONAM,
+        ONAM
+    );
 }
 impl<'data> FromRecord<'data> for ARMARecord<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<Self, FromRecordError<'data>> {
