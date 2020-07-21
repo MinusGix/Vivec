@@ -89,14 +89,14 @@ impl<'data> ARMORecord<'data> {
     );
 
     make_field_getter!(
-        pickup_sound_index,
+        optional: pickup_sound_index,
         pickup_sound,
         pickup_sound_mut,
         ARMOField::YNAM,
         item::YNAM
     );
     make_field_getter!(
-        drop_sound_index,
+        optional: drop_sound_index,
         drop_sound,
         drop_sound_mut,
         ARMOField::ZNAM,
@@ -141,7 +141,7 @@ impl<'data> ARMORecord<'data> {
     );
 
     make_field_getter!(
-        description_index,
+        optional: description_index,
         description,
         description_mut,
         ARMOField::DESC,
@@ -244,13 +244,31 @@ impl<'data> FromRecord<'data> for ARMORecord<'data> {
             }
         }
 
-        Ok((
-            &[],
-            Self {
-                common: record.common,
-                fields,
-            },
-        ))
+        if edid_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                edid::EDID::static_type_name(),
+            ))
+        } else if bodt_index.is_none() && bod2_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                item::BOD2::static_type_name(),
+            ))
+        } else if rnam_index.is_none() {
+            Err(FromRecordError::ExpectedField(RNAM::static_type_name()))
+        } else if data_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                item::DATA::static_type_name(),
+            ))
+        } else if dnam_index.is_none() {
+            Err(FromRecordError::ExpectedField(DNAM::static_type_name()))
+        } else {
+            Ok((
+                &[],
+                Self {
+                    common: record.common,
+                    fields,
+                },
+            ))
+        }
     }
 }
 impl_static_type_named!(ARMORecord<'_>, b"ARMO");
