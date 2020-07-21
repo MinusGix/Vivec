@@ -10,7 +10,7 @@ use bstr::{BStr, ByteSlice};
 use std::io::Write;
 
 /// Destruction data
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DEST {
     pub health: u32,
     // TODO: is this talking about the other fields that follow DEST entries?
@@ -41,7 +41,7 @@ impl Writable for DEST {
 
 // I believe these tend to be right after DEST, and repeating in order
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct DSTD {
     // TODO: in what manner is this a percent??
     pub health_percent: u16,
@@ -134,7 +134,7 @@ impl Writable for DSTDFlags {
 
 make_model_fields!(DMDL; DMDT; DMDS; DMDLCollection);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DESTCollection<'data> {
     destruction: DEST,
     stage_data: Vec<DSTDCollection<'data>>,
@@ -180,7 +180,7 @@ impl<'data> Writable for DESTCollection<'data> {
         self.stage_data.write_to(w)
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DSTDCollection<'data> {
     stage: DSTD,
     model: Option<DMDLCollection<'data>>,

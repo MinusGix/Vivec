@@ -15,7 +15,7 @@ pub type FunctionIndex = u16;
 // TODO: it might be interesting to have RunOn hold the reference if it's of the Reference variant
 
 /// [reference].[function]([param_1], [param_2]) [operator] [value
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CTDA {
     /// operator and flags
     pub op_data: OperatorData,

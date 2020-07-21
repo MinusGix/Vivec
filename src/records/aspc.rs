@@ -11,7 +11,7 @@ use crate::{
 };
 use derive_more::From;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASPCRecord<'data> {
     pub common: CommonRecordInfo,
     pub fields: Vec<ASPCField<'data>>,
@@ -119,7 +119,7 @@ impl Writable for ASPCRecord<'_> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ASPCField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),

@@ -470,10 +470,10 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FieldList<
     'data,
-    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
 > {
     list: Vec<T>,
     // TODO: is this good a way to do this?
@@ -481,7 +481,7 @@ pub struct FieldList<
 }
 impl<'data, T> FieldList<'data, T>
 where
-    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
 {
     pub fn collect<I>(
         first: T,
@@ -509,7 +509,7 @@ where
 }
 impl<'data, T> StaticTypeNamed for FieldList<'data, T>
 where
-    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
 {
     fn static_type_name() -> &'static BStr {
         T::static_type_name()
@@ -517,7 +517,7 @@ where
 }
 impl<'data, T> DataSize for FieldList<'data, T>
 where
-    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
 {
     fn data_size(&self) -> usize {
         self.list.data_size()
@@ -525,7 +525,7 @@ where
 }
 impl<'data, T> Writable for FieldList<'data, T>
 where
-    T: Debug + Clone + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
 {
     fn write_to<U>(&self, w: &mut U) -> std::io::Result<()>
     where

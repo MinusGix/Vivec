@@ -25,7 +25,7 @@ pub mod fields;
 
 pub mod common;
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum Record<'data> {
     TES4(tes4::TES4Record<'data>),
     AACT(aact::AACTRecord<'data>),

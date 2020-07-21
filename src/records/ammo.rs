@@ -21,7 +21,7 @@ use derive_more::From;
 use full_string::FullString;
 use std::io::Write;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AMMORecord<'data> {
     pub common: CommonRecordInfo,
 
@@ -150,7 +150,7 @@ impl<'data> Writable for AMMORecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum AMMOField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),
@@ -317,7 +317,7 @@ impl Writable for DATASpecialEdition {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DATA {
     /// Legendary edition version, 16 byte struct
     LE(DATALegendaryEdition),
@@ -406,7 +406,7 @@ impl Writable for DATAFlags {
 
 make_single_value_field!(
     /// UESP says this exists, but I haven't seen it in either Skyrim.esm or Dawnguard.esm
-    [Debug, Clone], ONAM, short_name, FullString, 'data);
+    [Debug, Clone, Eq, PartialEq], ONAM, short_name, FullString, 'data);
 impl<'data> FromField<'data> for ONAM<'data> {
     fn from_field(field: GeneralField<'data>) -> PResult<'data, Self, FromFieldError> {
         let (data, short_name) = FullString::parse(field.data)?;

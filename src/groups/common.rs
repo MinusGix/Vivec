@@ -33,7 +33,7 @@ impl Writable for CommonGroupInfo {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeneralGroup<'data> {
     pub group_type: GroupType<'data>,
     pub common: CommonGroupInfo,
@@ -95,7 +95,7 @@ pub trait FromGeneralGroup<'data> {
     fn from_general_group(group: GeneralGroup<'data>) -> Self;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TopGroup<'data> {
     pub label: RecordName<'data>,
     pub common: CommonGroupInfo,
@@ -139,7 +139,7 @@ impl<'data> Writable for TopGroup<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum FromTopGroupError<'data> {
     /// TODO: note that any parse errors inside records will be under FromRecordError.. this is fine I guess?
     RecordError(FromRecordError<'data>),
@@ -299,7 +299,7 @@ where
 macro_rules! make_simple_top_group {
     ($(#[$outer:meta])* $group_name:ident, $name:ident, $record_name:ident, $life:lifetime) => {
 		$(#[$outer])*
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct $group_name<$life> {
             pub common: $crate::groups::common::CommonGroupInfo,
             pub records: Vec<$record_name<$life>>,

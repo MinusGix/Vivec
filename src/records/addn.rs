@@ -19,7 +19,7 @@ use std::io::Write;
 /// Contains information on addon nodes
 /// appear to be generic visual attachments for any object
 /// Note: there can be an Empty-Record of this
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ADDNRecord<'data> {
     pub common: CommonRecordInfo,
     /// EDID
@@ -103,7 +103,7 @@ impl<'data> Writable for ADDNRecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ADDNField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),

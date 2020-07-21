@@ -21,7 +21,7 @@ use std::io::Write;
 /// Holds information about actors
 /// It is a specific NPC at a certain location, possibly at a time (possibly triggered by scripts)
 /// doing things.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ACHRRecord<'data> {
     pub common: CommonRecordInfo,
     /// EDID
@@ -196,7 +196,7 @@ impl<'data> DataSize for ACHRRecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ACHRField<'data> {
     EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
@@ -285,7 +285,7 @@ make_empty_field!(XPPA);
 
 make_formid_field!(INAM);
 
-make_single_value_field!([Debug, Clone], PDTO, topic_type, TopicType, 'data);
+make_single_value_field!([Debug, Copy, Clone, PartialEq], PDTO, topic_type, TopicType, 'data);
 impl<'data> FromField<'data> for PDTO<'data> {
     fn from_field(field: GeneralField<'data>) -> PResult<Self, FromFieldError> {
         let (data, topic_type) = u32::parse(field.data)?;
@@ -354,7 +354,7 @@ impl<'data> Writable for TopicType<'data> {
 }
 
 make_single_value_field!(
-    [Debug, Clone],
+    [Debug, Clone, Eq, PartialEq],
     XRGD,
     /// TODO: figure out how this is structured
     data,
@@ -367,7 +367,7 @@ impl<'data> FromField<'data> for XRGD<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct XRGB {
     // TODO: figure out what this is
     // It's named XRGB, and (maybe) 3 floats, so it's potentially a color, but for what? (check if it always fits in 0.0-1.0)
@@ -485,7 +485,7 @@ impl Writable for XAPDFlags {
 }
 
 /// activate parent
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct XAPR {
     /// -> REFR, which is usually a STAT
     formid: FormId,
@@ -520,7 +520,7 @@ make_formid_field!(
     XHOR
 );
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct XESP {
     /// Parent reference. (Object to take enable state from)
     parent: FormId,
@@ -590,7 +590,7 @@ make_formid_field!(
     XLCN
 );
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct XLKR {
     /// 0 or ->KYWD (usually LinkCarryStart/LinkCarryEnd)
     keyword: FormId,
@@ -627,7 +627,7 @@ make_formid_field!(XLRL);
 make_single_value_field!([Debug, Copy, Clone, PartialEq], XSCL, scale, f32);
 impl_from_field!(XSCL, [scale: f32]);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DATA {
     /// TODO: is this correct name?
     position: Position3<f32>,

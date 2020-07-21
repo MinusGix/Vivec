@@ -17,7 +17,7 @@ use crate::{
 use derive_more::From;
 use std::io::Write;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ARMORecord<'data> {
     common: CommonRecordInfo,
     fields: Vec<ARMOField<'data>>,
@@ -293,7 +293,7 @@ impl Writable for ARMORecord<'_> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ARMOField<'data> {
     EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),
@@ -489,7 +489,7 @@ impl_from_field!(EAMT, [amount: u16]);
 /// make_inventory_modl_collection(MODL_name; MODT_name; MODS_name; MODLCollection_name; ICON_name; MICO_name; Name that inventory collection should be named);
 macro_rules! make_inventory_modl_collection {
     ($life:lifetime; $modl:ty; $modt:ty; $mods:ty; $modlcol:ty; $icon:ty; $mico:ty; $invcol:ident) => {
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct $invcol<$life> {
             model: $modlcol,
             inventory_image: Option<$icon>,
@@ -555,7 +555,7 @@ make_model_fields!(MOD4; MO4T; MO4S; MO4LCollection);
 make_inventory_modl_collection!('a; MOD4<'a>; MO4T; MO4S; MO4LCollection<'a>; ICO2<'a>; MIC2<'a>; InventoryMOD4LCollection);
 make_single_value_field!(
     /// Inventory icon filename
-    [Debug, Clone],
+    [Debug, Clone, PartialEq],
     ICO2,
     filename,
     NullTerminatedString,
@@ -565,7 +565,7 @@ impl_from_field!(ICO2, 'data, [filename: NullTerminatedString]);
 
 make_single_value_field!(
     /// Message icon filename
-    [Debug, Clone],
+    [Debug, Clone, PartialEq],
     MIC2,
     filename,
     NullTerminatedString,

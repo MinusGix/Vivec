@@ -18,7 +18,7 @@ use bstr::BStr;
 use derive_more::From;
 use std::io::Write;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ACTIRecord<'data> {
     pub common: CommonRecordInfo,
 
@@ -156,7 +156,7 @@ impl<'data> Writable for ACTIRecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ACTIField<'data> {
     EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),

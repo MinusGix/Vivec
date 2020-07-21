@@ -16,7 +16,7 @@ use derive_more::From;
 use std::io::Write;
 
 /// Header record for mod file
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TES4Record<'data> {
     pub common: CommonRecordInfo,
     pub fields: Vec<TES4Field<'data>>,
@@ -132,7 +132,7 @@ impl<'data> Writable for TES4Record<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum TES4Field<'data> {
     HEDR(HEDR),
     CNAM(CNAM<'data>),
@@ -254,7 +254,7 @@ make_single_value_field!([Debug, Clone, Eq, PartialEq], SNAM,
 impl_from_field!(SNAM, 'data, [description: NullTerminatedString]);
 
 /// Holds a MAST,DATA pair
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MASTCollection<'data> {
     master: MAST<'data>,
     data: DATA,
@@ -290,7 +290,7 @@ impl Writable for MASTCollection<'_> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MasterCollection<'data> {
     masters: Vec<MASTCollection<'data>>,
 }

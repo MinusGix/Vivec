@@ -18,7 +18,7 @@ pub mod aspc;
 
 pub mod common;
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum Group<'data> {
     AACT(aact::AACTGroup<'data>),
     ACTI(acti::ACTIGroup<'data>),

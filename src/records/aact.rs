@@ -17,7 +17,7 @@ use std::io::Write;
 
 /// Holds information about actions
 /// Note: There can be an Empty-Record of this.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AACTRecord<'data> {
     pub common: CommonRecordInfo,
     /// Editor id. EDID
@@ -73,7 +73,7 @@ impl<'data> Writable for AACTRecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum AACTField<'data> {
     EDID(edid::EDID<'data>),
     CNAM(CNAM),

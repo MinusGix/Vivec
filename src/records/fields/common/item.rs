@@ -50,7 +50,7 @@ impl Writable for Weight {
 
 make_single_value_field!(
     /// Inventory icon filename
-    [Debug, Clone],
+    [Debug, Clone, Eq, PartialEq],
     ICON,
     filename,
     NullTerminatedString,
@@ -60,7 +60,7 @@ impl_from_field!(ICON, 'data, [filename: NullTerminatedString]);
 
 make_single_value_field!(
     /// Message icon filename
-    [Debug, Clone],
+    [Debug, Clone, Eq, PartialEq],
     MICO,
     filename,
     NullTerminatedString,
@@ -145,7 +145,7 @@ make_single_value_field!(
 );
 impl_from_field!(DESC, [description: LString]);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct BODT {
     pub part_node_flags: BodyPartNodeFlags,
     pub flags: BODTFlags,
@@ -295,7 +295,7 @@ impl TryFrom<u32> for ArmorSkill {
 }
 
 /// Essentially a 'new'/'updated' trimmed down version of BODT
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct BOD2 {
     pub part_node_flags: BodyPartNodeFlags,
     pub skill: ArmorSkill,

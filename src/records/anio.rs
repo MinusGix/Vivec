@@ -14,7 +14,7 @@ use crate::{
 use bstr::BStr;
 use derive_more::From;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ANIORecord<'data> {
     pub common: CommonRecordInfo,
     pub editor_id_index: Index,
@@ -85,7 +85,7 @@ impl Writable for ANIORecord<'_> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ANIOField<'data> {
     EDID(edid::EDID<'data>),
     MODLCollection(modl::MODLCollection<'data>),

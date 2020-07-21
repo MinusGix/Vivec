@@ -18,7 +18,7 @@ use crate::{
 use derive_more::From;
 use std::{fmt::Debug, io::Write};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ARMARecord<'data> {
     pub common: CommonRecordInfo,
     pub fields: Vec<ARMAField<'data>>,
@@ -229,7 +229,7 @@ impl Writable for ARMARecord<'_> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ARMAField<'data> {
     EDID(edid::EDID<'data>),
     BODT(item::BODT),
@@ -345,7 +345,7 @@ make_formid_field!(
     RNAM
 );
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DNAM {
     pub male_priority: u8,
     pub female_priority: u8,

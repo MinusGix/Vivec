@@ -12,13 +12,13 @@ mod parse;
 mod records;
 mod util;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeneralTop<'data> {
     Record(GeneralRecord<'data>),
     Group(GeneralGroup<'data>),
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, From, PartialEq)]
 enum GeneralError<'data> {
     TopGroup(FromTopGroupError<'data>),
     Record(FromRecordError<'data>),
@@ -37,7 +37,7 @@ fn parse_top_level<'data>(data: &'data [u8]) -> PResult<GeneralTop<'data>, Gener
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Top<'data> {
     Record(records::Record<'data>),
     // TODO: custom group types?

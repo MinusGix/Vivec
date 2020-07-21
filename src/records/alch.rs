@@ -18,7 +18,7 @@ use bstr::{BStr, ByteSlice};
 use derive_more::From;
 use std::io::Write;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ALCHRecord<'data> {
     pub common: CommonRecordInfo,
     /// EDID
@@ -139,7 +139,7 @@ impl<'data> Writable for ALCHRecord<'data> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ALCHField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),
@@ -233,14 +233,14 @@ impl<'data> Writable for ALCHField<'data> {
 
 make_single_value_field!(
     /// Message icon filename
-    [Debug, Clone],
+    [Debug, Copy, Clone, PartialEq, PartialOrd],
     DATA,
     weight,
     f32
 );
 impl_from_field!(DATA, [weight: f32]);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ENIT {
     /// ?
     pub potion_value: u32,
@@ -358,7 +358,7 @@ impl Writable for EFIT {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EnchantedEffectCollection {
     pub enchanted_item: ENIT,
     pub effect_id: EFID,

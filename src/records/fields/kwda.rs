@@ -18,7 +18,7 @@ impl_from_field!(KSIZ, [amount: u32]);
 
 make_single_value_field!(
     /// 'Keyword array'
-    [Debug, Clone],
+    [Debug, Clone, Eq, PartialEq],
     KWDA,
     /// FormId array that points to keywords (?)
     keywords,
@@ -33,7 +33,7 @@ impl KWDA {
 }
 
 /// KWDACollection
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct KWDACollection {
     // Note: we don't keep the KSIZ instance in here, since it can be generated from the KWDA instance :]
     keywords: KWDA,

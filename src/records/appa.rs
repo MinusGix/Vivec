@@ -19,7 +19,7 @@ use std::io::Write;
 
 /// Apparatus
 /// No use in TES5, but were used in Morrowind and Oblivion.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct APPARecord<'data> {
     pub common: CommonRecordInfo,
     /// EDID
@@ -153,7 +153,7 @@ impl DataSize for APPARecord<'_> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum APPAField<'data> {
     EDID(edid::EDID<'data>),
     VMAD(vmad::VMAD<'data, vmad::NoFragments>),

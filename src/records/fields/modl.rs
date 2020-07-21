@@ -6,7 +6,7 @@ use crate::{
 };
 use bstr::{BStr, ByteSlice};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AlternateTexture<'data> {
     /// 3d object name inside nif file
     name_3d: &'data BStr,
@@ -97,7 +97,7 @@ macro_rules! make_model_fields {
             }
         }
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct $mods<'data> {
             pub alternate_textures: Vec<$crate::records::fields::modl::AlternateTexture<'data>>,
         }
@@ -136,7 +136,7 @@ macro_rules! make_model_fields {
             }
         }
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct $collection<'data> {
             pub model: $modl<'data>,
             pub texture_data: Option<$modt<'data>>,

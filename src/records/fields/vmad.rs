@@ -14,7 +14,7 @@ pub trait ParseFragments<'data>: Sized + DataSize + Writable {
 }
 
 /// Contains Papyrus script data
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VMAD<'data, Fragment: ParseFragments<'data>> {
     pub primary: VMADPrimarySection<'data, Fragment>,
 }
@@ -56,7 +56,7 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VMADPrimarySection<'data, Fragment: ParseFragments<'data>> {
     // TODO: unlikely to be signed...
     pub version: i16,
@@ -183,7 +183,7 @@ impl Writable for VMADObjectFormat {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VMADScript<'data> {
     /// The name of the script, without an extension
     pub name: Windows1252String16<'data>,
@@ -239,7 +239,7 @@ impl<'data> DataSize for VMADScript<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum VMADPropertyData<'data> {
     /// UESP: "Object types are used to assign formid values to props, in particular for quest aliases, but also for a range of other cases that use formids.
     /// it's length is always 8 bytes, but how the bytes are decoded depends upon object format":
@@ -498,7 +498,7 @@ impl_static_data_size!(
     u16::static_data_size() // unused
 );
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VMADProperty<'data> {
     pub name: Windows1252String16<'data>,
     /// FIXME: UESP says only present if version >= 4
@@ -543,7 +543,7 @@ impl<'data> DataSize for VMADProperty<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NoFragments {}
 impl<'data> ParseFragments<'data> for NoFragments {
     fn parse_fragments(_data: &'data [u8]) -> PResult<Self> {
@@ -563,7 +563,7 @@ impl Writable for NoFragments {
 
 /// Stored by default in a TIF file, ex: TIF_[editorId]_[formId]
 /// Since most INFO records do not have an editorID, it stores as TIF__[formId]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct INFORecordFragments<'data> {
     /// Always 2
     pub unknown: u8,
@@ -654,7 +654,7 @@ impl Writable for INFORecordFragmentsFlags {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FragmentInfo<'data> {
     pub unknown: u8,
     /// Name of script. Normally same as parent INFORecord.filename
@@ -694,7 +694,7 @@ impl<'data> Writable for FragmentInfo<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PACKRecordFragments<'data> {
     /// Always 2
     pub unknown: u8,
@@ -788,7 +788,7 @@ impl Writable for PACKRecordFragmentsFlags {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PERKRecordFragments<'data> {
     /// always 2
     pub unknown: u8,
@@ -831,7 +831,7 @@ impl<'data> Writable for PERKRecordFragments<'data> {
         self.fragments.write_to(w)
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PERKRecordFragmentInfo<'data> {
     /// Index into what??
     pub index: u16,
@@ -883,7 +883,7 @@ impl<'data> Writable for PERKRecordFragmentInfo<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct QUSTRecordFragments<'data> {
     /// always 2
     pub unknown: u8,
@@ -941,7 +941,7 @@ impl<'data> Writable for QUSTRecordFragments<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct QUSTRecordFragmentInfo<'data> {
     /// Quest stage index (same as QUST INDX field) that this fragment is attached to
     pub index: u16,
@@ -1004,7 +1004,7 @@ impl<'data> Writable for QUSTRecordFragmentInfo<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FragmentAlias<'data> {
     pub object: VMADPropertyObject,
     /// Always 4 or 5. always the same as primary script's version
@@ -1067,7 +1067,7 @@ impl<'data> Writable for FragmentAlias<'data> {
 }
 
 /// Stored in a SF file: "SF_[editorId]_[formId]"
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SCENRecordFragments<'data> {
     /// always 2
     pub unknown: u8,
@@ -1134,7 +1134,7 @@ impl<'data> Writable for SCENRecordFragments<'data> {
 // We just type alias it, since from what I know they're the same
 pub type SCENRecordFragmentsFlags = INFORecordFragmentsFlags;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BEFragmentInfo<'data> {
     pub unknown: u8,
     /// Tends to equal parent filename
@@ -1174,7 +1174,7 @@ impl<'data> Writable for BEFragmentInfo<'data> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PhaseInfo<'data> {
     pub unknown: u8,
     /// Phase number. In creation kit, it starts at 1, but in code it starts at 0.

@@ -17,7 +17,7 @@ use crate::{
 use derive_more::From;
 use std::convert::{TryFrom, TryInto};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ARTORecord<'data> {
     pub common: CommonRecordInfo,
     pub fields: Vec<ARTOField<'data>>,
@@ -120,7 +120,7 @@ impl Writable for ARTORecord<'_> {
     }
 }
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Clone, PartialEq, From)]
 pub enum ARTOField<'data> {
     EDID(edid::EDID<'data>),
     OBND(obnd::OBND),
