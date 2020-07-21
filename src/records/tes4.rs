@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
-    impl_static_type_named, make_single_value_field,
+    impl_static_type_named, make_field_getter, make_single_value_field,
     parse::{many, PResult, Parse},
     util::{fmt_data, DataSize, Writable},
 };
@@ -22,124 +22,48 @@ pub struct TES4Record<'data> {
     pub fields: Vec<TES4Field<'data>>,
 }
 impl<'data> TES4Record<'data> {
-    pub fn header_index(&self) -> Index {
-        self.fields
-            .iter()
-            .position(|x| matches!(x, TES4Field::HEDR(_)))
-            .expect("ILE: Expected TES4 to have a HEDR")
-    }
+    make_field_getter!(header_index, header, header_mut, TES4Field::HEDR, HEDR);
 
-    pub fn header(&self) -> &HEDR {
-        // TODO: I don't particularly like this unreachable bit. It is unreachable, but having to explicitly say it is an annoyance.
-        match &self.fields[self.header_index()] {
-            TES4Field::HEDR(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        }
-    }
+    make_field_getter!(
+        optional: author_index,
+        author,
+        author_mut,
+        TES4Field::CNAM,
+        CNAM<'data>
+    );
 
-    pub fn header_mut(&mut self) -> &mut HEDR {
-        let index = self.header_index();
-        match &mut self.fields[index] {
-            TES4Field::HEDR(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        }
-    }
+    make_field_getter!(
+        optional: description_index,
+        description,
+        description_mut,
+        TES4Field::SNAM,
+        SNAM<'data>
+    );
 
-    pub fn author_index(&self) -> Option<Index> {
-        self.fields
-            .iter()
-            .position(|x| matches!(x, TES4Field::CNAM(_)))
-    }
-    pub fn author(&self) -> Option<&CNAM<'data>> {
-        self.author_index().map(|i| match &self.fields[i] {
-            TES4Field::CNAM(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        })
-    }
-    pub fn author_mut(&mut self) -> Option<&mut CNAM<'data>> {
-        self.author_index().map(move |i| match &mut self.fields[i] {
-            TES4Field::CNAM(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        })
-    }
+    // TODO: should this just exist always, but with zero entries? would have to decide where to put it..
+    make_field_getter!(
+        optional: masters_index,
+        masters,
+        masters_mut,
+        TES4Field::MasterCollection,
+        MasterCollection<'data>
+    );
 
-    pub fn description_index(&self) -> Option<Index> {
-        self.fields
-            .iter()
-            .position(|x| matches!(x, TES4Field::SNAM(_)))
-    }
-    pub fn description(&self) -> Option<&SNAM<'data>> {
-        self.description_index().map(|i| match &self.fields[i] {
-            TES4Field::SNAM(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        })
-    }
-    pub fn description_mut(&mut self) -> Option<&mut SNAM<'data>> {
-        self.description_index()
-            .map(move |i| match &mut self.fields[i] {
-                TES4Field::SNAM(x) => x,
-                _ => panic!("ILE: Unreachable"),
-            })
-    }
+    make_field_getter!(
+        optional: overrides_index,
+        overrides,
+        overrides_mut,
+        TES4Field::ONAM,
+        ONAM
+    );
 
-    // TODO: this should probably exist automatically, just with zero entries? Would have to decide where to put it in the array..
-    pub fn masters_index(&self) -> Option<Index> {
-        self.fields
-            .iter()
-            .position(|x| matches!(x, TES4Field::MasterCollection(_)))
-    }
-    pub fn masters(&self) -> Option<&MasterCollection<'data>> {
-        self.masters_index().map(|i| match &self.fields[i] {
-            TES4Field::MasterCollection(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        })
-    }
-    pub fn masters_mut(&mut self) -> Option<&mut MasterCollection<'data>> {
-        self.masters_index()
-            .map(move |i| match &mut self.fields[i] {
-                TES4Field::MasterCollection(x) => x,
-                _ => panic!("ILE: Unreachable"),
-            })
-    }
-
-    pub fn overrides_index(&self) -> Option<Index> {
-        self.fields
-            .iter()
-            .position(|x| matches!(x, TES4Field::ONAM(_)))
-    }
-    pub fn overrides(&self) -> Option<&ONAM> {
-        self.overrides_index().map(|i| match &self.fields[i] {
-            TES4Field::ONAM(x) => x,
-            _ => panic!("ILE: Unreachable"),
-        })
-    }
-    pub fn overrides_mut(&mut self) -> Option<&mut ONAM> {
-        self.overrides_index()
-            .map(move |i| match &mut self.fields[i] {
-                TES4Field::ONAM(x) => x,
-                _ => panic!("ILE: Unreachable"),
-            })
-    }
-
-    pub fn internal_version_index(&self) -> Option<Index> {
-        self.fields
-            .iter()
-            .position(|x| matches!(x, TES4Field::INTV(_)))
-    }
-    pub fn internal_version(&self) -> Option<&INTV> {
-        self.internal_version_index()
-            .map(|i| match &self.fields[i] {
-                TES4Field::INTV(x) => x,
-                _ => panic!("ILE: Unreachable"),
-            })
-    }
-    pub fn internal_version_mut(&mut self) -> Option<&mut INTV> {
-        self.internal_version_index()
-            .map(move |i| match &mut self.fields[i] {
-                TES4Field::INTV(x) => x,
-                _ => panic!("ILE: Unreachable"),
-            })
-    }
+    make_field_getter!(
+        optional: internal_version_index,
+        internal_version,
+        internal_version_mut,
+        TES4Field::INTV,
+        INTV
+    );
 }
 impl<'data> FromRecord<'data> for TES4Record<'data> {
     fn from_record(record: GeneralRecord<'data>) -> PResult<TES4Record, FromRecordError<'data>> {
