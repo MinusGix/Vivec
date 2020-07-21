@@ -535,6 +535,60 @@ where
     }
 }
 
+/// make_field_getter!(editor_id_index, editor_id, editor_id_mut, ARTOField::EDID, edid::EDID<'data>); inside of impl
+///   to find a field and panic if it doesn't exist, and makes getters for non-mut and mut version
+/// make_field_getter!(optional: model_index, model, model_mut, ARTOField::MODLCollection, modl::MODLCollection<'data>);
+///   to find a field and return None if it does not exist. Type will automatically be wrapped in Option
+/// requires self.fields property
+#[macro_export]
+macro_rules! make_field_getter {
+    ($index_name:ident, $name:ident, $name_mut:ident, $field_variant:path, $field_type:ty) => {
+        pub fn $index_name(&self) -> Index {
+            self.fields
+                .iter()
+                .position(|x| matches!(x, $field_variant(_)))
+                .expect("ILE: Expected specific field")
+        }
+
+        pub fn $name(&self) -> &$field_type {
+            match &self.fields[self.$index_name()] {
+                $field_variant(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            }
+        }
+
+        pub fn $name_mut(&mut self) -> &mut $field_type {
+            let index = self.$index_name();
+            match &mut self.fields[index] {
+                $field_variant(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            }
+        }
+    };
+
+    (optional: $index_name:ident, $name:ident, $name_mut:ident, $field_variant:path, $field_type:ty) => {
+        pub fn $index_name(&self) -> Option<Index> {
+            self.fields
+                .iter()
+                .position(|x| matches!(x, $field_variant(_)))
+        }
+
+        pub fn $name(&self) -> Option<&$field_type> {
+            self.$index_name().map(|i| match &self.fields[i] {
+                $field_variant(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
+        }
+
+        pub fn $name_mut(&mut self) -> Option<&mut $field_type> {
+            self.$index_name().map(move |i| match &mut self.fields[i] {
+                $field_variant(x) => x,
+                _ => panic!("ILE: Unreachable"),
+            })
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
