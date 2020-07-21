@@ -68,14 +68,14 @@ impl<'data> ARMORecord<'data> {
         inventory_mod2,
         inventory_mod2_mut,
         ARMOField::InventoryMO2LCollection,
-        InventoryMOD2LCollection<'data>
+        InventoryMO2LCollection<'data>
     );
     make_field_getter!(
         optional: inventory_mod4_index,
         inventory_mod4,
         inventory_mod4_mut,
         ARMOField::InventoryMO4LCollection,
-        InventoryMOD4LCollection<'data>
+        InventoryMO4LCollection<'data>
     );
 
     // TODO: make getter for BODT|BOD2
@@ -216,10 +216,10 @@ impl<'data> FromRecord<'data> for ARMORecord<'data> {
                     }
                 }
                 b"MOD2" => {
-                    collect_one_collection!(MOD2, InventoryMOD2LCollection; field, field_iter => fields; inventory_mod2_index)
+                    collect_one_collection!(MOD2, InventoryMO2LCollection; field, field_iter => fields; inventory_mod2_index)
                 }
                 b"MOD4" => {
-                    collect_one_collection!(MOD4, InventoryMOD4LCollection; field, field_iter => fields; inventory_mod4_index)
+                    collect_one_collection!(MOD4, InventoryMO4LCollection; field, field_iter => fields; inventory_mod4_index)
                 }
                 b"BODT" => collect_one!(item::BODT, field => fields; bodt_index),
                 b"BOD2" => collect_one!(item::BOD2, field => fields; bod2_index),
@@ -301,8 +301,8 @@ pub enum ARMOField<'data> {
     FULL(object::FULL),
     Enchantment(Enchantment),
     MODLCollection(modl::MODLCollection<'data>),
-    InventoryMO2LCollection(InventoryMOD2LCollection<'data>),
-    InventoryMO4LCollection(InventoryMOD4LCollection<'data>),
+    InventoryMO2LCollection(InventoryMO2LCollection<'data>),
+    InventoryMO4LCollection(InventoryMO4LCollection<'data>),
     BODT(item::BODT),
     BOD2(item::BOD2),
     DESTCollection(dest::DESTCollection<'data>),
@@ -549,10 +549,10 @@ macro_rules! make_inventory_modl_collection {
 
 // male
 make_model_fields!(MOD2; MO2T; MO2S; MO2LCollection);
-make_inventory_modl_collection!('a; MOD2<'a>; MO2T; MO2S; MO2LCollection<'a>; item::ICON<'a>; item::MICO<'a>; InventoryMOD2LCollection);
+make_inventory_modl_collection!('a; MOD2<'a>; MO2T; MO2S; MO2LCollection<'a>; item::ICON<'a>; item::MICO<'a>; InventoryMO2LCollection);
 // female
 make_model_fields!(MOD4; MO4T; MO4S; MO4LCollection);
-make_inventory_modl_collection!('a; MOD4<'a>; MO4T; MO4S; MO4LCollection<'a>; ICO2<'a>; MIC2<'a>; InventoryMOD4LCollection);
+make_inventory_modl_collection!('a; MOD4<'a>; MO4T; MO4S; MO4LCollection<'a>; ICO2<'a>; MIC2<'a>; InventoryMO4LCollection);
 make_single_value_field!(
     /// Inventory icon filename
     [Debug, Clone, PartialEq],
