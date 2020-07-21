@@ -1,7 +1,6 @@
 use super::{
     common::{
-        CommonRecordInfo, ConversionError, FromRecord, FromRecordError, GeneralRecord, Index,
-        TypeNamed,
+        CommonRecordInfo, ConversionError, FromRecord, FromRecordError, GeneralRecord, TypeNamed,
     },
     fields::{
         common::{write_field_header, GeneralField, FIELDH_SIZE},

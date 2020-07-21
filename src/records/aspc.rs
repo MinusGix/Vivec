@@ -64,9 +64,8 @@ impl<'data> FromRecord<'data> for ASPCRecord<'data> {
         let mut bnam_index = None;
 
         let mut fields = Vec::new();
-        let mut field_iter = record.fields.into_iter().peekable();
 
-        while let Some(field) = field_iter.next() {
+        for field in record.fields {
             match field.type_name().as_ref() {
                 b"EDID" => collect_one!(edid::EDID, field => fields; edid_index),
                 b"OBND" => collect_one!(obnd::OBND, field => fields; obnd_index),
