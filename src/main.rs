@@ -166,7 +166,8 @@ fn main() {
                     Group::ARMO(group) => println!("ARMO group: {} entries", group.records.len()),
                     Group::ARTO(group) => println!("ARTO group: {} entries", group.records.len()),
                     Group::ASPC(group) => println!("ASPC group: {} entries", group.records.len()),
-                    _ => print!("G, "),
+                    Group::Unknown(_) => print!("GU, "),
+                    Group::UnknownTop(_) => print!("GT, "),
                 },
             };
         }
