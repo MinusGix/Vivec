@@ -543,7 +543,7 @@ where
 #[macro_export]
 macro_rules! make_field_getter {
     ($index_name:ident, $name:ident, $name_mut:ident, $field_variant:path, $field_type:ty) => {
-        pub fn $index_name(&self) -> Index {
+        pub fn $index_name(&self) -> $crate::records::common::Index {
             self.fields
                 .iter()
                 .position(|x| matches!(x, $field_variant(_)))
