@@ -1,5 +1,7 @@
 use super::{
-    common::{CommonRecordInfo, FromRecord, FromRecordError, GeneralRecord, TypeNamed},
+    common::{
+        CommonRecordInfo, FromRecord, FromRecordError, GeneralRecord, StaticTypeNamed, TypeNamed,
+    },
     fields::{common::GeneralField, edid, obnd},
 };
 use crate::{
@@ -76,13 +78,23 @@ impl<'data> FromRecord<'data> for ASPCRecord<'data> {
             }
         }
 
-        Ok((
-            &[],
-            Self {
-                common: record.common,
-                fields,
-            },
-        ))
+        if edid_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                edid::EDID::static_type_name(),
+            ))
+        } else if obnd_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                obnd::OBND::static_type_name(),
+            ))
+        } else {
+            Ok((
+                &[],
+                Self {
+                    common: record.common,
+                    fields,
+                },
+            ))
+        }
     }
 }
 impl_static_type_named!(ASPCRecord<'_>, b"ASPC");
