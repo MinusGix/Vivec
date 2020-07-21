@@ -18,6 +18,7 @@ pub mod arma;
 pub mod armo;
 pub mod arto;
 pub mod aspc;
+pub mod astp;
 
 pub mod tes4;
 
@@ -40,6 +41,7 @@ pub enum Record<'data> {
     ARMO(armo::ARMORecord<'data>),
     ARTO(arto::ARTORecord<'data>),
     ASPC(aspc::ASPCRecord<'data>),
+    ASTP(astp::ASTPRecord<'data>),
     Unknown(common::GeneralRecord<'data>),
 }
 impl<'data> TypeNamed<'data> for Record<'data> {
@@ -48,7 +50,7 @@ impl<'data> TypeNamed<'data> for Record<'data> {
             Record,
             self,
             [
-                TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC,
+                TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP,
                 Unknown
             ],
             x,
@@ -62,7 +64,7 @@ impl<'data> DataSize for Record<'data> {
             Record,
             self,
             [
-                TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC,
+                TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP,
                 Unknown
             ],
             x,
@@ -79,7 +81,7 @@ impl<'data> Writable for Record<'data> {
             Record,
             self,
             [
-                TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC,
+                TES4, AACT, ACTI, ADDN, ACHR, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP,
                 Unknown
             ],
             x,
