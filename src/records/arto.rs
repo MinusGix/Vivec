@@ -1,6 +1,7 @@
 use super::{
     common::{
-        CommonRecordInfo, ConversionError, FromRecord, FromRecordError, GeneralRecord, TypeNamed,
+        CommonRecordInfo, ConversionError, FromRecord, FromRecordError, GeneralRecord,
+        StaticTypeNamed, TypeNamed,
     },
     fields::{
         common::{write_field_header, GeneralField, FIELDH_SIZE},
@@ -76,13 +77,25 @@ impl<'data> FromRecord<'data> for ARTORecord<'data> {
             }
         }
 
-        Ok((
-            &[],
-            Self {
-                common: record.common,
-                fields,
-            },
-        ))
+        if edid_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                edid::EDID::static_type_name(),
+            ))
+        } else if obnd_index.is_none() {
+            Err(FromRecordError::ExpectedField(
+                obnd::OBND::static_type_name(),
+            ))
+        } else if dnam_index.is_none() {
+            Err(FromRecordError::ExpectedField(DNAM::static_type_name()))
+        } else {
+            Ok((
+                &[],
+                Self {
+                    common: record.common,
+                    fields,
+                },
+            ))
+        }
     }
 }
 impl_static_type_named!(ARTORecord<'_>, b"ARTO");
