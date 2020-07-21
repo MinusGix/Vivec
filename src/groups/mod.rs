@@ -14,6 +14,7 @@ pub mod appa;
 pub mod arma;
 pub mod armo;
 pub mod arto;
+pub mod aspc;
 
 pub mod common;
 
@@ -29,6 +30,7 @@ pub enum Group<'data> {
     ARMA(arma::ARMAGroup<'data>),
     ARMO(armo::ARMOGroup<'data>),
     ARTO(arto::ARTOGroup<'data>),
+    ASPC(aspc::ASPCGroup<'data>),
     Unknown(common::GeneralGroup<'data>),
     UnknownTop(common::TopGroup<'data>),
 }
@@ -42,7 +44,10 @@ impl<'data> DataSize for Group<'data> {
         dispatch_all!(
             Group,
             self,
-            [AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, Unknown, UnknownTop],
+            [
+                AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, Unknown,
+                UnknownTop
+            ],
             x,
             { x.data_size() }
         )
@@ -56,7 +61,10 @@ impl<'data> Writable for Group<'data> {
         dispatch_all!(
             Group,
             self,
-            [AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, Unknown, UnknownTop],
+            [
+                AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, Unknown,
+                UnknownTop
+            ],
             x,
             { x.write_to(w) }
         )
