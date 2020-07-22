@@ -1,4 +1,4 @@
-use super::fields::common::{FieldName, FromField, FromFieldError, GeneralField};
+use super::fields::common::{CollectField, FieldName, FromField, FromFieldError, GeneralField};
 use crate::{
     impl_static_data_size,
     parse::{many, take, PResult, Parse, ParseError},
@@ -44,7 +44,7 @@ macro_rules! collect_one {
 /// collect_one_collection!(OpeningFieldType, CollectionType; field_variable, field_iterator => field_vector; index_option);
 #[macro_export]
 macro_rules! collect_one_collection {
-    ($of:ty, $cf:ty; $field:expr, $field_iter:expr => $fields:expr; $o:expr) => {{
+    ($of:ty, $cf:ty; $field:expr, $field_iter:expr => $fields:expr; $o:expr; $collect_name:ident) => {{
         use $crate::records::fields::common::FromField;
         if $o.is_some() {
             use bstr::ByteSlice;
@@ -54,9 +54,13 @@ macro_rules! collect_one_collection {
         }
 
         let (_, opening_field) = <$of>::from_field($field)?;
-        let (_, collection) = <$cf>::collect(opening_field, &mut $field_iter)?;
+        let (_, collection) = <$cf>::$collect_name(opening_field, &mut $field_iter)?;
         $o = Some($fields.len());
         $fields.push(collection.into());
+    }};
+    ($of:ty, $cf:ty; $field:expr, $field_iter:expr => $fields:expr; $o:expr) => {{
+        use $crate::records::fields::common::CollectField;
+        collect_one_collection!($of, $cf; $field, $field_iter => $fields; $o; collect);
     }};
 }
 
@@ -479,19 +483,17 @@ where
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct FieldList<
-    'data,
-    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
-> {
+pub struct FieldList<'data, T: StaticTypeNamed + DataSize> {
     list: Vec<T>,
     // TODO: is this good a way to do this?
     _marker: std::marker::PhantomData<&'data [u8]>,
 }
-impl<'data, T> FieldList<'data, T>
+// Implementation for fields
+impl<'data, T> CollectField<'data, T> for FieldList<'data, T>
 where
-    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: StaticTypeNamed + DataSize + FromField<'data>,
 {
-    pub fn collect<I>(
+    fn collect<I>(
         first: T,
         field_iter: &mut std::iter::Peekable<I>,
     ) -> PResult<Self, FromFieldError<'data>>
@@ -515,9 +517,48 @@ where
         ))
     }
 }
+// Implementation for collections
+//impl<'data, C, F> CollectField<'data, F> for FieldList<'data, C>
+impl<'data, C> FieldList<'data, C>
+where
+    C: StaticTypeNamed + DataSize,
+{
+    pub fn collect_collection<I, F>(
+        first: F,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>,
+        F: StaticTypeNamed + DataSize + FromField<'data>,
+        C: CollectField<'data, F>,
+    {
+        let (_, first): (_, C) = C::collect(first, field_iter)?;
+
+        let mut list: Vec<C> = vec![first];
+        loop {
+            let (_, field): (_, Option<F>) = get_field(field_iter, F::static_type_name())?;
+            let field = match field {
+                Some(field) => field,
+                None => break,
+            };
+
+            let (_, entry): (_, C) = C::collect(field, field_iter)?;
+            list.push(entry);
+        }
+
+        Ok((
+            &[],
+            Self {
+                list,
+                _marker: std::marker::PhantomData,
+            },
+        ))
+    }
+}
+
 impl<'data, T> StaticTypeNamed for FieldList<'data, T>
 where
-    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: StaticTypeNamed + DataSize,
 {
     fn static_type_name() -> &'static BStr {
         T::static_type_name()
@@ -525,7 +566,7 @@ where
 }
 impl<'data, T> DataSize for FieldList<'data, T>
 where
-    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: StaticTypeNamed + DataSize,
 {
     fn data_size(&self) -> usize {
         self.list.data_size()
@@ -533,7 +574,7 @@ where
 }
 impl<'data, T> Writable for FieldList<'data, T>
 where
-    T: Debug + Clone + PartialEq + Writable + StaticTypeNamed + DataSize + FromField<'data>,
+    T: Writable + StaticTypeNamed + DataSize,
 {
     fn write_to<U>(&self, w: &mut U) -> std::io::Result<()>
     where
