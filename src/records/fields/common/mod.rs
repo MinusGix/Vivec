@@ -230,6 +230,7 @@ macro_rules! impl_from_field {
     ($strct:ident, $life:lifetime, [$($name:ident : $typ:ty),*]) => {
         impl<$life> $crate::records::fields::common::FromField<$life> for $strct<$life> {
             fn from_field(field: $crate::records::fields::common::GeneralField<$life>) -> $crate::parse::PResult<Self, $crate::records::fields::common::FromFieldError> {
+                use $crate::parse::Parse;
                 let data = field.data;
                 $(
                     let (data, $name) = <$typ>::parse(data)?;
@@ -241,6 +242,7 @@ macro_rules! impl_from_field {
     ($strct:ident, [$($name:ident : $typ:ty),*]) => {
         impl $crate::records::fields::common::FromField<'_> for $strct {
             fn from_field(field: $crate::records::fields::common::GeneralField<'_>) -> $crate::parse::PResult<Self, $crate::records::fields::common::FromFieldError> {
+                use $crate::parse::Parse;
                 let data = field.data;
                 $(
                     let (data, $name) = <$typ>::parse(data)?;
