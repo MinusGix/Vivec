@@ -50,8 +50,9 @@ impl<'data> GeneralField<'data> {
     pub fn new(type_name: FieldName<'data>, data: &'data [u8]) -> GeneralField<'data> {
         GeneralField { type_name, data }
     }
-
-    pub fn parse(data: &'data [u8]) -> PResult<GeneralField<'data>> {
+}
+impl<'data> Parse<'data> for GeneralField<'data> {
+    fn parse(data: &'data [u8]) -> PResult<GeneralField<'data>> {
         let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
         let (data, field_data_size) = u16::parse(data)?;

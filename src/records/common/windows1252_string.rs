@@ -22,8 +22,9 @@ impl<'data> Windows1252String16<'data> {
     pub fn from_ascii_bytes(value: &'data [u8]) -> Windows1252String16<'data> {
         Windows1252String16::new(value.as_bstr())
     }
-
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+}
+impl<'data> Parse<'data> for Windows1252String16<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         // TODO: test that this is little endian
         let (data, length) = u16::parse(data)?;
         let (data, string) = take(data, length as usize)?;

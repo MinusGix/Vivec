@@ -14,8 +14,8 @@ pub struct AlternateTexture<'data> {
     texture_set: FormId,
     index_3d: u32,
 }
-impl<'data> AlternateTexture<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for AlternateTexture<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, size) = u32::parse(data)?;
         let (data, name_3d) = take(data, size as usize)?;
         let name_3d = name_3d.as_bstr();

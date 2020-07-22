@@ -1,4 +1,4 @@
-use crate::{impl_static_data_size, util::Writable};
+use crate::{impl_static_data_size, parse::Parse, util::Writable};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct LString {
@@ -6,9 +6,8 @@ pub struct LString {
     /// If the file is localized (see TES4 record), then ???, otherwise it points to a null terminated string
     pub index: u32,
 }
-impl LString {
-    pub fn parse(data: &[u8]) -> crate::parse::PResult<Self> {
-        use crate::parse::Parse;
+impl Parse<'_> for LString {
+    fn parse(data: &[u8]) -> crate::parse::PResult<Self> {
         let (data, index) = u32::parse(data)?;
         Ok((data, Self { index }))
     }

@@ -190,7 +190,9 @@ impl OperatorData {
             flags: Flags::from_byte(v),
         })
     }
-    pub fn parse(data: &[u8]) -> PResult<Self> {
+}
+impl Parse<'_> for OperatorData {
+    fn parse(data: &[u8]) -> PResult<Self> {
         let (data, v) = single(data)?;
         OperatorData::from_byte(v)
             .map_err(|x| match x {
@@ -304,15 +306,16 @@ impl RunOn {
         })
     }
 
-    pub fn parse(data: &[u8]) -> PResult<Self> {
+    pub fn code(&self) -> u32 {
+        *self as u32
+    }
+}
+impl Parse<'_> for RunOn {
+    fn parse(data: &[u8]) -> PResult<Self> {
         let (data, v) = u32::parse(data)?;
         Self::from_u32(v).map(|x| (data, x)).map_err(|e| match e {
             RunOnError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
         })
-    }
-
-    pub fn code(&self) -> u32 {
-        *self as u32
     }
 }
 impl_static_data_size!(RunOn, u32::static_data_size());

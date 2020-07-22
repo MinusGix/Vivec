@@ -1,6 +1,6 @@
 use crate::{
     impl_static_data_size,
-    parse::{take, PResult},
+    parse::{take, PResult, Parse},
     util::Writable,
 };
 
@@ -32,8 +32,9 @@ impl VersionControlInfo {
             current_user_id,
         }
     }
-
-    pub fn parse(data: &[u8]) -> PResult<Self> {
+}
+impl Parse<'_> for VersionControlInfo {
+    fn parse(data: &[u8]) -> PResult<Self> {
         let (data, day) = take(data, 1usize)?;
         let (data, month) = take(data, 1usize)?;
         let (data, last_user_id) = take(data, 1usize)?;

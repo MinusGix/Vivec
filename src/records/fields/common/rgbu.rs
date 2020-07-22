@@ -1,5 +1,5 @@
 use crate::{
-    parse::{single, PResult},
+    parse::{single, PResult, Parse},
     util::{DataSize, Writable},
 };
 
@@ -22,8 +22,9 @@ impl RGBU {
             unused,
         }
     }
-
-    pub fn parse(data: &[u8]) -> PResult<RGBU> {
+}
+impl Parse<'_> for RGBU {
+    fn parse(data: &[u8]) -> PResult<RGBU> {
         let (data, red) = single(data)?;
         let (data, green) = single(data)?;
         let (data, blue) = single(data)?;

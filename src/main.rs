@@ -3,7 +3,7 @@ use groups::{
     common::{FromGeneralGroup, FromTopGroup, FromTopGroupError, GeneralGroup, GroupType},
     Group,
 };
-use parse::{many, take, PResult, ParseError};
+use parse::{many, take, PResult, Parse, ParseError};
 use records::common::{FromRecord, FromRecordError, GeneralRecord, TypeNamed};
 use util::{DataSize, Writable};
 

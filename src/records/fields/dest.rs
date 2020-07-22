@@ -101,11 +101,6 @@ pub struct DSTDFlags {
     pub flags: u8,
 }
 impl DSTDFlags {
-    pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = take(data, 1)?;
-        Ok((data, Self { flags: flags[0] }))
-    }
-
     pub fn cap_damage(&self) -> bool {
         (self.flags & 0b1) != 0
     }
@@ -120,6 +115,12 @@ impl DSTDFlags {
 
     pub fn ignore_external_damage(&self) -> bool {
         (self.flags & 0b1000) != 0
+    }
+}
+impl Parse<'_> for DSTDFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = take(data, 1)?;
+        Ok((data, Self { flags: flags[0] }))
     }
 }
 impl_static_data_size!(DSTDFlags, u8::static_data_size());

@@ -1,6 +1,6 @@
 use super::BStrw;
 use crate::{
-    parse::{tag, take_until, PResult},
+    parse::{tag, take_until, PResult, Parse},
     util::{DataSize, Writable},
 };
 use bstr::{BStr, ByteSlice};
@@ -21,9 +21,9 @@ impl<'data> NullTerminatedString<'data> {
     pub fn from_ascii_bytes(value: &'data [u8]) -> NullTerminatedString<'data> {
         NullTerminatedString::new(value.as_bstr())
     }
-
-    pub fn parse(data: &[u8]) -> PResult<NullTerminatedString> {
-        // TODO: i hate this reference thing
+}
+impl<'data> Parse<'data> for NullTerminatedString<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, info) = take_until(data, 0x00)?;
         let (data, _) = tag(data, &[0x00])?;
         Ok((data, NullTerminatedString::from_ascii_bytes(info)))

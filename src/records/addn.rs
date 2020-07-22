@@ -8,7 +8,7 @@ use super::{
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
     impl_static_type_named, make_formid_field, make_single_value_field,
-    parse::{PResult, Parse},
+    parse::PResult,
     util::{DataSize, Writable},
 };
 use bstr::BStr;

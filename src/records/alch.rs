@@ -293,11 +293,6 @@ pub struct ENITFlags {
     pub flags: u32,
 }
 impl ENITFlags {
-    pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = u32::parse(data)?;
-        Ok((data, Self { flags }))
-    }
-
     pub fn manual_calc(&self) -> bool {
         (self.flags & 0b1) != 0
     }
@@ -312,6 +307,12 @@ impl ENITFlags {
 
     pub fn poison(&self) -> bool {
         (self.flags & 0x20000) != 0
+    }
+}
+impl Parse<'_> for ENITFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = u32::parse(data)?;
+        Ok((data, Self { flags }))
     }
 }
 impl_static_data_size!(ENITFlags, u32::static_data_size());

@@ -327,8 +327,8 @@ pub struct GeneralRecord<'data> {
     /// Stored in data
     pub fields: Vec<GeneralField<'data>>,
 }
-impl<'data> GeneralRecord<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<GeneralRecord<'data>> {
+impl<'data> Parse<'data> for GeneralRecord<'data> {
+    fn parse(data: &'data [u8]) -> PResult<GeneralRecord<'data>> {
         let (data, type_name) = take(data, 4)?;
         let type_name = type_name.as_bstr();
 

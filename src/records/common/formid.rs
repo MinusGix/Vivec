@@ -17,13 +17,14 @@ impl FormId {
         FormId::new(u32::from_le_bytes(id))
     }
 
-    pub fn parse(data: &[u8]) -> PResult<FormId> {
-        let (data, id) = u32::parse(data)?;
-        Ok((data, FormId::new(id)))
-    }
-
     pub fn as_bytes(&self) -> [u8; 4] {
         self.id.to_le_bytes()
+    }
+}
+impl Parse<'_> for FormId {
+    fn parse(data: &[u8]) -> PResult<FormId> {
+        let (data, id) = u32::parse(data)?;
+        Ok((data, FormId::new(id)))
     }
 }
 impl_static_data_size!(FormId, u32::static_data_size());

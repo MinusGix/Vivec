@@ -40,8 +40,8 @@ pub struct GeneralGroup<'data> {
     /// Records and subgroups
     pub data: &'data [u8],
 }
-impl<'data> GeneralGroup<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for GeneralGroup<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, _) = tag(data, b"GRUP")?;
         // Size of the entire group, including group header..
         let (data, group_size) = u32::parse(data)?;
@@ -180,12 +180,6 @@ pub enum GroupType<'data> {
     Unknown { group_type: i32, label: [u8; 4] },
 }
 impl<'data> GroupType<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
-        let (data, label) = take(data, 4)?;
-        let (data, group_type) = i32::parse(data)?;
-        Ok((data, GroupType::from_info(group_type, label)))
-    }
-
     // TODO: this needs testing
     // TODO: check endianess!!!
     // TODO: the uesp docs say that group_type is a int32 rather than a uint32, why? it doesn't have any negative values
@@ -263,6 +257,13 @@ impl<'data> GroupType<'data> {
         }
     }
 }
+impl<'data> Parse<'data> for GroupType<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
+        let (data, label) = take(data, 4)?;
+        let (data, group_type) = i32::parse(data)?;
+        Ok((data, GroupType::from_info(group_type, label)))
+    }
+}
 impl_static_data_size!(
     GroupType<'_>,
     (u8::static_data_size() * 4) + // label
@@ -306,6 +307,7 @@ macro_rules! make_simple_top_group {
         }
         impl<$life> $crate::FromTopGroup<$life> for $group_name<$life> {
             fn from_top_group(group: $crate::groups::common::TopGroup<$life>) -> crate::parse::PResult<Self, crate::groups::common::FromTopGroupError> {
+                use $crate::parse::Parse;
                 let (data, records) = crate::parse::many(group.data, $crate::records::common::GeneralRecord::parse)?;
                 if !data.is_empty() {
                     return Err(crate::parse::ParseError::ExpectedEOF.into());

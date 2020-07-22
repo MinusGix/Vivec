@@ -256,8 +256,8 @@ pub struct DATALegendaryEdition {
     pub damage: f32,
     pub value: u32,
 }
-impl DATALegendaryEdition {
-    pub fn parse(data: &[u8]) -> PResult<Self> {
+impl Parse<'_> for DATALegendaryEdition {
+    fn parse(data: &[u8]) -> PResult<Self> {
         let (data, projectile_id) = FormId::parse(data)?;
         let (data, flags) = DATAFlags::parse(data)?;
         let (data, damage) = f32::parse(data)?;
@@ -296,8 +296,8 @@ pub struct DATASpecialEdition {
     pub le: DATALegendaryEdition,
     pub weight: f32,
 }
-impl DATASpecialEdition {
-    pub fn parse(data: &[u8]) -> PResult<Self> {
+impl Parse<'_> for DATASpecialEdition {
+    fn parse(data: &[u8]) -> PResult<Self> {
         let (data, le) = DATALegendaryEdition::parse(data)?;
         let (data, weight) = f32::parse(data)?;
         Ok((data, Self { le, weight }))
@@ -371,11 +371,6 @@ pub struct DATAFlags {
     pub flags: u32,
 }
 impl DATAFlags {
-    pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = u32::parse(data)?;
-        Ok((data, Self { flags }))
-    }
-
     pub fn ignores_weapon_resistance(&self) -> bool {
         (self.flags & 0b1) != 0
     }
@@ -392,6 +387,12 @@ impl DATAFlags {
 
     pub fn is_bolt(&self) -> bool {
         (self.flags & 0b100) == 0
+    }
+}
+impl Parse<'_> for DATAFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = u32::parse(data)?;
+        Ok((data, Self { flags }))
     }
 }
 impl_static_data_size!(DATAFlags, u32::static_data_size());

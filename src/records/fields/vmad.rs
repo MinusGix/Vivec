@@ -67,11 +67,11 @@ pub struct VMADPrimarySection<'data, Fragment: ParseFragments<'data>> {
     /// Script fragments
     pub fragments: Vec<Fragment>,
 }
-impl<'data, Fragment> VMADPrimarySection<'data, Fragment>
+impl<'data, Fragment> Parse<'data> for VMADPrimarySection<'data, Fragment>
 where
     Fragment: ParseFragments<'data>,
 {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, version) = i16::parse(data)?;
         let (data, object_format) = VMADObjectFormat::parse(data)?;
         let (data, script_count) = u16::parse(data)?;
@@ -145,14 +145,15 @@ pub enum VMADObjectFormat {
 }
 type VMADObjectFormatConversionError = ConversionError<u16>;
 impl VMADObjectFormat {
-    pub fn parse(data: &[u8]) -> PResult<Self> {
+    pub fn code(&self) -> i16 {
+        *self as i16
+    }
+}
+impl Parse<'_> for VMADObjectFormat {
+    fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u16::parse(data)?;
         let object_format = VMADObjectFormat::try_from(value)?;
         Ok((data, object_format))
-    }
-
-    pub fn code(&self) -> i16 {
-        *self as i16
     }
 }
 impl TryFrom<u16> for VMADObjectFormat {
@@ -618,11 +619,6 @@ impl INFORecordFragmentsFlags {
         Self { flags }
     }
 
-    pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = take(data, 1usize)?;
-        Ok((data, Self::new(flags[0])))
-    }
-
     // TODO: verify this
     pub fn has_begin_script(&self) -> bool {
         (self.flags & 0b1) != 0
@@ -635,6 +631,12 @@ impl INFORecordFragmentsFlags {
 
     pub fn count_ones(&self) -> u8 {
         self.flags.count_ones() as u8
+    }
+}
+impl Parse<'_> for INFORecordFragmentsFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = take(data, 1usize)?;
+        Ok((data, Self::new(flags[0])))
     }
 }
 impl_static_data_size!(INFORecordFragmentsFlags, u8::static_data_size());
@@ -655,8 +657,8 @@ pub struct FragmentInfo<'data> {
     /// Name of function containing this fragment script. Usually, something like "Fragment_3"
     pub fragment_name: Windows1252String16<'data>,
 }
-impl<'data> FragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for FragmentInfo<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
@@ -750,11 +752,6 @@ impl PACKRecordFragmentsFlags {
         Self { flags }
     }
 
-    pub fn parse(data: &[u8]) -> PResult<Self> {
-        let (data, flags) = take(data, 1usize)?;
-        Ok((data, Self::new(flags[0])))
-    }
-
     pub fn has_on_begin(&self) -> bool {
         (self.flags & 0b1) != 0
     }
@@ -769,6 +766,12 @@ impl PACKRecordFragmentsFlags {
 
     pub fn count_ones(&self) -> u8 {
         self.flags.count_ones() as u8
+    }
+}
+impl Parse<'_> for PACKRecordFragmentsFlags {
+    fn parse(data: &[u8]) -> PResult<Self> {
+        let (data, flags) = take(data, 1usize)?;
+        Ok((data, Self::new(flags[0])))
     }
 }
 impl_static_data_size!(PACKRecordFragmentsFlags, u8::static_data_size());
@@ -835,8 +838,8 @@ pub struct PERKRecordFragmentInfo<'data> {
     /// Name of fragment. Usually a name like "Fragment_3"
     pub fragment_name: Windows1252String16<'data>,
 }
-impl<'data> PERKRecordFragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for PERKRecordFragmentInfo<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, index) = u16::parse(data)?;
         let (data, unknown) = u16::parse(data)?;
         let (data, unknown2) = take(data, 1usize)?;
@@ -950,8 +953,8 @@ pub struct QUSTRecordFragmentInfo<'data> {
     /// Name of function containing this fragment script
     pub fragment_name: Windows1252String16<'data>,
 }
-impl<'data> QUSTRecordFragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for QUSTRecordFragmentInfo<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, index) = u16::parse(data)?;
         let (data, unknown) = u16::parse(data)?;
         assert_eq!(unknown, 0);
@@ -1007,9 +1010,9 @@ pub struct FragmentAlias<'data> {
     // TODO: verify that it is supposed to be a VMADScript..
     pub scripts: Vec<VMADScript<'data>>,
 }
-impl<'data> FragmentAlias<'data> {
+impl<'data> Parse<'data> for FragmentAlias<'data> {
     // TODO: verify that version and object_format are equivalent to parents
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         // TODO: hardcoding byte size is bleh
         // We need the object format, which is stored later, so we simply consume the bytes needed for now
         let (data, object) = take(data, 4usize)?;
@@ -1135,8 +1138,8 @@ pub struct BEFragmentInfo<'data> {
     /// name of function containing this fragment script
     pub fragment_name: Windows1252String16<'data>,
 }
-impl<'data> BEFragmentInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for BEFragmentInfo<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, script_name) = Windows1252String16::parse(data)?;
@@ -1178,8 +1181,8 @@ pub struct PhaseInfo<'data> {
     /// Name of function containing fragment script
     pub fragment_name: Windows1252String16<'data>,
 }
-impl<'data> PhaseInfo<'data> {
-    pub fn parse(data: &'data [u8]) -> PResult<Self> {
+impl<'data> Parse<'data> for PhaseInfo<'data> {
+    fn parse(data: &'data [u8]) -> PResult<Self> {
         let (data, unknown) = take(data, 1usize)?;
         let unknown = unknown[0];
         let (data, phase) = u32::parse(data)?;
