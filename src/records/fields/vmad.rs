@@ -147,14 +147,7 @@ type VMADObjectFormatConversionError = ConversionError<u16>;
 impl VMADObjectFormat {
     pub fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u16::parse(data)?;
-        let object_format = match VMADObjectFormat::try_from(value) {
-            Ok(format) => format,
-            Err(e) => match e {
-                VMADObjectFormatConversionError::InvalidEnumerationValue(_) => {
-                    return Err(ParseError::InvalidEnumerationValue);
-                }
-            },
-        };
+        let object_format = VMADObjectFormat::try_from(value)?;
         Ok((data, object_format))
     }
 

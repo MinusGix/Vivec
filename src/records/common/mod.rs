@@ -387,6 +387,14 @@ pub enum ConversionError<T> {
     InvalidEnumerationValue(T),
 }
 
+impl<T> From<ConversionError<T>> for ParseError<'_> {
+    fn from(v: ConversionError<T>) -> Self {
+        match v {
+            ConversionError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum FromRecordError<'data> {
     /// An unexpected end of fields

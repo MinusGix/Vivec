@@ -107,9 +107,7 @@ pub enum Quality {
 impl Parse<'_> for Quality {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u32::parse(data)?;
-        let quality = value.try_into().map_err(|e| match e {
-            ConversionError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
-        })?;
+        let quality = value.try_into()?;
         Ok((data, quality))
     }
 }

@@ -11,7 +11,7 @@ use super::{
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
     impl_static_type_named, make_field_getter,
-    parse::{PResult, Parse, ParseError},
+    parse::{PResult, Parse},
     util::{DataSize, Writable},
 };
 use derive_more::From;
@@ -197,9 +197,7 @@ impl ArtType {
 impl Parse<'_> for ArtType {
     fn parse(data: &[u8]) -> PResult<Self> {
         let (data, value) = u32::parse(data)?;
-        let art_type = value.try_into().map_err(|e| match e {
-            ConversionError::InvalidEnumerationValue(_) => ParseError::InvalidEnumerationValue,
-        })?;
+        let art_type = value.try_into()?;
         Ok((data, art_type))
     }
 }
