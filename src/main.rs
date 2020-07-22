@@ -101,6 +101,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
                     b"ASPC" => records::aspc::ASPCRecord::from_record(record)?.1.into(),
                     b"ASTP" => records::astp::ASTPRecord::from_record(record)?.1.into(),
                     b"AVIF" => records::avif::AVIFRecord::from_record(record)?.1.into(),
+                    b"BOOK" => records::book::BOOKRecord::from_record(record)?.1.into(),
                     _ => record.into(),
                 }));
             }
@@ -121,6 +122,7 @@ fn parse_file(data: &[u8]) -> PResult<Vec<Top>, GeneralError> {
                         b"ASPC" => groups::aspc::ASPCGroup::from_top_group(group)?.1.into(),
                         b"ASTP" => groups::astp::ASTPGroup::from_top_group(group)?.1.into(),
                         b"AVIF" => groups::avif::AVIFGroup::from_top_group(group)?.1.into(),
+                        b"BOOK" => groups::book::BOOKGroup::from_top_group(group)?.1.into(),
                         _ => group.into(),
                     }
                 }
@@ -160,6 +162,7 @@ fn main() {
                     Group::ASPC(group) => println!("ASPC group: {} entries", group.records.len()),
                     Group::ASTP(group) => println!("ASTP group: {} entries", group.records.len()),
                     Group::AVIF(group) => println!("AVIF group: {} entries", group.records.len()),
+                    Group::BOOK(group) => println!("BOOK group: {} entries", group.records.len()),
                     Group::Unknown(_) => print!("GU, "),
                     Group::UnknownTop(_) => print!("GT, "),
                 },

@@ -17,6 +17,7 @@ pub mod arto;
 pub mod aspc;
 pub mod astp;
 pub mod avif;
+pub mod book;
 
 pub mod common;
 
@@ -35,6 +36,7 @@ pub enum Group<'data> {
     ASPC(aspc::ASPCGroup<'data>),
     ASTP(astp::ASTPGroup<'data>),
     AVIF(avif::AVIFGroup<'data>),
+    BOOK(book::BOOKGroup<'data>),
     Unknown(common::GeneralGroup<'data>),
     UnknownTop(common::TopGroup<'data>),
 }
@@ -49,7 +51,7 @@ impl<'data> DataSize for Group<'data> {
             Group,
             self,
             [
-                AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP, AVIF,
+                AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP, AVIF, BOOK,
                 Unknown, UnknownTop
             ],
             x,
@@ -66,7 +68,7 @@ impl<'data> Writable for Group<'data> {
             Group,
             self,
             [
-                AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP, AVIF,
+                AACT, ACTI, ADDN, ALCH, AMMO, ANIO, APPA, ARMA, ARMO, ARTO, ASPC, ASTP, AVIF, BOOK,
                 Unknown, UnknownTop
             ],
             x,
