@@ -517,44 +517,6 @@ where
         ))
     }
 }
-// Implementation for collections
-//impl<'data, C, F> CollectField<'data, F> for FieldList<'data, C>
-impl<'data, C> FieldList<'data, C>
-where
-    C: StaticTypeNamed + DataSize,
-{
-    pub fn collect_collection<I, F>(
-        first: F,
-        field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
-    where
-        I: std::iter::Iterator<Item = GeneralField<'data>>,
-        F: StaticTypeNamed + DataSize + FromField<'data>,
-        C: CollectField<'data, F>,
-    {
-        let (_, first): (_, C) = C::collect(first, field_iter)?;
-
-        let mut list: Vec<C> = vec![first];
-        loop {
-            let (_, field): (_, Option<F>) = get_field(field_iter, F::static_type_name())?;
-            let field = match field {
-                Some(field) => field,
-                None => break,
-            };
-
-            let (_, entry): (_, C) = C::collect(field, field_iter)?;
-            list.push(entry);
-        }
-
-        Ok((
-            &[],
-            Self {
-                list,
-                _marker: std::marker::PhantomData,
-            },
-        ))
-    }
-}
 
 impl<'data, T> StaticTypeNamed for FieldList<'data, T>
 where
@@ -579,6 +541,75 @@ where
     fn write_to<U>(&self, w: &mut U) -> std::io::Result<()>
     where
         U: Write,
+    {
+        self.list.write_to(w)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CollectionList<'data, T: StaticTypeNamed + DataSize> {
+    list: Vec<T>,
+    // TODO: is this a good way to do this
+    _marker: std::marker::PhantomData<&'data [u8]>,
+}
+impl<'data, T, F> CollectField<'data, F> for CollectionList<'data, T>
+where
+    T: StaticTypeNamed + DataSize + CollectField<'data, F>,
+    F: StaticTypeNamed + DataSize + FromField<'data>,
+{
+    fn collect<I>(
+        first: F,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>,
+    {
+        let (_, first) = T::collect(first, field_iter)?;
+
+        let mut list: Vec<T> = vec![first];
+        loop {
+            let (_, field): (_, Option<F>) = get_field(field_iter, F::static_type_name())?;
+            let field = match field {
+                Some(field) => field,
+                None => break,
+            };
+
+            let (_, entry) = T::collect(field, field_iter)?;
+            list.push(entry);
+        }
+
+        Ok((
+            &[],
+            Self {
+                list,
+                _marker: std::marker::PhantomData,
+            },
+        ))
+    }
+}
+impl<'data, T> StaticTypeNamed for CollectionList<'data, T>
+where
+    T: StaticTypeNamed + DataSize,
+{
+    fn static_type_name() -> &'static BStr {
+        T::static_type_name()
+    }
+}
+impl<'data, T> DataSize for CollectionList<'data, T>
+where
+    T: StaticTypeNamed + DataSize,
+{
+    fn data_size(&self) -> usize {
+        self.list.data_size()
+    }
+}
+impl<'data, T> Writable for CollectionList<'data, T>
+where
+    T: Writable + StaticTypeNamed + DataSize,
+{
+    fn write_to<W>(&self, w: &mut W) -> std::io::Result<()>
+    where
+        W: Write,
     {
         self.list.write_to(w)
     }
