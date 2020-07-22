@@ -139,21 +139,8 @@ fn main() {
         for entry in result.iter() {
             match entry {
                 Top::Record(record) => match record {
-                    Record::TES4(tes4) => println!("TES4: {:?}", tes4),
-                    Record::AACT(aact) => println!("AACT: {:?}", aact),
-                    Record::ADDN(addn) => println!("ADDN: {:?}", addn),
-                    Record::ACHR(achr) => println!("ACHR: {:?}", achr),
-                    Record::ACTI(acti) => println!("ACTI: {:?}", acti),
-                    Record::ALCH(alch) => println!("ALCH: {:?}", alch),
-                    Record::AMMO(ammo) => println!("AMMO: {:?}", ammo),
-                    Record::ANIO(anio) => println!("ANIO: {:?}", anio),
-                    Record::APPA(appa) => println!("APPA: {:?}", appa),
-                    Record::ARMA(arma) => println!("ARMA: {:?}", arma),
-                    Record::ARMO(armo) => println!("ARMO: {:?}", armo),
-                    Record::ARTO(arto) => println!("ARTO: {:?}", arto),
-                    Record::ASPC(aspc) => println!("ASPC: {:?}", aspc),
-                    Record::ASTP(astp) => println!("ASTP: {:?}", astp),
                     Record::Unknown(record) => println!("U({}),", record.type_name()), // println!("Unknown record: {:?}", record),
+                    record => println!("{:?}", record),
                 },
                 Top::Group(group) => match group {
                     Group::AACT(group) => {
