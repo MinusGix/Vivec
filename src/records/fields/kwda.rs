@@ -1,4 +1,4 @@
-use super::common::{FromFieldError, GeneralField};
+use super::common::{CollectField, FromFieldError, GeneralField};
 use crate::{
     impl_from_field, impl_static_type_named, make_single_value_field,
     parse::{count, PResult, Parse},
@@ -39,10 +39,18 @@ pub struct KWDACollection {
     keywords: KWDA,
 }
 impl KWDACollection {
-    pub fn collect<'data, I>(
+    pub fn create_ksiz(&self) -> KSIZ {
+        // TODO: check that it fits
+        KSIZ {
+            amount: self.keywords.keywords.len() as u32,
+        }
+    }
+}
+impl<'data> CollectField<'data, KSIZ> for KWDACollection {
+    fn collect<I>(
         ksiz: KSIZ,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {
@@ -59,12 +67,6 @@ impl KWDACollection {
             let field = field_iter.next().unwrap();
             let (_, field) = KWDA::from_field(field, ksiz.amount)?;
             Ok((&[], KWDACollection { keywords: field }))
-        }
-    }
-    pub fn create_ksiz(&self) -> KSIZ {
-        // TODO: check that it fits
-        KSIZ {
-            amount: self.keywords.keywords.len() as u32,
         }
     }
 }

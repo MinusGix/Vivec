@@ -1,7 +1,6 @@
 use super::common::{write_field_header, FIELDH_SIZE};
 use crate::{
     impl_from_field, impl_static_data_size, impl_static_type_named,
-    parse::Parse,
     util::{Position3, Writable},
 };
 

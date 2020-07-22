@@ -496,7 +496,7 @@ where
     fn collect<I>(
         first: T,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {
@@ -560,7 +560,7 @@ where
     fn collect<I>(
         first: F,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {

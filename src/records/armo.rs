@@ -4,7 +4,7 @@ use super::{
         FromRecordError, GeneralRecord, NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{item, object, FromFieldError, GeneralField},
+        common::{item, object, CollectField, FromFieldError, GeneralField},
         dest, edid, kwda, modl, obnd, vmad,
     },
 };
@@ -444,11 +444,11 @@ pub struct Enchantment {
     pub enchantment: EITM,
     pub amount: Option<EAMT>,
 }
-impl Enchantment {
-    pub fn collect<'data, I>(
+impl<'data> CollectField<'data, EITM> for Enchantment {
+    fn collect<I>(
         enchantment: EITM,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {
@@ -496,8 +496,8 @@ macro_rules! make_inventory_modl_collection {
             message_image: Option<$mico>,
         }
 
-        impl<$life> $invcol<$life> {
-            pub fn collect<I>(
+        impl<$life> CollectField<$life, $modl> for $invcol<$life> {
+            fn collect<I>(
                 modl: $modl,
                 field_iter: &mut std::iter::Peekable<I>,
             ) -> PResult<$life, Self, FromFieldError<$life>>

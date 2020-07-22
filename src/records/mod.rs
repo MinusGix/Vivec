@@ -20,6 +20,7 @@ pub mod arto;
 pub mod aspc;
 pub mod astp;
 pub mod avif;
+pub mod book;
 
 pub mod tes4;
 

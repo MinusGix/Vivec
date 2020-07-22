@@ -1,4 +1,4 @@
-use super::common::{write_field_header, FromFieldError, GeneralField, FIELDH_SIZE};
+use super::common::{write_field_header, CollectField, FromFieldError, GeneralField, FIELDH_SIZE};
 use crate::{
     impl_from_field, impl_static_data_size, impl_static_type_named, make_empty_field,
     make_model_fields, make_single_value_field,
@@ -140,11 +140,11 @@ pub struct DESTCollection<'data> {
     destruction: DEST,
     stage_data: Vec<DSTDCollection<'data>>,
 }
-impl<'data> DESTCollection<'data> {
-    pub fn collect<I>(
+impl<'data> CollectField<'data, DEST> for DESTCollection<'data> {
+    fn collect<I>(
         destruction: DEST,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {

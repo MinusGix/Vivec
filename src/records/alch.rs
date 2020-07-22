@@ -4,7 +4,10 @@ use super::{
         StaticTypeNamed, TypeNamed,
     },
     fields::{
-        common::{item, object, write_field_header, FromFieldError, GeneralField, FIELDH_SIZE},
+        common::{
+            item, object, write_field_header, CollectField, FromFieldError, GeneralField,
+            FIELDH_SIZE,
+        },
         ctda, edid, kwda, modl, obnd,
     },
 };
@@ -366,11 +369,11 @@ pub struct EnchantedEffectCollection {
     pub item: EFIT,
     pub conditions: Vec<ctda::CTDA>,
 }
-impl EnchantedEffectCollection {
-    pub fn collect<'data, I>(
+impl<'data> CollectField<'data, ENIT> for EnchantedEffectCollection {
+    fn collect<I>(
         enchanted_item: ENIT,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {

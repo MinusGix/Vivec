@@ -330,7 +330,7 @@ impl<'data> CollectField<'data, PNAM> for Perk {
     fn collect<I>(
         perk: PNAM,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>,
     {

@@ -108,7 +108,7 @@ pub trait CollectField<'data, C>: Sized {
     fn collect<I>(
         first: C,
         field_iter: &mut std::iter::Peekable<I>,
-    ) -> PResult<Self, FromFieldError<'data>>
+    ) -> PResult<'data, Self, FromFieldError<'data>>
     where
         I: std::iter::Iterator<Item = GeneralField<'data>>;
 }

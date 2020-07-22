@@ -3,7 +3,9 @@ use super::{
         get_field, CommonRecordInfo, FormId, FromRecord, FromRecordError, GeneralRecord, Index,
         NullTerminatedString, StaticTypeNamed, TypeNamed,
     },
-    fields::common::{write_field_header, FromField, FromFieldError, GeneralField, FIELDH_SIZE},
+    fields::common::{
+        write_field_header, CollectField, FromField, FromFieldError, GeneralField, FIELDH_SIZE,
+    },
 };
 use crate::{
     collect_one, collect_one_collection, dispatch_all, impl_from_field, impl_static_data_size,
@@ -259,8 +261,8 @@ pub struct MASTCollection<'data> {
     master: MAST<'data>,
     data: DATA,
 }
-impl<'data> MASTCollection<'data> {
-    pub fn collect<I>(
+impl<'data> CollectField<'data, MAST<'data>> for MASTCollection<'data> {
+    fn collect<I>(
         master: MAST<'data>,
         field_iter: &mut std::iter::Peekable<I>,
     ) -> PResult<'data, Self, FromFieldError<'data>>

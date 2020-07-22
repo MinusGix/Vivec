@@ -142,8 +142,8 @@ macro_rules! make_model_fields {
             pub texture_data: Option<$modt<'data>>,
             pub alternate_textures: Option<$mods<'data>>,
         }
-        impl<'data> $collection<'data> {
-            pub fn collect<I>(modl: $modl<'data>, field_iter: &mut std::iter::Peekable<I>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>>
+        impl<'data> $crate::records::fields::common::CollectField<'data, $modl<'data>> for $collection<'data> {
+            fn collect<I>(modl: $modl<'data>, field_iter: &mut std::iter::Peekable<I>) -> $crate::parse::PResult<'data, Self, $crate::records::fields::common::FromFieldError<'data>>
             where
                 I: std::iter::Iterator<Item = $crate::records::fields::common::GeneralField<'data>>,
             {
