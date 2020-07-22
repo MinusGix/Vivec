@@ -103,6 +103,15 @@ pub trait FromField<'data>: Sized {
     fn from_field(field: GeneralField<'data>) -> PResult<'data, Self, FromFieldError>;
 }
 
+pub trait CollectField<'data, C>: Sized {
+    fn collect<I>(
+        first: C,
+        field_iter: &mut std::iter::Peekable<I>,
+    ) -> PResult<Self, FromFieldError<'data>>
+    where
+        I: std::iter::Iterator<Item = GeneralField<'data>>;
+}
+
 #[macro_export]
 macro_rules! make_empty_field {
     ($(#[$outer:meta])* $name:ident) => {
