@@ -276,7 +276,7 @@ impl<'data> VMADPropertyData<'data> {
         data: &'data [u8],
         object_format: VMADObjectFormat,
         property_type: u8,
-    ) -> PResult<VMADPropertyData> {
+    ) -> PResult<VMADPropertyData<'data>> {
         match property_type {
             1 => {
                 let (data, value) = VMADPropertyObject::parse(data, object_format)?;
@@ -331,9 +331,9 @@ impl<'data> VMADPropertyData<'data> {
                 // TODO: I hate it
                 let (data, items) = count(
                     data,
-                    |x: &[u8]| {
-                        let (data, value) = take(x, 1usize)?;
-                        Ok((data, value[0] == 0))
+                    |x: &[u8]| -> PResult<bool> {
+                        let (data, value) = u8::parse(x)?;
+                        Ok((data, value != 0))
                     },
                     amount as usize,
                 )?;
